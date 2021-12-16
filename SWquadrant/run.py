@@ -77,7 +77,7 @@ def draw_quadrant(x, y, start="2016-03-01", end="2016-04-01"):
         last_date = common_index[i - 1]
         ax.plot(x.loc[[last_date, date]], y.loc[[last_date, date]], marker='o')
 
-    ax.text(x=x.iloc[0], y=y.iloc[0], s=f'起始点:{x.index[0].strftime(r"%Y-%m-%d")}', color="skyblue")
+    ax.text(x=x.iloc[-1], y=y.iloc[-1], s=f'终止点:{x.index[-1].strftime(r"%Y-%m-%d")}', color="skyblue")
 
     xp = np.linspace(0, ax.get_xlim()[1], 10)
     xn = np.linspace(ax.get_xlim()[0], 0, 10)
