@@ -1,0 +1,6 @@
+pandas
+numpy
+akshare
+matplotlib
+statsmodels
+ipykernel
