@@ -106,4 +106,4 @@ if __name__ == "__main__":
     rws = calc_rws(big, small)
     drws = derivative(rws)
     ddrws = derivative(drws)
-    draw_quadrant(ddrws, drws)
+    draw_quadrant(ddrws, drws, start="2021-11-01", end="2021-12-15")
