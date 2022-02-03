@@ -1,0 +1,29 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "database",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.database"
+		},
+		{
+			"name": "get_data",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.get_data"
+		},
+		{
+			"name": "io",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.io"
+		},
+		{
+			"name": "calculate",
+			"type": "python",
+			"request": "launch",
+			"module": "other.amount_concentration.calculate"
+		}
+	]
+}
