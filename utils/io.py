@@ -11,8 +11,7 @@ from email.mime.text import MIMEText
 from rich.traceback import install
 from rich.console import Console
 from rich.progress import (track, Progress, SpinnerColumn,
-                           TimeRemainingColumn, BarColumn
-                          )
+                           TimeRemainingColumn, BarColumn)
 
 install(suppress=[rich], show_locals=False)
 console = Console()

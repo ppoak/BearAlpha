@@ -11,7 +11,7 @@ def amount_concentration(date: Union[datetime.datetime, datetime.date, str]) -> 
     return market_data.iloc[:top5pct].amount.sum() / market_data.amount.sum()
 
 if __name__ == "__main__":
-    trade_dates = trade_date('2010-01-01', '2022-01-30')
+    trade_dates = trade_date('2010-01-01', '2022-01-30', freq='monthly')
     result = pd.Series(dtype=float)
     with progress:
         for date in progress.track(trade_dates, description='calculating ... '):
@@ -19,10 +19,11 @@ if __name__ == "__main__":
 
     _, ax = plt.subplots(1, 1, figsize=(20, 8))
     result.plot(ax=ax)
+    result.name = 'result'
     ax.set_title('Amount Concentration')
     ax.set_xlabel('date')
     ax.set_ylabel('amount percentage')
     ax.hlines(0.50, xmin=ax.axes.get_xlim()[0], xmax=ax.axes.get_xlim()[1], color='red', linestyle='--')
     plt.savefig('other/amount_concentration/images/result.png')
-    result.to_csv('result.csv')
+    result.to_csv('other/amount_concentration/result/result.csv')
     print(result)

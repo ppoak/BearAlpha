@@ -151,3 +151,6 @@ cython_debug/
 
 # 报告只传百度网盘链接
 assets/report/**/*.pdf
+
+# 结果的csv文件
+**/result/*.csv
