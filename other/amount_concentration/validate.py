@@ -71,7 +71,7 @@ _end = list()
 for date in concentration_list:
     if date < later:
         continue
-    # 观察 突破阈值 后 30天 大盘指数的变化
+    # 观察 突破阈值后 30天 hs300指数的变化
     later = date + datetime.timedelta(days=30)
     while later not in trade_dates_daily:
         later = later + datetime.timedelta(days=1)
