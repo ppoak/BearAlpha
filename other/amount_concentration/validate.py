@@ -246,8 +246,8 @@ def cal_tradedate(signal_date: list,
 def back_track(index: pd.Series,
                trade_plan: pd.DataFrame,
                init_worth: int ) -> list:
-    trade_plan['buy_value'] = index.loc[trade_plan['buy_date'].apply(lambda x:x.strftime('%Y-%m-%d'))]['s_dq_close'].to_numpy()
-    trade_plan['sell_value'] = index.loc[trade_plan['sell_date'].apply(lambda x:x.strftime('%Y-%m-%d'))]['s_dq_close'].to_numpy()
+    trade_plan['buy_value'] = index.loc[trade_plan['buy_date']].to_numpy()
+    trade_plan['sell_value'] = index.loc[trade_plan['sell_date']].to_numpy()
     trade_plan['gain_rate'] = (trade_plan['sell_value'] - trade_plan['buy_value']) / trade_plan['buy_value']
     tmp = trade_plan['gain_rate'].to_numpy()
     net_worth = list()
