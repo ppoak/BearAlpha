@@ -1,6 +1,6 @@
 
 #######################################
-###########计算筹码集中度指标#############
+###########计算大小盘变化################
 #######################################
 
 # --
@@ -309,3 +309,6 @@ cal_df_low, win_rate_low = back_track(sz_index, cal_df_low, init_worth)
 plot(cal_df, win_rate, 'sz_index', '95%')
 plot(cal_df_low, win_rate_low, 'sz_index', '5%')
 
+# %%
+a = int('1996')
+# %%
