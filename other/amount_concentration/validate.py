@@ -107,7 +107,7 @@ plt.xticks(x, [d.to_pydatetime().date() for d in df_1['rate'].index], rotation=4
 plt.ylabel('growth rate', fontsize=18)
 
 
-# --
+# %%
 
 ##################################
 # 历史数据的前后5%为界限，验证有效性。##
@@ -293,7 +293,7 @@ hs300.set_index('trade_dt', inplace=True)
 cal_df = cal_tradedate(above_high_date, 7)
 cal_df_low = cal_tradedate(below_low_date, 7)
 init_worth = 1
-cal_df, win_rate_low = back_track(hs300, cal_df, init_worth)
+cal_df, win_rate = back_track(hs300, cal_df, init_worth)
 cal_df_low, win_rate_low = back_track(hs300, cal_df_low, init_worth)
 plot(cal_df, win_rate, 'hs300', '95%')
 plot(cal_df_low, win_rate_low, 'hs300', '5%')
@@ -304,11 +304,12 @@ sz_index.set_index('trade_dt', inplace=True)
 cal_df = cal_tradedate(above_high_date, 7)
 cal_df_low = cal_tradedate(below_low_date, 7)
 init_worth = 1
-cal_df, win_rate_low = back_track(sz_index, cal_df, init_worth)
+cal_df, win_rate = back_track(sz_index, cal_df, init_worth)
 cal_df_low, win_rate_low = back_track(sz_index, cal_df_low, init_worth)
 plot(cal_df, win_rate, 'sz_index', '95%')
 plot(cal_df_low, win_rate_low, 'sz_index', '5%')
 
-# %%
-a = int('1996')
+
+
+
 # %%
