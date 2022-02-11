@@ -18,14 +18,12 @@ def median_correct(data, n=5):
     new_data[new_data < down] = down
     return new_data
 
-
 def fix_odd_drop(data, n):
     drop_proportion = n / 2
     new_data = data.copy()
     new_data = new_data[(data >= data.quantile(drop_proportion)) & (
         data <= data.quantile(1 - drop_proportion))].droplevel('date')
     return new_data
-
 
 def fix_odd_percentile(data, n):
     data_bot = n[0]
@@ -35,8 +33,15 @@ def fix_odd_percentile(data, n):
         data <= data.quantile(data_top))].droplevel('date')
     return new_data
 
+def mean_std(data, n):
+    mean = np.mean(data[~np.isnan(data)])
+    std = np.std(data[~np.isnan(data)])
+    new_data = data.copy()
+    new_data[new_data > mean + n * std] = mean + n * std
+    new_data[new_data < mean - n * std] = mean - n * std
+    return new_data
 
-def deextreme(data, n=None, deextreme_type='median'):
+def deextreme(data, n=None, deextreme_type='mean_std'):
     """deextreme ways
     ----------------
 
@@ -46,9 +51,11 @@ def deextreme(data, n=None, deextreme_type='median'):
         when using fixed odd percentile, n must be one of those:
             1. the remaining percentiles for head and tail in a list form
             2. the n percentiles for head and tail in a float form
+        when using mean std, ni is the number of deviations from mean
     deextreme_type: str, must be one of these:
         'median': median way
         'fix_odd': fixed odd way
+        'mean_std': mean_std way
     return: np.array, result
     """
     if deextreme_type == 'median':
@@ -56,8 +63,7 @@ def deextreme(data, n=None, deextreme_type='median'):
             n = 5
         new_data = median_correct(data, n)
     elif deextreme_type == 'mean_std':
-        # TODO: mean_std method
-        pass
+        new_data = mean_std(data, n)
     elif deextreme_type == 'fix_odd':
         if isinstance(n, float):
             new_data = fix_odd_drop(data, n)
@@ -81,7 +87,6 @@ def zscore(data):
     std = np.std(data[~np.isnan(data)])
     new_data = (data - mean) / std
     return new_data
-
 
 def standard(data, standard_type='zscore'):
     """standardization ways

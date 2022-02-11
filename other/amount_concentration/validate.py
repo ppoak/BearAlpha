@@ -6,7 +6,7 @@
 # --
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils.get_data import *
+from utils.getdata import *
 
 # ---
 start = '2010-01-01'
@@ -49,7 +49,7 @@ axes[1].hlines(0.45, xmin=axes[1].axes.get_xlim()[0],
 import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils.get_data import *
+from utils.getdata import *
 
 start = '2010-01-01'
 end = '2022-02-01'
@@ -116,7 +116,7 @@ plt.ylabel('growth rate', fontsize=18)
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils.get_data import *
+from utils.getdata import *
 import datetime
 from matplotlib import font_manager
 my_font = font_manager.FontProperties(fname='/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf')

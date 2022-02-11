@@ -1,6 +1,6 @@
 import datetime
 import matplotlib.pyplot as plt
-from utils.get_data import *
+from utils.getdata import *
 from utils.io import *
 
 

@@ -55,7 +55,8 @@ if __name__ == '__main__':
     elif sys.argv[1] == 'debug':
         paths = [
             "utils",
-            'other/amount_concentration'
+            'other/amount_concentration',
+            "factor/define"
             ]
         for path in paths:
             debug_config(path)

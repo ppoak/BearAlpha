@@ -31,6 +31,7 @@ def market_daily(start: Union[datetime.date, str, datetime.datetime],
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    # get data
     if fields is None:
         fields = '*'
     else:
@@ -40,7 +41,16 @@ def market_daily(start: Union[datetime.date, str, datetime.datetime],
         conditions = 'and ' + 'and'.join(conditions)
         sql += conditions
     data = pd.read_sql(sql, stock_database)
-    data.trade_date = pd.to_datetime(data.trade_date)
+
+    # modify time format
+    if 'trade_date' in fields:
+        data.trade_date = pd.to_datetime(data.trade_date)
+
+    # modify dataframe index
+    index = ['trade_date', 'code']
+    index = list(filter(lambda x: x in fields, index))
+    if index:
+        data = data.set_index(index)
     return data
 
 def index_market_daily(code: str,
@@ -57,6 +67,7 @@ def index_market_daily(code: str,
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    # get data
     if fields is None:
         fields = '*'
     else:
@@ -68,7 +79,16 @@ def index_market_daily(code: str,
         conditions = 'and ' + 'and'.join(conditions)
         sql += conditions
     data = pd.read_sql(sql, stock_database)
-    data.trade_dt = pd.to_datetime(data.trade_dt)
+
+    # modify time format
+    if 'trade_dt' in fields:
+        data.trade_dt = pd.to_datetime(data.trade_dt)
+
+    # modify dataframe index
+    index = ['trade_dt', 's_info_windcode']
+    index = list(filter(lambda x: x in fields, index))
+    if index:
+        data = data.set_index(index)
     return data
 
 def index_hs300_close_weight(start: Union[datetime.datetime, datetime.date, str],
@@ -93,7 +113,8 @@ def index_hs300_close_weight(start: Union[datetime.datetime, datetime.date, str]
         conditions = 'and ' + 'and'.join(conditions)
         sql += conditions
     data = pd.read_sql(sql, stock_database)
-    data.trade_dt = pd.to_datetime(data.trade_dt)
+    if data.get('trade_date', False):
+        data.trade_dt = pd.to_datetime(data.trade_dt)
     return data
 
 def plate_info(start: Union[datetime.datetime, datetime.date, str],
@@ -108,6 +129,7 @@ def plate_info(start: Union[datetime.datetime, datetime.date, str],
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    # get data
     if fields is None:
         fields = '*'
     else:
@@ -118,9 +140,18 @@ def plate_info(start: Union[datetime.datetime, datetime.date, str],
         conditions = 'and ' + 'and'.join(conditions)
         sql += conditions
     data = pd.read_sql(sql, stock_database)
-    data.trade_date = pd.to_datetime(data.trade_date)
+
+    # modify time format
+    if 'trade_date' in fields:
+        data.trade_date = pd.to_datetime(data.trade_date)
+    
+    # modify dataframe index
+    index = ['trade_date', 'code']
+    index = list(filter(lambda x: x in fields, index))
+    if index:
+        data = data.set_index(index)
     return data
 
 if __name__ == "__main__":
-    data = plate_info('2021-01-01', '2021-01-05')
+    data = plate_info('2021-01-05', '2021-01-05', ['code', 'swcode_level1'])
     print(data)

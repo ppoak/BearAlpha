@@ -2,16 +2,28 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "treatment",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.treatment"
+		},
+		{
+			"name": "common",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.common"
+		},
+		{
 			"name": "database",
 			"type": "python",
 			"request": "launch",
 			"module": "utils.database"
 		},
 		{
-			"name": "get_data",
+			"name": "getdata",
 			"type": "python",
 			"request": "launch",
-			"module": "utils.get_data"
+			"module": "utils.getdata"
 		},
 		{
 			"name": "io",
@@ -24,6 +36,18 @@
 			"type": "python",
 			"request": "launch",
 			"module": "other.amount_concentration.calculate"
+		},
+		{
+			"name": "validate",
+			"type": "python",
+			"request": "launch",
+			"module": "other.amount_concentration.validate"
+		},
+		{
+			"name": "technical",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.technical"
 		}
 	]
 }
