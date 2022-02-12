@@ -165,6 +165,99 @@ def turnover_3m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series
     factor.index.names = ["date", "asset"]
     return factor
 
+def volatility_1m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
+    '''Stock total return standard deviation over past 20 trading days
+    -----------------------------------------------
+
+    date: str, datetime or date, the given date
+    return: series, a series with the name in accordance with the function name
+    '''
+    # get stock pool and industry
+    stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
+    industry = plate_info(date, date, ['code', 'zxname_level1'])
+    
+    # calculate factor
+    last_date = last_n_trade_dates(date, 20)[0]
+    market = market_daily(last_date, date, ['trade_date', 'code', 'percent_change'])
+    factor = market.groupby(level=1).std()
+
+    # factor preprocess
+    factor = pd.concat([factor, industry], axis=1)
+    factor['percent_change'] = factor.groupby('zxname_level1').apply(
+        lambda x: standard(x.loc[:, 'percent_change'])).droplevel(0).sort_index()
+    factor['percent_change'] = factor.groupby('zxname_level1').apply(
+        lambda x: deextreme(x.loc[:, 'percent_change'], n=3)).droplevel(0).sort_index()
+    factor = missing_fill(factor.percent_change)
+    factor = factor.loc[stocks]
+    
+    # modify factor style
+    factor.name = 'volatility_1m'
+    factor.index = pd.MultiIndex.from_product([[date], factor.index])
+    factor.index.names = ["date", "asset"]
+    return factor
+
+def volatility_3m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
+    '''Stock total return standard deviation over past 20 trading days
+    -----------------------------------------------
+
+    date: str, datetime or date, the given date
+    return: series, a series with the name in accordance with the function name
+    '''
+    # get stock pool and industry
+    stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
+    industry = plate_info(date, date, ['code', 'zxname_level1'])
+    
+    # calculate factor
+    last_date = last_n_trade_dates(date, 60)[0]
+    market = market_daily(last_date, date, ['trade_date', 'code', 'percent_change'])
+    factor = market.groupby(level=1).std()
+
+    # factor preprocess
+    factor = pd.concat([factor, industry], axis=1)
+    factor['percent_change'] = factor.groupby('zxname_level1').apply(
+        lambda x: standard(x.loc[:, 'percent_change'])).droplevel(0).sort_index()
+    factor['percent_change'] = factor.groupby('zxname_level1').apply(
+        lambda x: deextreme(x.loc[:, 'percent_change'], n=3)).droplevel(0).sort_index()
+    factor = missing_fill(factor.percent_change)
+    factor = factor.loc[stocks]
+    
+    # modify factor style
+    factor.name = 'volatility_1m'
+    factor.index = pd.MultiIndex.from_product([[date], factor.index])
+    factor.index.names = ["date", "asset"]
+    return factor
+
+def volatility_12m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
+    '''Stock total return standard deviation over past 20 trading days
+    -----------------------------------------------
+
+    date: str, datetime or date, the given date
+    return: series, a series with the name in accordance with the function name
+    '''
+    # get stock pool and industry
+    stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
+    industry = plate_info(date, date, ['code', 'zxname_level1'])
+    
+    # calculate factor
+    last_date = last_n_trade_dates(date, 250)[0]
+    market = market_daily(last_date, date, ['trade_date', 'code', 'percent_change'])
+    factor = market.groupby(level=1).std()
+
+    # factor preprocess
+    factor = pd.concat([factor, industry], axis=1)
+    factor['percent_change'] = factor.groupby('zxname_level1').apply(
+        lambda x: standard(x.loc[:, 'percent_change'])).droplevel(0).sort_index()
+    factor['percent_change'] = factor.groupby('zxname_level1').apply(
+        lambda x: deextreme(x.loc[:, 'percent_change'], n=3)).droplevel(0).sort_index()
+    factor = missing_fill(factor.percent_change)
+    factor = factor.loc[stocks]
+    
+    # modify factor style
+    factor.name = 'volatility_1m'
+    factor.index = pd.MultiIndex.from_product([[date], factor.index])
+    factor.index.names = ["date", "asset"]
+    return factor
+
 
 if __name__ == "__main__":
-    print(turnover_1m('2012-01-05'))
+    print(volatility_12m('2012-01-05'))

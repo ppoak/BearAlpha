@@ -12,8 +12,9 @@ from rich.traceback import install
 from rich.console import Console
 from rich.progress import (track, Progress, SpinnerColumn,
                            TimeRemainingColumn, BarColumn)
+import sqlalchemy
 
-install(suppress=[rich], show_locals=False)
+install(suppress=[rich, pymysql, sqlalchemy, pd], show_locals=False)
 console = Console()
 progress = Progress(
     SpinnerColumn(spinner_name='monkey'),
