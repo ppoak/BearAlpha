@@ -9,6 +9,8 @@
 | return_1m | Technical | Stock total return over past 20 trading days |
 | return_3m | Technical | Stock total return over past 60 trading days |
 | return_12m | Technical | Stock total return over past 250 trading days |
+| turnover_1m | Technical | Stock average turnover in past 20 days, MA(VOLUME/CAPITAL, 20) |
+| turnover_3m | Technical | Stock average turnover in past 60 days, MA(VOLUME/CAPITAL, 60) |
 
 ## 注意事项
 

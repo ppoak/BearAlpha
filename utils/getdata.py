@@ -152,6 +152,41 @@ def plate_info(start: Union[datetime.datetime, datetime.date, str],
         data = data.set_index(index)
     return data
 
+def derivative_indicator(start: Union[datetime.datetime, datetime.date, str],
+                         end: Union[datetime.datetime, datetime.date, str],
+                         fields: list = None,
+                         conditions: list = None) -> pd.DataFrame:
+    '''get derivative indicator in daily frequecy
+    ---------------------------------------------
+
+    start: datetime or date or str, start date in 3 forms
+    end: datetime or date or str, end date in 3 forms
+    fields: list, the field names you want to get
+    conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
+    '''
+    # get data
+    if fields is None:
+        fields = '*'
+    else:
+        fields = ', '.join(fields)
+    sql = f'select {fields} from derivative_indicator ' + \
+        f'where trade_dt >= "{start}" and trade_dt <= "{end}"'
+    if conditions:
+        conditions = 'and ' + 'and'.join(conditions)
+        sql += conditions
+    data = pd.read_sql(sql, stock_database)
+
+    # modify time format
+    if 'trade_dt' in fields:
+        data.trade_dt = pd.to_datetime(data.trade_dt)
+    
+    # modify dataframe index
+    index = ['trade_dt', 's_info_windcode']
+    index = list(filter(lambda x: x in fields, index))
+    if index:
+        data = data.set_index(index)
+    return data
+
 if __name__ == "__main__":
-    data = plate_info('2021-01-05', '2021-01-05', ['code', 'swcode_level1'])
+    data = derivative_indicator('2021-01-05', '2021-01-05', ['s_info_windcode', 's_dq_freeturnover'])
     print(data)
