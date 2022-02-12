@@ -292,6 +292,40 @@ def ar(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
     factor.index.names = ["date", "asset"]
     return factor
 
+def br(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
+    '''sum of maximum(0, (high - previous close price)) / sum of maximum(0, (previous close price - low)) of previous 20 days
+    -----------------------------------------------
+
+    date: str, datetime or date, the given date
+    return: series, a series with the name in accordance with the function name
+    '''
+    # get stock pool and industry
+    stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
+    industry = plate_info(date, date, ['code', 'zxname_level1'])
+    
+    # calculate factor
+    last_date = last_n_trade_dates(date, 20)[0]
+    market = market_daily(last_date, date, 
+        ['trade_date', 'code', 'adjusted_preclose', 'adjusted_high', 'adjusted_low'])
+    factor = market.groupby(level=1).apply(lambda x:
+        (x.loc[:, 'adjusted_high'] - x.loc[:, 'adjusted_preclose']).clip(0).sum() / 
+        (x.loc[:, 'adjusted_preclose'] - x.loc[:, 'adjusted_low']).clip(0).sum())
+
+    # factor preprocess
+    factor.name = 'br'
+    factor = pd.concat([factor, industry], axis=1)
+    factor['br'] = factor.groupby('zxname_level1').apply(
+        lambda x: standard(x.loc[:, 'br'])).droplevel(0).sort_index()
+    factor['br'] = factor.groupby('zxname_level1').apply(
+        lambda x: deextreme(x.loc[:, 'br'], n=3)).droplevel(0).sort_index()
+    factor = missing_fill(factor.br)
+    factor = factor.loc[stocks]
+    
+    # modify factor style
+    factor.index = pd.MultiIndex.from_product([[date], factor.index])
+    factor.index.names = ["date", "asset"]
+    return factor
+
 def bias_1m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
     '''(last close price - 20 days close price moving average) / 20 days close price moving average
     -----------------------------------------------
@@ -326,6 +360,49 @@ def bias_1m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
     factor.index.names = ["date", "asset"]
     return factor
 
+def davol_1m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
+    '''Stock Turnover 20 days/ Turnover 120 days
+    -----------------------------------------------
+
+    date: str, datetime or date, the given date
+    return: series, a series with the name in accordance with the function name
+    '''
+    def _cal(x):
+        s = x.loc[last_short_date:date, 's_dq_freeturnover'].mean()
+        l = x.loc[last_long_date:date, 's_dq_freeturnover'].mean()
+        if l == 0:
+            return np.nan
+        return s / l
+
+    # get stock pool and industry
+    stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
+    industry = plate_info(date, date, ['code', 'zxname_level1'])
+    
+    # calculate factor
+    last_long_date = last_n_trade_dates(date, 120)[0]
+    last_short_date = last_n_trade_dates(date, 20)[0]
+    date = str2time(date)
+    last_long_date = str2time(last_long_date)
+    last_short_date = str2time(last_short_date)
+    market = derivative_indicator(last_long_date, date, 
+        ['trade_dt', 's_info_windcode', 's_dq_freeturnover'])
+    factor = market.groupby(level=1).apply(_cal)
+
+    # factor preprocess
+    factor.name = 'davol_1m'
+    factor = pd.concat([factor, industry], axis=1)
+    factor['davol_1m'] = factor.groupby('zxname_level1').apply(
+        lambda x: standard(x.loc[:, 'davol_1m'])).droplevel(0).sort_index()
+    factor['davol_1m'] = factor.groupby('zxname_level1').apply(
+        lambda x: deextreme(x.loc[:, 'davol_1m'], n=3)).droplevel(0).sort_index()
+    factor = missing_fill(factor.davol_1m)
+    factor = factor.loc[stocks]
+    
+    # modify factor style
+    factor.index = pd.MultiIndex.from_product([[date], factor.index])
+    factor.index.names = ["date", "asset"]
+    return factor
+
 
 if __name__ == "__main__":
-    print(bias_1m('2012-01-05'))
+    print(davol_1m('2012-01-05'))
