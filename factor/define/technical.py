@@ -258,6 +258,74 @@ def volatility_12m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Ser
     factor.index.names = ["date", "asset"]
     return factor
 
+def ar(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
+    '''Sum of (daily high price - daily open price)/(daily open price - daily low price) of previous 20 days
+    -----------------------------------------------
+
+    date: str, datetime or date, the given date
+    return: series, a series with the name in accordance with the function name
+    '''
+    # get stock pool and industry
+    stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
+    industry = plate_info(date, date, ['code', 'zxname_level1'])
+    
+    # calculate factor
+    last_date = last_n_trade_dates(date, 20)[0]
+    market = market_daily(last_date, date, 
+        ['trade_date', 'code', 'adjusted_high', 'adjusted_low', 'adjusted_open'])
+    factor = market.groupby(level=1).apply(lambda x:
+        ((x.adjusted_high - x.adjusted_open) / (x.adjusted_open - x.adjusted_low)).sum())
+    factor = factor.replace(np.inf, np.nan)
+
+    # factor preprocess
+    factor.name = 'ar'
+    factor = pd.concat([factor, industry], axis=1)
+    factor['ar'] = factor.groupby('zxname_level1').apply(
+        lambda x: standard(x.loc[:, 'ar'])).droplevel(0).sort_index()
+    factor['ar'] = factor.groupby('zxname_level1').apply(
+        lambda x: deextreme(x.loc[:, 'ar'], n=3)).droplevel(0).sort_index()
+    factor = missing_fill(factor.ar)
+    factor = factor.loc[stocks]
+    
+    # modify factor style
+    factor.index = pd.MultiIndex.from_product([[date], factor.index])
+    factor.index.names = ["date", "asset"]
+    return factor
+
+def bias_1m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
+    '''(last close price - 20 days close price moving average) / 20 days close price moving average
+    -----------------------------------------------
+
+    date: str, datetime or date, the given date
+    return: series, a series with the name in accordance with the function name
+    '''
+    # get stock pool and industry
+    stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
+    industry = plate_info(date, date, ['code', 'zxname_level1'])
+    
+    # calculate factor
+    last_date = last_n_trade_dates(date, 20)[0]
+    market = market_daily(last_date, date, 
+        ['trade_date', 'code', 'adjusted_close'])
+    factor = market.groupby(level=1).apply(lambda x:
+        ((x.loc[date, 'adjusted_close'] - x.loc[:, 'adjusted_close'].mean()) / 
+        x.loc[:, 'adjusted_close'].mean()).values[0])
+
+    # factor preprocess
+    factor.name = 'bias_1m'
+    factor = pd.concat([factor, industry], axis=1)
+    factor['bias_1m'] = factor.groupby('zxname_level1').apply(
+        lambda x: standard(x.loc[:, 'bias_1m'])).droplevel(0).sort_index()
+    factor['bias_1m'] = factor.groupby('zxname_level1').apply(
+        lambda x: deextreme(x.loc[:, 'bias_1m'], n=3)).droplevel(0).sort_index()
+    factor = missing_fill(factor.bias_1m)
+    factor = factor.loc[stocks]
+    
+    # modify factor style
+    factor.index = pd.MultiIndex.from_product([[date], factor.index])
+    factor.index.names = ["date", "asset"]
+    return factor
+
 
 if __name__ == "__main__":
-    print(volatility_12m('2012-01-05'))
+    print(bias_1m('2012-01-05'))

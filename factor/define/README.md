@@ -14,6 +14,8 @@
 | volatility_1m | Technical | Stock total return standard deviation over past 20 trading days |
 | volatility_3m | Technical | Stock total return standard deviation over past 60 trading days |
 | volatility_12m | Technical | Stock total return standard deviation over past 120 trading days |
+| ar | Technical | sum of (daily high price - daily open price)/(daily open price - daily low price) of previous 20 days |
+| bias_1m | Technical | (last close price - 20 days close price moving average) / 20 days close price moving average |
 
 ## 注意事项
 
