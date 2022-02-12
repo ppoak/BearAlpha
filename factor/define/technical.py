@@ -361,7 +361,7 @@ def bias_1m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
     return factor
 
 def davol_1m(date: Union[datetime.datetime, datetime.date, str]) -> pd.Series:
-    '''Stock Turnover 20 days/ Turnover 120 days
+    '''Stock Turnover 20 days / Turnover 120 days
     -----------------------------------------------
 
     date: str, datetime or date, the given date

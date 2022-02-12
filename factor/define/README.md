@@ -17,6 +17,10 @@
 | ar | Technical | sum of (daily high price - daily open price)/(daily open price - daily low price) of previous 20 days |
 | br | Technical | sum of maximum(0, (high - previous close price)) / sum of maximum(0, (previous close price - low)) of previous 20 days |
 | bias_1m | Technical | (last close price - 20 days close price moving average) / 20 days close price moving average |
+| davol_1m | Technical | Stock Turnover 20 days / Turnover 120 days |
+| a_c_mkt_cap | Size | log(total circulating A shares * close price) |
+| a_mkt_cap | Size | log(total A shares * previous close price) |
+| market_cap | Size | log(total shares * previous close price) |
 
 ## 注意事项
 
