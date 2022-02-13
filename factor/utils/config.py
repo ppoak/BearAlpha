@@ -1,44 +1,62 @@
+from utils import *
 from pandas import Series
 from factor.define import *
 
-class Factor():
+FACTORS = {
+    "return_1m": {
+        "table": "technical",
+        "dataloader": return_1m,
+        },
+    "return_3m": {
+        "table": "technical",
+        "dataloader": return_3m,
+        },
+    "return_12m": {
+        "table": "technical",
+        "dataloader": return_12m,
+        },
+    "turnover_1m": {
+        "table": "technical",
+        "dataloader": turnover_1m,
+        },
+    "turnover_3m": {
+        "table": "technical",
+        "dataloader": turnover_3m,
+        },
+    "volatility_1m": {
+        "table": "technical",
+        "dataloader": volatility_1m,
+        },
+    "volatility_3m": {
+        "table": "technical",
+        "dataloader": volatility_3m,
+        },
+    "volatility_12m": {
+        "table": "technical",
+        "dataloader": volatility_12m},
+    "ar": {
+        "table": "technical",
+        "dataloader": ar,
+        },
+    "br": {
+        "table": "technical",
+        "dataloader": br,
+        },
+    "bias_1m": {
+        "table": "technical",
+        "dataloader": bias_1m,
+        },
+    "davol_1m": {
+        "table": "technical",
+        "dataloader": davol_1m,
+        },
+}
+
+class FactorSaver(Factor):
     
     def __init__(self) -> None:
-        self.today = datetime.date.today()
-        if datetime.datetime.now().hour <= 20:
-            self.today -= datetime.timedelta(days=1)
-        self.technical = technical
-        self.size = size
-        self.factors = [
-            'return_1m',
-            'return_3m',
-            'return_12m',
-            'turnover_1m',
-            'turnover_3m',
-            'volatility_1m',
-            'volatility_3m',
-            'volatility_12m',
-            'ar',
-            'br',
-            'bias_1m',
-            'davol_1m',
-        ]
-        self.dataloader = dict(zip(self.factors, list(map(eval, self.factors))))
-        self.tables = {
-            'return_1m': "technical",
-            'return_3m': "technical",
-            'return_12m': "technical",
-            'turnover_1m': "technical",
-            'turnover_3m': "technical",
-            'volatility_1m': "technical",
-            'volatility_3m': "technical",
-            'volatility_12m': "technical",
-            'ar': "technical",
-            'br': "technical",
-            'bias_1m': "technical",
-            'davol_1m': "technical",
-        }
-    
+        super().__init__()
+
     def _generate_args(self, start: str, end: str) -> list:
         args = trade_date(start, end)
         return args
@@ -52,11 +70,6 @@ class Factor():
         for date in args:
             data = self.get(factor, date)
             to_sql(table, factor_database, data)
-    
-    def get(self, factor: str, date: str) -> Union[pd.DataFrame, pd.Series]:
-        if factor not in self.factors:
-            raise ValueError (f'{factor} is not defined!')
-        return self.dataloader[factor](date)
     
     def save_single_table(self, table: str, factor: str, start: str, end: str) -> None:
         args = self._generate_args(start, end)
@@ -76,5 +89,5 @@ class Factor():
     
 
 if __name__ == "__main__":
-    factor = Factor()
+    factor = FactorSaver()
     print(factor.get('return_1m', '2019-01-04'))

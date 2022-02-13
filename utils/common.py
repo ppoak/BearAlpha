@@ -12,11 +12,9 @@ def last_n_trade_dates(date: Union[datetime.datetime, datetime.date, str],
     n: int, the number of dates since the given date
     return: list, a list of dates
     '''
-    last_date = str2time(date) - datetime.timedelta(days=n * 9 + 1)
-    data = pd.read_sql(f'select trade_date from trade_date_daily ' + \
-        f'where trade_date >= "{last_date}" and trade_date <= "{date}"',
-        stock_database)
-    last_date = data.trade_date.sort_values().iloc[-n - 1]
+    last_date = str2time(date) - datetime.timedelta(days=n * 9 + 2)
+    data = trade_date(last_date, date)
+    last_date = data[-n - 1]
     return time2str(last_date)
 
 def next_n_trade_dates(date: Union[datetime.datetime, datetime.date, str],
@@ -28,14 +26,12 @@ def next_n_trade_dates(date: Union[datetime.datetime, datetime.date, str],
     n: int, the number of dates since the given date
     return: list, a list of dates
     '''
-    next_date = str2time(date) + datetime.timedelta(days=n * 9 + 1)
-    data = pd.read_sql(f'select trade_date from trade_date_daily ' + \
-        f'where trade_date >= "{date}" and trade_date <= "{next_date}"',
-        stock_database)
+    next_date = str2time(date) + datetime.timedelta(days=n * 9 + 2)
+    data = trade_date(date, next_date)
     if len(data) < n + 1:
         return None
     else:
-        next_date = data.trade_date.sort_values().iloc[n + 1]
+        next_date = data[n]
         return time2str(next_date)
 
 def forward_return(date: Union[datetime.datetime, datetime.date, str],
@@ -53,10 +49,17 @@ def forward_return(date: Union[datetime.datetime, datetime.date, str],
         next_open = market_daily(next_date, next_date, ['code', 'adjusted_open'])
         next_n_close = market_daily(next_n_date, next_n_date, ['code', 'adjusted_close'])
         forward = (next_n_close.adjusted_close - next_open.adjusted_open) / next_open.adjusted_open
-        forward.name = 'forward_return'
-        return forward
+    elif next_date is not None and next_n_date is None:
+        next_open = market_daily(next_date, next_date, ['code', 'adjusted_open'])
+        next_open['adjusted_open'] = np.nan
+        forward = next_open.adjusted_open
     else:
-        return np.nan
+        raise ValueError ('There is no next date')
+    forward.name = f'{n}d'
+    forward.index = pd.MultiIndex.from_product([[date], forward.index])
+    forward.index.names = ["date", "asset"]
+    return forward.to_frame()
+
 
 if __name__ == "__main__":
-    print(forward_return('2022-01-10', 5))
+    print(forward_return('2022-01-23', 10))

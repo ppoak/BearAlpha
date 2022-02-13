@@ -56,10 +56,16 @@
 			"module": "factor.define.technical"
 		},
 		{
+			"name": "prepare",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.utils.prepare"
+		},
+		{
 			"name": "config",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.config"
+			"module": "factor.utils.config"
 		}
 	]
 }

@@ -6,7 +6,7 @@ import smtplib
 import pymysql
 import datetime
 import pandas as pd
-from typing import Union
+from typing import Any, Union
 from email.mime.text import MIMEText
 from rich.traceback import install
 from rich.console import Console
@@ -35,6 +35,12 @@ def str2time(date: Union[str, datetime.date, datetime.datetime]) -> datetime.dat
     if isinstance(date, (str, datetime.date)):
         date = pd.to_datetime(date)
     return date
+
+def item2list(item: Any) -> list:
+    if not isinstance(item, (list, tuple, set, dict)):
+        return [item]
+    else:
+        return item
 
 def sql_cols(df, usage="sql"):
     cols = tuple(df.columns)

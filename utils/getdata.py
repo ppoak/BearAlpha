@@ -1,7 +1,9 @@
 import datetime
 import pandas as pd
-from utils.database import *
 from typing import Union
+from utils.database import *
+from utils.io import *
+
 
 def trade_date(start: Union[datetime.date, datetime.datetime, str],
                end: Union[datetime.date, datetime.datetime, str],
@@ -13,6 +15,8 @@ def trade_date(start: Union[datetime.date, datetime.datetime, str],
     end: datetime or date or str, end date in 3 forms
     freq: str, frequency in either 'daily', 'weekly' or 'monthly'
     '''
+    start = time2str(start)
+    end = time2str(end)
     data = pd.read_sql(f'select trade_date from trade_date_{freq} ' + \
         f'where trade_date >= "{start}" ' + \
         f'and trade_date <= "{end}"', stock_database)
@@ -31,6 +35,8 @@ def market_daily(start: Union[datetime.date, str, datetime.datetime],
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    start = time2str(start)
+    end = time2str(end)
     # get data
     if fields is None:
         fields = '*'
@@ -67,6 +73,8 @@ def index_market_daily(code: str,
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    start = time2str(start)
+    end = time2str(end)
     # get data
     if fields is None:
         fields = '*'
@@ -103,6 +111,8 @@ def index_hs300_close_weight(start: Union[datetime.datetime, datetime.date, str]
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    start = time2str(start)
+    end = time2str(end)
     if fields is None:
         fields = '*'
     else:
@@ -129,6 +139,8 @@ def plate_info(start: Union[datetime.datetime, datetime.date, str],
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    start = time2str(start)
+    end = time2str(end)
     # get data
     if fields is None:
         fields = '*'
@@ -164,6 +176,8 @@ def derivative_indicator(start: Union[datetime.datetime, datetime.date, str],
     fields: list, the field names you want to get
     conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
     '''
+    start = time2str(start)
+    end = time2str(end)
     # get data
     if fields is None:
         fields = '*'

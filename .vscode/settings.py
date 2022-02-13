@@ -57,7 +57,7 @@ if __name__ == '__main__':
             "utils",
             'other/amount_concentration',
             "factor/define",
-            'factor'
+            'factor/utils'
             ]
         for path in paths:
             debug_config(path)
