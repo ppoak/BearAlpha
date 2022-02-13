@@ -14,6 +14,7 @@ def a_c_mkt_cap(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -50,6 +51,7 @@ def a_mkt_cap(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -86,6 +88,7 @@ def market_cap(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry

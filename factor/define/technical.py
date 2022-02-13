@@ -13,6 +13,7 @@ def return_1m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -51,6 +52,7 @@ def return_3m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -89,6 +91,7 @@ def return_12m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -127,6 +130,7 @@ def turnover_1m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -164,6 +168,7 @@ def turnover_3m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -201,6 +206,7 @@ def volatility_1m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -238,6 +244,7 @@ def volatility_3m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -275,6 +282,7 @@ def volatility_12m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -312,6 +320,7 @@ def ar(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -352,6 +361,7 @@ def br(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -392,6 +402,7 @@ def bias_1m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     # get stock pool and industry
@@ -432,6 +443,7 @@ def davol_1m(date: Union[datetime.datetime, datetime.date, str],
     -----------------------------------------------
 
     date: str, datetime or date, the given date
+    with_group: bool, whether to return the factor with group name
     return: series, a series with the name in accordance with the function name
     '''
     def _cal(x):
