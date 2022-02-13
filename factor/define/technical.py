@@ -489,4 +489,5 @@ def davol_1m(date: Union[datetime.datetime, datetime.date, str],
 
 
 if __name__ == "__main__":
-    print(return_1m('2012-01-05'))
+    data = return_1m('2012-01-05')
+    print(data)

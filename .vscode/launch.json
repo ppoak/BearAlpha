@@ -66,6 +66,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "factor.utils.config"
+		},
+		{
+			"name": "analyzer",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.utils.analyzer"
 		}
 	]
 }
