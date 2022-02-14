@@ -22,6 +22,7 @@ def factor_datas(factors: Union[list, str], dates: Union[list, str]) -> pd.DataF
         data = pd.DataFrame()
         factor_loader = FACTORS[factor]["dataloader"]
         for date in dates:
+            console.print(f'[*] loading factor: {factor} on {date} ... ')
             data = data.append(factor_loader(date))
         datas.append(data)
     
@@ -48,6 +49,7 @@ def forward_returns(dates: Union[list, str], n: Union[list, int]) -> pd.DataFram
     for p in n:
         data = pd.DataFrame()
         for date in dates:
+            console.print(f'[*] loading forward return: {p} days on {date} ... ')
             data = data.append(forward_return(date, p))
         datas.append(data)
 

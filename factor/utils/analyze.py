@@ -76,12 +76,14 @@ def layering(data: pd.DataFrame, quantiles: int = 5) -> pd.DataFrame:
     return: pd.DataFrame, a dataframe with multi-index and columns
     '''
     def _layer(d):
-        index = d.index.levels[0]
-        start = index[0]
-        index = index.map(lambda x: next_n_trade_dates(x, 1))
-        index = index.insert(0, start)
         prft = d[period].groupby(level='date').mean()
-        prft = pd.Series([0] + prft.to_list(), index=index, name=f'profit_{period}')
+        st = prft.index[0]
+        fwd_idx = prft.index.map(lambda x: next_n_trade_dates(x, int(period[:-1])))
+        prft.index = fwd_idx
+        prft.loc[st] = 0
+        prft = prft.sort_index()
+        prft.name = f'profit_{period}'
+        
         cum_prft = (prft + 1).cumprod()
         cum_prft.name = f'cum_profit_{period}'
         result = pd.concat([cum_prft, prft], axis=1)
@@ -95,8 +97,9 @@ def layering(data: pd.DataFrame, quantiles: int = 5) -> pd.DataFrame:
         period_result = []
         for period in forward:
             tmp_data = data.loc[:, [factor, period]]
-            tmp_data['quantiles'] = tmp_data[factor].groupby(level='date').apply(
-                pd.qcut, q=quantiles, labels=range(1, quantiles + 1))
+            quant = tmp_data[factor].groupby(level='date').apply(
+                pd.qcut, q=quantiles, labels=False, duplicates='drop')
+            tmp_data['quantiles'] = quant + 1
             result = tmp_data.groupby(by='quantiles').apply(_layer)
             result.index = pd.MultiIndex.from_arrays(
                 [[factor] * len(result), result.index.get_level_values(0), result.index.get_level_values(1)],

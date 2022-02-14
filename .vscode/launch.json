@@ -2,6 +2,12 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "__factor__",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.__init__"
+		},
+		{
 			"name": "treatment",
 			"type": "python",
 			"request": "launch",
@@ -56,22 +62,34 @@
 			"module": "factor.define.technical"
 		},
 		{
+			"name": "visualize",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.utils.visualize"
+		},
+		{
+			"name": "analyze",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.utils.analyze"
+		},
+		{
 			"name": "prepare",
 			"type": "python",
 			"request": "launch",
 			"module": "factor.utils.prepare"
 		},
 		{
+			"name": "overview",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.utils.overview"
+		},
+		{
 			"name": "config",
 			"type": "python",
 			"request": "launch",
 			"module": "factor.utils.config"
-		},
-		{
-			"name": "analyzer",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.utils.analyzer"
 		}
 	]
 }

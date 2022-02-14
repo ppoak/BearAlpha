@@ -111,16 +111,28 @@ def standard(data, standard_type='zscore'):
         raise ValueError("type should be chosen in ['zscore', 'weight', 'rank']")
     return new_data
 
+def drop_na(data):
+    new_data = data.copy()
+    new_data = new_data[~np.isnan(data)]
+    return new_data
 
-def missing_fill(data: np.array) -> np.array:
+def zero(data):
+    new_data = data.copy()
+    new_data[np.isnan(new_data)] = 0
+    return new_data
+
+def missing_fill(data: np.array, method: str = 'zero') -> np.array:
     """missing fill ways
     ---------------------
 
     data: np.array, raw data
+    method: choices between ['drop', 'zero']
     return: np.array, missing data filled with 0
     """
-    new_data = data.copy()
-    new_data[np.isnan(new_data)] = 0
+    if method == 'drop':
+        new_data = drop_na(data)
+    elif method == 'zero':
+        new_data = zero(data)
     return new_data
 
 

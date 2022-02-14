@@ -153,4 +153,4 @@ cython_debug/
 assets/report/**/*.pdf
 
 # 结果的csv文件
-**/result/*.csv
+**/result/

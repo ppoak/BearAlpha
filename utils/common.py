@@ -4,7 +4,7 @@ from utils.getdata import *
 
 
 def last_n_trade_dates(date: Union[datetime.datetime, datetime.date, str],
-                       n: int) -> str:
+                       n: int) -> datetime.date:
     '''Get last n trading dates
     -------------------------------------
     
@@ -15,10 +15,10 @@ def last_n_trade_dates(date: Union[datetime.datetime, datetime.date, str],
     last_date = str2time(date) - datetime.timedelta(days=n * 9 + 2)
     data = trade_date(last_date, date)
     last_date = data[-n - 1]
-    return time2str(last_date)
+    return last_date
 
 def next_n_trade_dates(date: Union[datetime.datetime, datetime.date, str],
-                       n: int) -> str:
+                       n: int) -> datetime.date:
     '''Get next n trading dates
     -------------------------------------
     
@@ -32,7 +32,7 @@ def next_n_trade_dates(date: Union[datetime.datetime, datetime.date, str],
         return None
     else:
         next_date = data[n]
-        return time2str(next_date)
+        return next_date
 
 def forward_return(date: Union[datetime.datetime, datetime.date, str],
                    n: int) -> pd.DataFrame:

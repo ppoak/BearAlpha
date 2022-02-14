@@ -5,6 +5,7 @@ import time
 import smtplib
 import pymysql
 import datetime
+import matplotlib
 import pandas as pd
 from typing import Any, Union
 from email.mime.text import MIMEText
@@ -14,7 +15,7 @@ from rich.progress import (track, Progress, SpinnerColumn,
                            TimeRemainingColumn, BarColumn)
 import sqlalchemy
 
-install(suppress=[rich, pymysql, sqlalchemy, pd], show_locals=False)
+install(suppress=[rich, pymysql, sqlalchemy, pd, matplotlib], show_locals=False)
 console = Console()
 progress = Progress(
     SpinnerColumn(spinner_name='monkey'),
