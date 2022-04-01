@@ -109,18 +109,24 @@ if __name__ == '__main__':
 
     
     # 合并数据
-    codes = os.listdir('industrial_momentum_and_reverse/data/stock')
+    codes = list(map(lambda x: x.split('.')[0], os.listdir('data/stock/minute/csv')))
     overnight_ret = []
     gentle_ret = []
     extreme_ret = []
-    for code_file in track(codes):
-        dt = pd.read_csv(f'industrial_momentum_and_reverse/data/stock/{code_file}', index_col=0, parse_dates=[0])
-        overnight_ret.append(dt['overnight'])
-        gentle_ret.append(dt['gentle_ret'])
-        extreme_ret.append(dt['extreme_ret'])
+    for code in track(codes):
+        dt = pd.read_csv(f'data/stock/minute/csv/{code}.csv', index_col=0, parse_dates=[0])
+        overnight = dt['overnight']
+        overnight.name = code
+        overnight_ret.append(overnight)
+        gentle = dt['gentle_ret']
+        gentle.name = code
+        gentle_ret.append(gentle)
+        extreme = dt['extreme_ret']
+        extreme.name = code
+        extreme_ret.append(extreme)
     overnight_ret = pd.concat(overnight_ret).astype('float32')
     gentle_ret = pd.concat(gentle_ret).astype('float32')
     extreme_ret = pd.concat(extreme_ret).astype('float32')
-    overnight_ret.to_csv('industrial_momentum_and_reverse/data/overnight_ret.csv')
-    gentle_ret.to_csv('industrial_momentum_and_reverse/data/gentle_ret.csv')
-    extreme_ret.to_csv('industrial_momentum_and_reverse/data/extreme_ret.csv')
+    overnight_ret.to_csv('industrial_momentum_and_reverse/result/overnight_ret.csv')
+    gentle_ret.to_csv('industrial_momentum_and_reverse/result/gentle_ret.csv')
+    extreme_ret.to_csv('industrial_momentum_and_reverse/result/extreme_ret.csv')
