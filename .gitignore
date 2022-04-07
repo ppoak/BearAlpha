@@ -154,6 +154,7 @@ assets/report/**/*.pdf
 
 # 结果的csv文件
 **/result/
+**/results
 
 # 日志文件
 **/logs
