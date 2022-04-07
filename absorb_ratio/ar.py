@@ -1,3 +1,4 @@
+import math
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -119,7 +120,7 @@ def calc_centralization(close_price: pd.DataFrame, n_component: int, window: int
 
 def calc_industry_ar(close_price: pd.DataFrame, n_component: int, window: int) -> pd.DataFrame:
     ret = (close_price - close_price.shift(1)) / close_price.shift(1)
-    ret = ret.ewm(halflife=20).mean()
+    # ret = ret.ewm(halflife=20).mean()
     ind_list_all =  [
         'zx_petro','zx_coal','zx_metals','zx_power','zx_steel','zx_chemicals',
         'zx_construct_eng','zx_construct_mat','zx_light_man','zx_machinery',
@@ -134,7 +135,9 @@ def calc_industry_ar(close_price: pd.DataFrame, n_component: int, window: int) -
         sample = ret.iloc[idx - window:idx]
         sample_demean = sample - sample.mean(axis=0)
         sample_demean = sample_demean.dropna(how='all')
-        industry_info = pd.read_csv(f"assets/data/stock.nosync/status/df_stock_status_{date.strftime('%Y-%m-%d')}.csv", index_col=3).iloc[:, 22:50]
+        industry_info = pd.read_csv(f"assets/data/stock.nosync/status/df_stock_status_{date.strftime('%Y-%m-%d')}.csv", index_col=3).iloc[:, [3, 4] + list(range(22, 50))]
+        industry_info = industry_info.loc[(industry_info['is_ST'] == 0) & (industry_info['is_new_stock'] == 0)]
+        industry_info = industry_info.drop(['is_ST', 'is_new_stock'], axis=1)
         for ind in industry_info.columns:
             stocks = industry_info.index[industry_info[ind].astype('bool')]
             stocks = ret.columns.intersection(stocks)
@@ -144,22 +147,24 @@ def calc_industry_ar(close_price: pd.DataFrame, n_component: int, window: int) -
             ind_sample_demean = sample_demean.loc[:, stocks].dropna(axis=1)
             ind_sample_cov = ind_sample_demean.T.dot(ind_sample_demean) / (ind_sample_demean.shape[0] - 1)
             eigvalue, eigvector = np.linalg.eigh(ind_sample_cov)
-            eigvalue, eigvector = eigvalue[-1:-n_component-1:-1], eigvector[:, -1:-n_component-1:-1]
+            if n_component < 1:
+                eigvalue, eigvector = eigvalue[-1:-int(math.ceil(n_component * len(stocks)))-1:-1], eigvector[:, -1:-int(math.ceil(n_component * len(stocks)))-1:-1]
+            else:
+                eigvalue, eigvector = eigvalue[-1:-n_component-1:-1], eigvector[:, -1:-n_component-1:-1]
             asset_var = np.diag(ind_sample_cov).sum()
             eigvector_var = eigvector.var(axis=0)
             ar = eigvector_var / asset_var
             industry_ar.loc[date, ind] = ar.sum()
-            
     return industry_ar
 
 
 if __name__ == "__main__":
-    n_component = 2
-    window=60
+    n_component = 0.1
+    window = 60
 
     close_price = pd.read_csv('assets/data/stock.nosync/daily/adj_close.csv', index_col=0, parse_dates=True)
     ind_ar = calc_industry_ar(close_price, n_component, window)
-    ind_ar.to_csv("absorb_ratio/result/industry_ar.csv")
+    ind_ar.to_csv("absorb_ratio/result/industry_10.csv")
     print(ind_ar)
 
     
