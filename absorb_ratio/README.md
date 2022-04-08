@@ -26,9 +26,18 @@
 主成分个数为5，时间窗口60个交易日，采用指数加权平均收益率
 ![主成分个数为5，时间窗口60个交易日，采用指数加权平均收益率](images/ncomponent5_window60_ewm.png)
 
+## 吸收比例与主成分方差贡献度
+
+我们认为，吸收比例的计算方式与主成方差贡献度有所不同，前n主成分方差贡献度可以由前n特征值的和与总的特征值的和的比值计算得到。如下图定义所示：
+
+![主成分方差贡献度](images/principal_component_variance_contribution.png)
+
 ## 参考文献
 
 [1]https://mp.weixin.qq.com/s/EO7uQic_wbH2WOI7x5R8aA
+
 [2][Crowed Trades: Implications for Sector Rotation and Factor Timing](https://pan.baidu.com/s/1bnLqzavXsTU-qUyi5idl1A?pwd=c87f)
+
 [3]https://mp.weixin.qq.com/s/YIGzAp6MlrVqIQ9VjpKvPw
+
 [4]https://mp.weixin.qq.com/s/anXGG-KcBzCBcI3zRQH37Q
