@@ -1,8 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from utils import *
-from factor.utils.prepare import *
-from factor.utils.analyze import *
+from .prepare import *
+from .analyze import *
 
 def regression_plot(regress_result: pd.DataFrame, path: str = None) -> None:
     ''''''

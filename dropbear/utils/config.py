@@ -1,53 +1,53 @@
 from utils import *
-from pandas import Series
-from factor.define import *
+from ..define import *
 
 FACTORS = {
     "return_1m": {
         "table": "technical",
-        "dataloader": return_1m,
+        "dataloader": Momentum(period=20),
         },
     "return_3m": {
         "table": "technical",
-        "dataloader": return_3m,
+        "dataloader": Momentum(period=60),
         },
     "return_12m": {
         "table": "technical",
-        "dataloader": return_12m,
+        "dataloader": Momentum(period=240),
         },
     "turnover_1m": {
         "table": "technical",
-        "dataloader": turnover_1m,
+        "dataloader": Turnover(period=20),
         },
     "turnover_3m": {
         "table": "technical",
-        "dataloader": turnover_3m,
+        "dataloader": Turnover(period=60),
         },
     "volatility_1m": {
         "table": "technical",
-        "dataloader": volatility_1m,
+        "dataloader": Volatility(period=20),
         },
     "volatility_3m": {
         "table": "technical",
-        "dataloader": volatility_3m,
+        "dataloader": Volatility(period=60),
         },
     "volatility_12m": {
         "table": "technical",
-        "dataloader": volatility_12m},
+        "dataloader": Volatility(period=240)
+        },
     "ar": {
         "table": "technical",
-        "dataloader": ar,
+        "dataloader": Ar(),
         },
     "br": {
         "table": "technical",
-        "dataloader": br,
+        "dataloader": Br,
         },
     "bias_1m": {
         "table": "technical",
-        "dataloader": bias_1m,
+        "dataloader": Bias(),
         },
     "davol_1m": {
         "table": "technical",
-        "dataloader": davol_1m,
+        "dataloader": Davol(),
         },
 }

@@ -1,6 +1,6 @@
 import pandas as pd
 import statsmodels.api as sm
-from factor.utils.prepare import *
+from .prepare import *
 
 def regression(data: pd.DataFrame) -> pd.DataFrame:
     '''Calculate factor regression results
