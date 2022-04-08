@@ -120,7 +120,7 @@ def calc_centralization(close_price: pd.DataFrame, n_component: int, window: int
 
 def calc_industry_ar(close_price: pd.DataFrame, n_component: int, window: int) -> pd.DataFrame:
     ret = (close_price - close_price.shift(1)) / close_price.shift(1)
-    ret = ret - ret.mean(axis=0)
+    ret = (ret.T - ret.mean(axis=1)).T
     # ret = ret.ewm(halflife=20).mean()
     ind_list_all =  [
         'zx_petro','zx_coal','zx_metals','zx_power','zx_steel','zx_chemicals',
@@ -160,11 +160,11 @@ def calc_industry_ar(close_price: pd.DataFrame, n_component: int, window: int) -
 
 if __name__ == "__main__":
     n_component = 0.1
-    window = 60
+    window = 21
 
     close_price = pd.read_csv('assets/data/stock.nosync/daily/adj_close.csv', index_col=0, parse_dates=True)
     ind_ar = calc_industry_ar(close_price, n_component, window)
-    ind_ar.to_csv("absorb_ratio/result/industry_10.csv")
+    ind_ar.to_csv("absorb_ratio/result/industry_0.1_21.csv")
     print(ind_ar)
 
     
