@@ -5,6 +5,7 @@ from utils import *
 from typing import Union
 from .config import FACTORS
 
+
 def factor_datas(factors: Union[list, str], dates: Union[list, str]) -> pd.DataFrame():
     '''Get factor data
     --------------------------------
@@ -88,7 +89,6 @@ def logret2algret(logret: Union[pd.Series, pd.DataFrame, np.ndarray]) -> Union[p
 
 def algret2logret(algret: Union[pd.Series, pd.DataFrame, np.ndarray]) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
     return np.log(algret + 1)
-
 
 
 if __name__ == "__main__":

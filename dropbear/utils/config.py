@@ -40,7 +40,7 @@ FACTORS = {
         },
     "br": {
         "table": "technical",
-        "dataloader": Br,
+        "dataloader": Br(),
         },
     "bias_1m": {
         "table": "technical",
