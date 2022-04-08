@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from rich.progress import track
+from utils.io import track
 
 
 class Centralization():
@@ -120,6 +120,7 @@ def calc_centralization(close_price: pd.DataFrame, n_component: int, window: int
 
 def calc_industry_ar(close_price: pd.DataFrame, n_component: int, window: int) -> pd.DataFrame:
     ret = (close_price - close_price.shift(1)) / close_price.shift(1)
+    ret = ret - ret.mean(axis=0)
     # ret = ret.ewm(halflife=20).mean()
     ind_list_all =  [
         'zx_petro','zx_coal','zx_metals','zx_power','zx_steel','zx_chemicals',
@@ -143,14 +144,13 @@ def calc_industry_ar(close_price: pd.DataFrame, n_component: int, window: int) -
             stocks = ret.columns.intersection(stocks)
             if len(stocks) < n_component:
                 print(f'[{date.date()}] {ind} has less than {n_component} stocks, set n_component temporarily to {len(stocks)}')
-                n_component = len(stocks)
             ind_sample_demean = sample_demean.loc[:, stocks].dropna(axis=1)
             ind_sample_cov = ind_sample_demean.T.dot(ind_sample_demean) / (ind_sample_demean.shape[0] - 1)
             eigvalue, eigvector = np.linalg.eigh(ind_sample_cov)
             if n_component < 1:
                 eigvalue, eigvector = eigvalue[-1:-int(math.ceil(n_component * len(stocks)))-1:-1], eigvector[:, -1:-int(math.ceil(n_component * len(stocks)))-1:-1]
             else:
-                eigvalue, eigvector = eigvalue[-1:-n_component-1:-1], eigvector[:, -1:-n_component-1:-1]
+                eigvalue, eigvector = eigvalue[-1:-min(n_component, len(stocks))-1:-1], eigvector[:, -1:-min(n_component, len(stocks))-1:-1]
             asset_var = np.diag(ind_sample_cov).sum()
             eigvector_var = eigvector.var(axis=0)
             ar = eigvector_var / asset_var

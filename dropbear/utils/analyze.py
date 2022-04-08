@@ -78,8 +78,7 @@ def layering(data: pd.DataFrame, quantiles: int = 5) -> pd.DataFrame:
     def _layer(d):
         prft = d[period].groupby(level='date').mean()
         st = prft.index[0]
-        fwd_idx = prft.index.map(lambda x: next_n_trade_dates(x, int(period[:-1])))
-        prft.index = fwd_idx
+        prft = prft.shift(1)
         prft.loc[st] = 0
         prft = prft.sort_index()
         prft.name = f'profit_{period}'

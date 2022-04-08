@@ -4,7 +4,7 @@ from utils import *
 from factor.utils.prepare import *
 from factor.utils.analyze import *
 
-def regression_plot(regress_result: pd.DataFrame, path: str) -> None:
+def regression_plot(regress_result: pd.DataFrame, path: str = None) -> None:
     ''''''
     def _reg_plot(d, ax):
         ax.set_title(f'regression: {factor} - {period}', fontsize=20)
@@ -32,9 +32,13 @@ def regression_plot(regress_result: pd.DataFrame, path: str) -> None:
         for j, period in enumerate(periods):
             tmp_data = regress_result.loc[factor, [f't_{period}', f'coef_{period}']].copy()
             _reg_plot(tmp_data, axes[i, j])
-    plt.savefig(path, bbox_inches='tight')
 
-def ic_plot(ic_result: pd.DataFrame, path: str) -> None:
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight')
+    else:
+        plt.show()
+
+def ic_plot(ic_result: pd.DataFrame, path: str = None) -> None:
     ''''''
     def _ic_plot(d, ax):
         d.index = pd.to_datetime(d.index)
@@ -59,9 +63,13 @@ def ic_plot(ic_result: pd.DataFrame, path: str) -> None:
         for j, period in enumerate(periods):
             tmp_data = ic_result.loc[factor, [f'ic_{period}']].copy()
             _ic_plot(tmp_data, axes[i, j])
-    plt.savefig(path, bbox_inches='tight')
 
-def layering_plot(layering_result: pd.DataFrame, path: str) -> None:
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight')
+    else:
+        plt.show()
+
+def layering_plot(layering_result: pd.DataFrame, path: str = None) -> None:
     ''''''
     def _layer_plot(d, ax):
         d = d.unstack(level=0)
@@ -93,7 +101,11 @@ def layering_plot(layering_result: pd.DataFrame, path: str) -> None:
         for j, period in enumerate(periods):
             tmp_data = layering_result.loc[factor, [f'profit_{period}', f'cum_profit_{period}']].copy()
             _layer_plot(tmp_data, axes[i, j])
-    plt.savefig(path, bbox_inches='tight')
+
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight')
+    else:
+        plt.show()
 
 
 if __name__ == '__main__':

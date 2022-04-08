@@ -75,13 +75,20 @@ def factor_datas_and_forward_returns(factors: Union[list, str],
 
 def get_factor_columns(data: pd.DataFrame):
     matched = list(filter(lambda x: 
-        x != 'group' and not re.match(r'\d+d', x),
+        x != 'group' and not re.match(r'\d+[dmyDMY]', x),
         data.columns))
     return matched
     
 def get_forward_return_columns(data: pd.DataFrame):
-    matched = list(filter(lambda x: re.match(r'\d+[dmy]', x), data.columns))
+    matched = list(filter(lambda x: re.match(r'\d+[dmyDMY]', x), data.columns))
     return matched
+
+def logret2algret(logret: Union[pd.Series, pd.DataFrame, np.ndarray]) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
+    return np.exp(logret) - 1
+
+def algret2logret(algret: Union[pd.Series, pd.DataFrame, np.ndarray]) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
+    return np.log(algret + 1)
+
 
 
 if __name__ == "__main__":
