@@ -5,7 +5,12 @@ from .prepare import *
 from .analyze import *
 
 def regression_plot(regress_result: pd.DataFrame, path: str = None) -> None:
-    ''''''
+    '''Regression Result Plot
+    -------------------------
+
+    regression_result: pd.DataFrame, standardized result generated from regression function
+    path: str, path to save the plot, default is None, which means show the plot
+    '''
     def _reg_plot(d, ax):
         ax.set_title(f'regression: {factor} - {period}', fontsize=20)
         ax.bar(d.index, d[f'coef_{period}'], color='b', width=8, label=f'coef_{period}')
@@ -39,7 +44,12 @@ def regression_plot(regress_result: pd.DataFrame, path: str = None) -> None:
         plt.show()
 
 def ic_plot(ic_result: pd.DataFrame, path: str = None) -> None:
-    ''''''
+    '''IC Result Plot
+    -------------------------
+
+    ic_result: pd.DataFrame, standardized result generated from ic function
+    path: str, path to save the plot, default is None, which means show the plot
+    '''
     def _ic_plot(d, ax):
         d.index = pd.to_datetime(d.index)
         ax.set_title(f'ic: {factor} - {period}', fontsize=20)
@@ -70,7 +80,12 @@ def ic_plot(ic_result: pd.DataFrame, path: str = None) -> None:
         plt.show()
 
 def layering_plot(layering_result: pd.DataFrame, path: str = None) -> None:
-    ''''''
+    '''Layering Result Plot
+    -------------------------
+
+    layering_result: pd.DataFrame, standardized result generated from layering function
+    path: str, path to save the plot, default is None, which means show the plot
+    '''
     def _layer_plot(d, ax):
         d = d.unstack(level=0)
         quantiles = d.columns.get_level_values(1).unique()
@@ -101,6 +116,42 @@ def layering_plot(layering_result: pd.DataFrame, path: str = None) -> None:
         for j, period in enumerate(periods):
             tmp_data = layering_result.loc[factor, [f'profit_{period}', f'cum_profit_{period}']].copy()
             _layer_plot(tmp_data, axes[i, j])
+
+    if path is not None:
+        plt.savefig(path, bbox_inches='tight')
+    else:
+        plt.show()
+
+def holding_plot(profits: pd.DataFrame, path: str = None) -> None:
+    '''Holding Result Plot
+    -------------------------
+
+    profits: pd.DataFrame, standardized result generated from holding_profit function
+    path: str, path to save the plot, default is None, which means show the plot
+    '''
+    def _hold_plot(d, ax):
+        ax.set_title(f'layering: {weight} - {period}', fontsize=20)
+        ax.bar(d.index, d[f'profit_{period}'], width=8)
+        ax.hlines(0, d.index[0], d.index[-1], color='k', linestyle='-.')
+        ax = ax.twinx()
+        ax.plot(d.index, d[f'cum_profit_{period}'])
+    
+    weights = profits.index.levels[0]
+    periods = set(profits.columns.map(lambda x: x.split('_')[-1]))
+    
+    _, axes = plt.subplots(len(weights), len(periods), 
+        figsize=(len(periods) * 17, len(weights) * 10))
+    if len(weights) == 1 and len(periods) == 1:
+        axes = np.array([[axes]])
+    elif len(weights) == 1 and len(periods) > 1:
+        axes = axes.reshape(1, -1)
+    elif len(weights) > 1 and len(periods) == 1:
+        axes = axes.reshape(-1, 1)
+
+    for i, weight in enumerate(weights):
+        for j, period in enumerate(periods):
+            tmp_data = profits.loc[weight, [f'profit_{period}', f'cum_profit_{period}']].copy()
+            _hold_plot(tmp_data, axes[i, j])
 
     if path is not None:
         plt.savefig(path, bbox_inches='tight')

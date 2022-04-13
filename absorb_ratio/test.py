@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
-from factor import logret2algret, regression, layering
-from factor.utils.analyze import ic
-from factor.utils.visualize import ic_plot, layering_plot
+from dropbear import logret2algret, regression, layering
+from dropbear.utils.analyze import holding_profit, ic
+from dropbear.utils.visualize import ic_plot, layering_plot, holding_plot
 from .ar import calc_industry_ar
 
 
@@ -50,8 +50,10 @@ if __name__ == "__main__":
     ret = forward_return(close_price, '1M')
     ar = factor_data(filepath='absorb_ratio/result/compcontrib.csv', period='1M')
     data = standarize_data(ar, ret)
+    profit = holding_profit(data)
+    holding_plot(profit)
     layer_result = layering(data)
     layering_plot(layer_result)
     ic_result = ic(data)
     ic_plot(ic_result)
-    print(ret)
+    print(profit)

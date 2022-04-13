@@ -2,7 +2,7 @@ import datetime
 import pandas as pd
 import numpy as np
 from typing import Union
-from dropbear.define import FactorBase
+from .base import FactorBase
 from utils import *
 
 

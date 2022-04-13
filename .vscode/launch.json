@@ -1,0 +1,157 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "current file",
+			"type": "python",
+			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal",
+			"justMyCode": true
+		},
+		{
+			"name": "sw_quadrant/run",
+			"type": "python",
+			"request": "launch",
+			"module": "sw_quadrant.run"
+		},
+		{
+			"name": "other/amount_concentration/calculate",
+			"type": "python",
+			"request": "launch",
+			"module": "other.amount_concentration.calculate"
+		},
+		{
+			"name": "other/amount_concentration/validate",
+			"type": "python",
+			"request": "launch",
+			"module": "other.amount_concentration.validate"
+		},
+		{
+			"name": "utils/treatment",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.treatment"
+		},
+		{
+			"name": "utils/database",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.database"
+		},
+		{
+			"name": "utils/io",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.io"
+		},
+		{
+			"name": "utils/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.__init__"
+		},
+		{
+			"name": "utils/getdata",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.getdata"
+		},
+		{
+			"name": "utils/common",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.common"
+		},
+		{
+			"name": "dropbear/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.__init__"
+		},
+		{
+			"name": "dropbear/define/technical",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.define.technical"
+		},
+		{
+			"name": "dropbear/define/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.define.__init__"
+		},
+		{
+			"name": "dropbear/define/size",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.define.size"
+		},
+		{
+			"name": "dropbear/define/base",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.define.base"
+		},
+		{
+			"name": "dropbear/utils/config",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.utils.config"
+		},
+		{
+			"name": "dropbear/utils/visualize",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.utils.visualize"
+		},
+		{
+			"name": "dropbear/utils/overview",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.utils.overview"
+		},
+		{
+			"name": "dropbear/utils/prepare",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.utils.prepare"
+		},
+		{
+			"name": "dropbear/utils/analyze",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.utils.analyze"
+		},
+		{
+			"name": "industrial_momentum_and_reverse/run",
+			"type": "python",
+			"request": "launch",
+			"module": "industrial_momentum_and_reverse.run"
+		},
+		{
+			"name": "industrial_momentum_and_reverse/matprocessor",
+			"type": "python",
+			"request": "launch",
+			"module": "industrial_momentum_and_reverse.matprocessor"
+		},
+		{
+			"name": "absorb_ratio/compcontrib",
+			"type": "python",
+			"request": "launch",
+			"module": "absorb_ratio.compcontrib"
+		},
+		{
+			"name": "absorb_ratio/test",
+			"type": "python",
+			"request": "launch",
+			"module": "absorb_ratio.test"
+		},
+		{
+			"name": "absorb_ratio/ar",
+			"type": "python",
+			"request": "launch",
+			"module": "absorb_ratio.ar"
+		}
+	]
+}
