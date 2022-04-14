@@ -13,7 +13,7 @@ __all__ = [
     'get_forward_return_columns',
     'logret2algret',
     'algret2logret',
-    'dextreme',
+    'deextreme',
     'standard',
     'missing_fill'
     ]
