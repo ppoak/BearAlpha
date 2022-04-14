@@ -1,5 +1,6 @@
 import numpy as np
-from dropbear.define import FactorBase
+from .base import FactorBase
+from ..utils import *
 from utils import *
 
 
