@@ -1,7 +1,4 @@
-import datetime
-import pandas as pd
 import numpy as np
-from typing import Union
 from .base import FactorBase
 from utils import *
 

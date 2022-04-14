@@ -75,7 +75,6 @@ def deextreme(data, n=None, deextreme_type='mean_std'):
             "type should be chosen in ['median', 'mean_std', 'fix_odd']")
     return new_data
 
-
 def zscore(data):
     """z-score standardization
     -------------------------
