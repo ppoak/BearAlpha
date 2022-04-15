@@ -26,6 +26,7 @@ class Data():
     should be the indicator name, and level 0 should be the datetime, 
     level 1 should be the assets name.
     '''
+
     def __init__(self, name: 'str' = 'data', *args, **kwargs):
         '''Standarized data used in dropbear framework
         ----------------------------------------------
@@ -84,7 +85,7 @@ class Data():
     def daterange_key(self, key: 'str') -> 'str':
         match = re.match(r'([ymwdYMWD])(\d+)', key)
         if match:
-            return match.group(1) + match.group(2)
+            return match.group(2) + match.group(1)
         else:
             return key
 
@@ -93,7 +94,7 @@ class Data():
         return self.data_dict
     
     @property
-    def dfi(self) -> 'pd.DataFrame':
+    def df(self) -> 'pd.DataFrame':
         if not self.data_dict:
             return pd.DataFrame()
         df = []
@@ -104,25 +105,15 @@ class Data():
         df = pd.concat(df, axis=1)
         df.columns.name = 'indicator'
         return df
-    
+        
     @property
-    def dfc(self) -> 'pd.DataFrame':
-        if not self.data_dict:
-            return pd.DataFrame()
-        col0 = []
-        col1 = []
-        for key in self.data_dict.keys():
-            col0 += [key] * len(self.data_dict[key].columns)
-            col1 += self.data_dict[key].columns.to_list()
-        col = pd.MultiIndex.from_arrays([col0, col1], names=["indicator", "asset"])
-        df = pd.concat(self.data_dict.values(), axis=1)
-        df.columns = col
-        return df
-    
-    @property
-    def names(self) -> 'list':
+    def indicators(self) -> 'list':
         return list(self.dic.keys())
     
+    @property
+    def shape(self) -> 'tuple':
+        return (len(self.df.index.levels[0]), len(self.df.columns))
+
     def __getitem__(self, key: 'str') -> pd.DataFrame:
         return self.data_dict[key]
 
@@ -143,69 +134,39 @@ class DataCollection():
     and specifically, DataCollection is used for getting ready
     for subsequent analysis.
     '''
-    def __init__(self, 
-        factor: 'Data', 
-        forward: 'Data' = None, 
-        price: 'Data' = None, 
-        group: 'Data' = None,
-        infer_forward: 'str | list' = None
-        ) -> 'None':
+    
+    def __init__(self, *args):
         '''DataCollection is used for getting ready for subsequent analysis
         --------------------------------------------------------------------
 
-        factor: Data, the factor data
-        forward: Data or None, the forward data
-        price: Data or None, the price data
-        group: Data or None, the group data
-        infer_forward: str or list, the forward data will be inferred from
+        args: dict of Data, the key is the name of the data
         '''
-        if isinstance(infer_forward, str):
-            infer_forward = [infer_forward]
+        data_dict = {}
+        for arg in args:
+            data_dict[arg.name] = arg
+        self.data_dict = data_dict
 
-        if infer_forward is not None and price is not None:
-            if forward is not None:
-                print(f'[!] forward is not None, infer_forward {infer_forward} cover forward')
-            forward = self.__infer_forward_from_price(price, infer_forward)
-
-        self.factor = factor
-        self.forward = forward
-        self.price = price
-        self.group = group
-        self.data_dict = {
-            "factor": factor,
-            "forward": forward,
-            "price": price,
-            "group": group
-        }
-
-    def __infer_forward_from_price(self, price: 'Data', infer_forward: 'list') -> 'pd.Series':
-        '''infer forward return from ohlc price data'''
-        def _infer(start_name: 'str', end_name: 'str') -> 'dict':
-            forward = {}
-            for iff in infer_forward:
-                price_start = price[start_name].resample(iff).first()
-                price_end = price[end_name].resample(iff).last()
-                forward[iff] = (price_end - price_start) / price_start
-            return forward
-
-        price = price.copy()
-        has_close = price.get('close', False)
-        has_open = price.get('open', False)
-        if len(price) == 1:
-            forward = _infer(price.names[0], price.names[0])
-        elif not has_close and not has_open:
-            raise ValueError('Ambiguous infer forward, Please calculate manually')
-        elif not has_close and has_open:
-            print('[!] Not find close price, infer forward from open price')
-            forward = _infer('open', 'open')
-        elif has_close and not has_open:
-            print('[!] Not find open price, use close price to infer forward')
-            forward = _infer('close', 'close')
-        else:
-            forward = _infer('open', 'close')
-
-        return Data(name="forward", **forward)
+    @property
+    def dic(self) -> 'pd.DataFrame':
+        all_data_dfi = []
+        for key, value in self.data_dict.items():
+            all_data_dfi.append(value.dfi)
     
+    @property
+    def df(self) -> 'pd.DataFrame':
+        all_data_df = []
+        for key, value in self.data_dict.items():
+            value = value.df.copy()
+            col = pd.MultiIndex.from_product([[key], value.columns], names=[key, "indicator"])
+            value.columns = col
+            all_data_df.append(value)
+        df = pd.concat(all_data_df, axis=1)
+        return df
+
+    @property
+    def shape(self) -> 'tuple':
+        return tuple(data.shape for data in self.data_dict.values())
+
     def __getitem__(self, idx: 'tuple') -> 'pd.DataFrame | Data':
         if len(idx) == 2:
             category = idx[0]
@@ -216,18 +177,14 @@ class DataCollection():
             return self.data_dict[category]
     
     def __repr__(self) -> str:
-        contain_forward = True if self.forward is not None else False
-        contain_price = True if self.price is not None else False
-        contain_group = True if self.group is not None else False
-        return f'Data(factor= {self.factor}, ' \
-            f'forward={contain_forward}, ' \
-            f'group={contain_group}, price={contain_price})\n' \
-            f'Forward: {self.forward}\n' \
-            f'Group: {self.group}\nPrice: {self.price}'
+        res =  ''
+        for key, value in self.data_dict.items():
+            res += f'{key}: {value.__repr__()}\n'
+        return res
     
     def __str__(self) -> str:
         return self.__repr__()
-    
+        
 if __name__ == "__main__":
     a = pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('20210101', periods=100),
         columns=['a', 'b', 'c', 'd', 'e'])
@@ -239,6 +196,6 @@ if __name__ == "__main__":
     factor = Data('factor', b, c, id7=a)
     forward = Data('forward', m1=a)
     price = Data('price', close=c, high=a)
-    group = Data('group', b)
-    collection = DataCollection(factor, forward, price, group, infer_forward='10d')
+    group = Data('group', c)
+    collection = DataCollection(factor, forward, price, group)
     print(collection)
