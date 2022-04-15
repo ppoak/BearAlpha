@@ -4,6 +4,7 @@ import rich
 import time
 import smtplib
 import pymysql
+import openpyxl
 import datetime
 import matplotlib
 import pandas as pd
@@ -15,7 +16,7 @@ from rich.progress import (track, Progress, SpinnerColumn,
                            TimeRemainingColumn, BarColumn)
 import sqlalchemy
 
-install(suppress=[rich, pymysql, sqlalchemy, pd, matplotlib], show_locals=False)
+install(suppress=[rich, pymysql, sqlalchemy, pd, openpyxl, matplotlib], show_locals=False)
 console = Console()
 progress = Progress(
     SpinnerColumn(spinner_name='monkey'),

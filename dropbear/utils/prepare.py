@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from utils import *
 from typing import Union
-from .config import FACTORS
+# from .config import FACTORS
 
 
 def factor_datas(factors: Union[list, str], dates: Union[list, str]) -> pd.DataFrame():

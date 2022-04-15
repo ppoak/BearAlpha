@@ -76,6 +76,12 @@
 			"module": "dropbear.core.__init__"
 		},
 		{
+			"name": "dropbear/core/api",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.core.api"
+		},
+		{
 			"name": "dropbear/core/base",
 			"type": "python",
 			"request": "launch",
