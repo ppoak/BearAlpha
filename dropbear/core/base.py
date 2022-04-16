@@ -1,9 +1,52 @@
 import re
+import random
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 from copy import deepcopy
 from typing import Iterable
+from pandas import ExcelWriter
 
+
+class Drawer(object):
+    '''A Parameter Class for Drawing'''
+    def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None),
+        asset: 'str | list | slice' = slice(None), indicator: 'str | list | slice' = slice(None),
+        name: str = None, title: str = 'Image', ax: plt.Axes = None, **kwargs):
+        self.method = method
+        self.date = date
+        if name is None:
+            self.indexer = [(date, asset), (indicator)]
+        else:
+            self.indexer = [(date, asset), (name, indicator)]
+        self.name = name
+        self.ax = ax
+        self.kwargs = kwargs
+        self.title = title
+        if not(self.is_ts or self.is_cs):
+            raise TypeError('indexer is wrongly set, please check')
+    
+    @property
+    def is_ts(self) -> bool:
+        if isinstance(self.date, (slice, list)):
+            return True
+        else:
+            return False
+    
+    @property
+    def is_cs(self) -> bool:
+        if isinstance(self.date, (str, tuple)):
+            return True
+        else:
+            return False
+
+    @property
+    def unstack_level(self) -> str:
+        if self.is_ts:
+            return 'asset'
+        else:
+            return 'datetime'
 
 class Data():
     '''This is a Standard Data Set for Containing Different Data
@@ -25,9 +68,9 @@ class Data():
     or dictionary. if the input data is a multi-index data, the column
     should be the indicator name, and level 0 should be the datetime, 
     level 1 should be the assets name.
-    '''
+    '''                              
 
-    def __init__(self, name: 'str' = 'data', *args, **kwargs):
+    def __init__(self, *args, name: 'str' = 'data', **kwargs):
         '''Standarized data used in dropbear framework
         ----------------------------------------------
         
@@ -42,7 +85,7 @@ class Data():
         data_dict = {}
         for arg in args:
             if isinstance(arg, (pd.DataFrame, pd.Series)):
-                if isinstance(arg.index, pd.MultiIndex):
+                if self.__index_dim(arg) > 1:
                     data_dict.update(self.__process_multiindex(arg))
                 else:
                     raise TypeError('If single index dataframe is pass, please use keyword argument')
@@ -51,17 +94,23 @@ class Data():
             
         for key, value in kwargs.items():
             if isinstance(value, (pd.Series, pd.DataFrame)):
-                if isinstance(value.index, pd.MultiIndex):
-                    data_dict.update(self.__process_multiindex(value))
-                elif isinstance(value.index, pd.DatetimeIndex):
-                    key = self.daterange_key(key)
-                    data_dict[key] = value
-                else:
-                    raise TypeError("Only Series, DataFrame type is available")
+                key = self.daterange_key(key)
+                if isinstance(value, pd.Series):
+                    value = value.to_frame()
+                data_dict[key] = value
+            else:
+                raise TypeError('DataFrame or Series is required')
 
+        idx_dims = []
         for name, data in data_dict.items():
+            idx_dims.append(self.__index_dim(data))
             data.index.name = 'datetime'
             data.columns.name = 'asset'
+        if len(set(idx_dims)) > 1:
+            print("[!] Some dataframe isn't consistent with the index dimension, "
+                "not that data.df will no longer be availale\n"
+                f"index dimensions in Data: {self.name} {idx_dims}")
+
         self.data_dict = data_dict
 
     def __process_multiindex(self, data: 'pd.DataFrame | pd.Series') -> 'dict':
@@ -72,6 +121,14 @@ class Data():
         for col in data.columns:
             data_dict[col] = data[col].unstack()
         return data_dict
+
+    def __index_dim(self, data: 'pd.DataFrame | pd.Series') -> int:
+        '''return the index dimension number of given data'''
+        try:
+            dim = len(data.index.levshape)
+        except:
+            dim = 1
+        return dim
 
     def get(self, key: 'str', default: 'any') -> 'pd.DataFrame':
         return self.dic.get(key, default)
@@ -88,6 +145,73 @@ class Data():
             return match.group(2) + match.group(1)
         else:
             return key
+
+    def draw(self, *args, ax: plt.Axes = None, path: str = None, show: bool = True, **kwargs):
+        '''Draw images on assigned ax with assigned data
+        ------------------------------------------------
+
+        args: DrawParam, the parameters for drawing
+        ax: matplotlib axes, default none to create new one, the overall 
+            ax setting with lower priority than args
+        path: str, the path to save the image
+        show: bool, whether to show the image
+        '''
+        def _check_large(d):
+            if d.columns.shape[0] > 10:
+                print('[!] your number of indicators is too large, it will draw slowly or the image may be undistinguishable')
+
+        if ax is None:
+            _, ax = plt.subplots(figsize=(12, 8))
+
+        if not args:
+            draw_data = self.df.unstack(level='asset').copy()
+            _check_large(draw_data)
+            draw_data.plot(ax=ax)
+        
+        data = self.df.copy(deep=True)
+        data.index = data.index.set_levels(
+            data.index.get_level_values('datetime').unique().strftime(r'%Y-%m-%d'),
+            level='datetime'
+        )
+
+        for arg in args:
+            tmp_kwargs = kwargs.copy()
+            tmp_kwargs.update(arg.kwargs)
+            tmp_ax = arg.ax if arg.ax else ax
+            if arg.is_ts:
+                draw_data = data.loc[arg.indexer[0], arg.indexer[1]].unstack(level='asset')
+                _check_large(draw_data)
+                draw_data.plot(kind=arg.method, ax=tmp_ax, **tmp_kwargs)
+                tmp_ax.xaxis.set_major_locator(mticker.MaxNLocator(10))
+            else:
+                draw_data = self.df.loc[arg.indexer[0], arg.indexer[1]].unstack(level='datetime')
+                _check_large(draw_data)
+                draw_data.plot(kind=arg.method, ax=tmp_ax, **tmp_kwargs)
+                tmp_ax.set_title(f'Cross Section {arg.indexer[0][0]}')
+        
+        if path:
+            plt.savefig(path)
+        if show:
+            plt.show()
+
+    def to_file(self, path: 'str | ExcelWriter') -> None:
+        '''save data to file
+        ------------------
+        path: str or excelwriter, the path of the file
+        '''
+        if isinstance(path, ExcelWriter):
+            for key, value in self.data_dict.items():
+                    value.to_excel(path, sheet_name=key)
+            
+        elif path.endswith('csv'):
+            self.df.to_csv(path)
+
+        elif path.endswith('xlsx'):
+            with ExcelWriter(path) as writer:
+                for key, value in self.data_dict.items():
+                    value.to_excel(writer, sheet_name=key)
+        else:
+            raise ValueError(f"The file format {path.split('.')[-1]} is not supported")
 
     @property
     def dic(self) -> 'dict':
@@ -112,19 +236,22 @@ class Data():
     
     @property
     def shape(self) -> 'tuple':
-        return (len(self.df.index.levels[0]), len(self.df.columns))
+        return (self.df.index.shape[0], self.df.columns.shape[0])
 
     def __getitem__(self, key: 'str') -> pd.DataFrame:
         return self.data_dict[key]
 
     def __repr__(self) -> 'str':
-        return f'Data: {list(self.data_dict.keys())}'
+        return f'{self.name}: {list(self.data_dict.keys())}'
     
     def __str__(self) -> 'str':
         return self.__repr__()
     
     def __len__(self) -> 'int':
         return len(self.dic)
+
+    def __bool__(self) -> bool:
+        return self.df.empty
 
 class DataCollection():
     '''A Collection of the Standarized Data
@@ -134,7 +261,7 @@ class DataCollection():
     and specifically, DataCollection is used for getting ready
     for subsequent analysis.
     '''
-    
+
     def __init__(self, *args):
         '''DataCollection is used for getting ready for subsequent analysis
         --------------------------------------------------------------------
@@ -146,11 +273,96 @@ class DataCollection():
             data_dict[arg.name] = arg
         self.data_dict = data_dict
 
+    def to_file(self, path: str):
+        '''save data to file
+        ------------------
+        
+        path: str, the path of the file
+        '''
+        if path.endswith('csv'):
+            self.df.to_csv(path)
+
+        elif path.endswith('xlsx'):
+            with ExcelWriter(path) as writer:
+                for value in self.data_dict.values():
+                    value.to_file(writer)
+
+        else:
+            raise ValueError(f"The file format {path.split('.')[-1]} is not supported")
+
+    def _draw(self, *args, ax: plt.Axes = None, path: str = None, show: bool = True, **kwargs):
+        '''Draw images on assigned ax with assigned data
+        ------------------------------------------------
+
+        args: DrawParam, the parameters for drawing
+        ax: matplotlib axes, default none to create new one, the overall 
+            ax setting with lower priority than args
+        path: str, the path to save the image
+        show: bool, whether to show the image
+        '''
+        def _check_large(d):
+            if d.columns.shape[0] > 10:
+                print('[!] your number of indicators is too large, it will draw slowly or the image may be undistinguishable')
+
+        if ax is None:
+            _, ax = plt.subplots(figsize=(12, 8))
+
+        if not args:
+            draw_data = self.df.unstack(level='asset').copy()
+            _check_large(draw_data)
+            draw_data.plot(ax=ax)
+        
+        data = self.df.copy(deep=True)
+
+        for arg in args:
+            tmp_kwargs = kwargs.copy()
+            tmp_kwargs.update(arg.kwargs)
+            tmp_ax = arg.ax if arg.ax else ax
+            draw_data = data.loc[arg.indexer[0], arg.indexer[1]]
+            draw_data.index = draw_data.index.set_levels(
+                data.index.get_level_values('datetime').unique().strftime(r'%Y-%m-%d'), level='datetime')
+            draw_data = draw_data.unstack(level=arg.unstack_level)
+            _check_large(draw_data)
+            draw_data.plot(kind=arg.method, ax=tmp_ax, **tmp_kwargs)
+            tmp_ax.xaxis.set_major_locator(mticker.MaxNLocator(10))
+            tmp_ax.set_title(arg.title)
+        
+        if path:
+            plt.savefig(path)
+        if show:
+            plt.show()
+
+    def gallery(self, *args, shape: 'list | tuple' = (1,1), axes: 'list | np.ndarray' = None,
+        path: str = None, show: bool = True):
+        '''Plot a gallery of images for assigned data
+        ---------------------------------------------
+
+        kwargs: parameters should be passed in the form:
+            image title = [Drawer(...), ...] | Drawer(...)
+        '''
+        if not args:
+            raise ValueError('At Least One Drawer should be passed in')
+        
+        if not axes:
+            _, axes = plt.subplots(nrows=shape[0], ncols=shape[1], figsize=(12 * shape[1], 8 * shape[0]))
+            axes = np.array(axes).reshape(shape)
+
+        for i, drawers in enumerate(args):
+            if isinstance(drawers, Drawer):
+                drawers = [drawers]
+            ax = axes[i // shape[1], i % shape[1]]
+            self._draw(*drawers, show=False, ax=ax)
+        
+        if path:
+            plt.savefig(path)
+        if show:
+            plt.show()
+
     @property
     def dic(self) -> 'pd.DataFrame':
-        all_data_dfi = []
-        for key, value in self.data_dict.items():
-            all_data_dfi.append(value.dfi)
+        all_data_df = []
+        for value in self.data_dict.values():
+            all_data_df.append(value.df)
     
     @property
     def df(self) -> 'pd.DataFrame':
@@ -168,13 +380,12 @@ class DataCollection():
         return tuple(data.shape for data in self.data_dict.values())
 
     def __getitem__(self, idx: 'tuple') -> 'pd.DataFrame | Data':
-        if len(idx) == 2:
-            category = idx[0]
-            key = idx[1]
-            return self.data_dict[category].dic[key]
+        if isinstance(idx, str):
+            return self.data_dict[idx]
+        elif len(idx) == 2:
+            return self.data_dict[idx[0]].dic[idx[1]]
         elif len(idx) == 1:
-            category = idx[0]
-            return self.data_dict[category]
+            return self.data_dict[idx[0]]
     
     def __repr__(self) -> str:
         res =  ''
@@ -184,7 +395,11 @@ class DataCollection():
     
     def __str__(self) -> str:
         return self.__repr__()
-        
+    
+    def __bool__(self) -> bool:
+        return bool(self.data_dict)
+    
+
 if __name__ == "__main__":
     a = pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('20210101', periods=100),
         columns=['a', 'b', 'c', 'd', 'e'])
@@ -193,9 +408,20 @@ if __name__ == "__main__":
         columns=['id1', 'id2', 'id3', 'id4', 'id5'])
     c = pd.Series(np.random.rand(500), index=pd.MultiIndex.from_product(
         [pd.date_range('20210101', periods=100), list('abcde')]), name='id6')
-    factor = Data('factor', b, c, id7=a)
-    forward = Data('forward', m1=a)
-    price = Data('price', close=c, high=a)
-    group = Data('group', c)
-    collection = DataCollection(factor, forward, price, group)
-    print(collection)
+    data0 = Data(b, c, id7=a)
+    data1 = Data(id8=a, name='23333')
+    collection = DataCollection(data0, data1)
+    # collection.to_file('test.xlsx') # data.to_file('test.csv')
+    # data.to_file('test.xlsx')
+    # data0.draw(Drawer(method='bar', indexer=[(slice(None), 'a'), 'id6']))
+    # collection._draw(
+    #     Drawer(method='bar', asset='a', name='data', indicator='id2')
+    # )
+    collection.gallery(
+        Drawer('line', asset='a', name='data', indicator='id1', title='a_company_for_id1'),
+        Drawer('bar', date='20210101', name='data', indicator='id7', title='all_company_on_20210101_for_id7'),
+        Drawer('line', asset='c', name='data', indicator=['id3', 'id4'], title='c_company_for_id3_id4'),
+        Drawer('bar', date=['20210102', '20210107'], asset=['a', 'c'], name=['data', '23333'] ,indicator=['id2', 'id7'], title='a_c_company_on_20210101_20210102_for_id2_id7'),
+        shape=(2, 2)
+    )
+    
