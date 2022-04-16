@@ -12,14 +12,11 @@ from pandas import ExcelWriter
 class Drawer(object):
     '''A Parameter Class for Drawing'''
     def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None),
-        asset: 'str | list | slice' = slice(None), indicator: 'str | list | slice' = slice(None),
-        name: str = None, title: str = 'Image', ax: plt.Axes = None, **kwargs):
+        asset: 'str | list | slice' = slice(None), name: str = None, 
+        indicator: 'str | list | slice' = slice(None), title: str = 'Image', ax: plt.Axes = None, **kwargs):
         self.method = method
         self.date = date
-        if name is None:
-            self.indexer = [(date, asset), (indicator)]
-        else:
-            self.indexer = [(date, asset), (name, indicator)]
+        self.indexer = eval(str([(date, asset), (name, indicator)]).replace('None, ', ''))
         self.name = name
         self.ax = ax
         self.kwargs = kwargs
@@ -169,25 +166,19 @@ class Data():
             draw_data.plot(ax=ax)
         
         data = self.df.copy(deep=True)
-        data.index = data.index.set_levels(
-            data.index.get_level_values('datetime').unique().strftime(r'%Y-%m-%d'),
-            level='datetime'
-        )
 
         for arg in args:
             tmp_kwargs = kwargs.copy()
             tmp_kwargs.update(arg.kwargs)
             tmp_ax = arg.ax if arg.ax else ax
-            if arg.is_ts:
-                draw_data = data.loc[arg.indexer[0], arg.indexer[1]].unstack(level='asset')
-                _check_large(draw_data)
-                draw_data.plot(kind=arg.method, ax=tmp_ax, **tmp_kwargs)
-                tmp_ax.xaxis.set_major_locator(mticker.MaxNLocator(10))
-            else:
-                draw_data = self.df.loc[arg.indexer[0], arg.indexer[1]].unstack(level='datetime')
-                _check_large(draw_data)
-                draw_data.plot(kind=arg.method, ax=tmp_ax, **tmp_kwargs)
-                tmp_ax.set_title(f'Cross Section {arg.indexer[0][0]}')
+            draw_data = data.loc[arg.indexer[0], arg.indexer[1]]
+            draw_data.index = draw_data.index.set_levels(
+                data.index.get_level_values('datetime').unique().strftime(r'%Y-%m-%d'), level='datetime')
+            draw_data = draw_data.unstack(level=arg.unstack_level)
+            _check_large(draw_data)
+            draw_data.plot(kind=arg.method, ax=tmp_ax, **tmp_kwargs)
+            tmp_ax.xaxis.set_major_locator(mticker.MaxNLocator(10))
+            tmp_ax.set_title(arg.title)
         
         if path:
             plt.savefig(path)
@@ -231,9 +222,17 @@ class Data():
         return df
         
     @property
+    def assets(self) -> 'pd.Index':
+        return self.df.index.get_level_values('asset').unique().to_list()
+    
+    @property
     def indicators(self) -> 'list':
         return list(self.dic.keys())
     
+    @property
+    def dates(self) -> 'list':
+        return self.df.index.get_level_values('datetime').unique().to_list()
+
     @property
     def shape(self) -> 'tuple':
         return (self.df.index.shape[0], self.df.columns.shape[0])
@@ -343,9 +342,9 @@ class DataCollection():
         if not args:
             raise ValueError('At Least One Drawer should be passed in')
         
-        if not axes:
+        if axes is None:
             _, axes = plt.subplots(nrows=shape[0], ncols=shape[1], figsize=(12 * shape[1], 8 * shape[0]))
-            axes = np.array(axes).reshape(shape)
+        axes = np.array(axes).reshape(shape)
 
         for i, drawers in enumerate(args):
             if isinstance(drawers, Drawer):
@@ -369,7 +368,7 @@ class DataCollection():
         all_data_df = []
         for key, value in self.data_dict.items():
             value = value.df.copy()
-            col = pd.MultiIndex.from_product([[key], value.columns], names=[key, "indicator"])
+            col = pd.MultiIndex.from_product([[key], value.columns], names=['category', "indicator"])
             value.columns = col
             all_data_df.append(value)
         df = pd.concat(all_data_df, axis=1)
@@ -379,6 +378,31 @@ class DataCollection():
     def shape(self) -> 'tuple':
         return tuple(data.shape for data in self.data_dict.values())
 
+    @property
+    def names(self) -> 'list':
+        return list(self.data_dict.keys())
+    
+    @property
+    def dates(self) -> 'list':
+        d = set()
+        for n in self.names:
+            d = d.union(set(self[n].dates))
+        return sorted(list(d))
+    
+    @property
+    def assets(self) -> 'list':
+        a = set()
+        for n in self.names:
+            a = a.union(set(self[n].assets))
+        return sorted(list(a))
+    
+    @property
+    def indictors(self) -> 'list':
+        i = set()
+        for n in self.names:
+            i = i.union(set(self[n].indicators))
+        return sorted(list(i))
+    
     def __getitem__(self, idx: 'tuple') -> 'pd.DataFrame | Data':
         if isinstance(idx, str):
             return self.data_dict[idx]
