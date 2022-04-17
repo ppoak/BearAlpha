@@ -84,12 +84,6 @@ def get_forward_return_columns(data: pd.DataFrame):
     matched = list(filter(lambda x: re.match(r'\d+[dmyDMY]', x), data.columns))
     return matched
 
-def logret2algret(logret: Union[pd.Series, pd.DataFrame, np.ndarray]) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
-    return np.exp(logret) - 1
-
-def algret2logret(algret: Union[pd.Series, pd.DataFrame, np.ndarray]) -> Union[pd.Series, pd.DataFrame, np.ndarray]:
-    return np.log(algret + 1)
-
 
 if __name__ == "__main__":
     factors = ['return_1m', 'return_3m']
