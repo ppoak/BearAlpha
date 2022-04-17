@@ -4,48 +4,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from .artist import Drawer
 from copy import deepcopy
 from typing import Iterable
 from pandas import ExcelWriter
 
 
-class Drawer(object):
-    '''A Parameter Class for Drawing'''
-    def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None),
-        asset: 'str | list | slice' = slice(None), name: str = None, 
-        indicator: 'str | list | slice' = slice(None), title: str = 'Image', ax: plt.Axes = None, **kwargs):
-        self.method = method
-        self.date = date
-        self.indexer = eval(str([(date, asset), (name, indicator)]).replace('None, ', ''))
-        self.name = name
-        self.ax = ax
-        self.kwargs = kwargs
-        self.title = title
-        if not(self.is_ts or self.is_cs):
-            raise TypeError('indexer is wrongly set, please check')
-    
-    @property
-    def is_ts(self) -> bool:
-        if isinstance(self.date, (slice, list)):
-            return True
-        else:
-            return False
-    
-    @property
-    def is_cs(self) -> bool:
-        if isinstance(self.date, (str, tuple)):
-            return True
-        else:
-            return False
-
-    @property
-    def unstack_level(self) -> str:
-        if self.is_ts:
-            return 'asset'
-        else:
-            return 'datetime'
-
-class Data():
+class Data(object):
     '''This is a Standard Data Set for Containing Different Data
     ===========================================================
 
@@ -252,7 +217,7 @@ class Data():
     def __bool__(self) -> bool:
         return self.df.empty
 
-class DataCollection():
+class DataCollection(object):
     '''A Collection of the Standarized Data
     =======================================
     

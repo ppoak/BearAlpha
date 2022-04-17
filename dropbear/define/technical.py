@@ -1,6 +1,6 @@
 import numpy as np
 from .base import FactorBase
-from ..utils import *
+from ..tools import *
 from utils import *
 
 

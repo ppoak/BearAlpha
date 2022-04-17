@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from dropbear import logret2algret
-from dropbear.core import Analyzer
+from dropbear.staff import Analyzer
 from .ar import calc_industry_ar
 
 

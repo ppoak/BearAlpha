@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-from .base import DataCollection, Data, Drawer
+from .cleaner import DataCollection, Data, Drawer
 
 
 class AnalyzeData(DataCollection):
@@ -78,7 +78,7 @@ class AnalyzeData(DataCollection):
     def __bool__(self) -> bool:
         return self.price.__bool__() or self.forward.__bool__()
 
-class Aanalyzer(object):
+class Analyzer(object):
     '''Analyzer is a general analyst dedicated to analyze the AnalyzeData
     =====================================================================
 
@@ -234,10 +234,10 @@ class Aanalyzer(object):
             ax=True, path=None, show=False
             )
         
-        if show:
-            plt.show()
         if path:
             plt.savefig(path)
+        if show:
+            plt.show()
             
     def ic_plot(self, path: str = None, show: bool = True):
         '''Plot the IC value Result
@@ -252,10 +252,10 @@ class Aanalyzer(object):
             ax=True, path=None, show=False
             )
         
-        if show:
-            plt.show()
         if path:
             plt.savefig(path)
+        if show:
+            plt.show()
     
     def layering_plot(self, path: str = None, show: bool = True):
         '''Plot the Layering Result
@@ -277,14 +277,25 @@ class Aanalyzer(object):
     
 if __name__ == "__main__":
     import numpy as np
-    a = pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('20210101', periods=100),
+    close_price = pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('20210101', periods=100),
         columns=['a', 'b', 'c', 'd', 'e'])
-    b = pd.DataFrame(np.random.rand(500, 5), index=pd.MultiIndex.from_product(
+    factors0 = pd.DataFrame(np.random.rand(500, 2), index=pd.MultiIndex.from_product(
         [pd.date_range('20210101', periods=100), list('abcde')]),
-        columns=['id1', 'id2', 'id3', 'id4', 'id5'])
-    c = pd.Series(np.random.rand(500), index=pd.MultiIndex.from_product(
-        [pd.date_range('20210101', periods=100), list('abcde')]), name='id6')
-    data = AnalyzeData(factor=Data(b), forward=Data(m1=a), group=Data(c))
-    analyzer = Aanalyzer(data)
-    analyzer.layering()
-    analyzer.layering_plot(path='test.png')
+        columns=['factor1', 'factor2'])
+    factors1 = pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('20210101', periods=100),
+        columns=['a', 'b', 'c', 'd', 'e'])
+    factors2 = pd.DataFrame(np.random.rand(500, 2), index=pd.MultiIndex.from_product(
+        [pd.date_range('20210101', periods=100), list('abcde')]),
+        columns=['factor4', 'factor5']
+    )
+    group = pd.Series(['A', 'A', 'B', 'B', 'C'] * 100, index=pd.MultiIndex.from_product(
+        [pd.date_range('20210101', periods=100), list('abcde')]), name='group')
+    
+    factors = Data(factors0, factors2, name='factor', factor3=factors1)
+    close = Data(name='close', close=close_price)
+    group = Data(group, name='group')
+    data = AnalyzeData(factor=factors, price=close, group=group, infer_forward=['1d', '10d'])
+    
+    analyzer = Analyzer(data)
+    analyzer.regression()
+    analyzer.regression_plot(path='test.png')
