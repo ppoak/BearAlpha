@@ -1,82 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-from .cleaner import DataCollection, Data, Drawer
+from .cleaner import Data, DataCollection, AnalyzeData
+from .artist import Drawer
 
-
-class AnalyzeData(DataCollection):
-    '''A Collection of the Standarized Data Used for Analysis
-    ========================================================
-    
-    AnalyzeData can only contain Data class data,
-    and specifically, DataCollection is used for getting ready
-    for subsequent analysis.
-    '''
-    
-    def __init__(self, factor: 'Data', 
-        forward: 'Data' = None, 
-        price: 'Data' = None, 
-        group: 'Data' = None,
-        infer_forward: 'str | list' = None, *args) -> 'None':
-        '''DataCollection is used for getting ready for subsequent analysis
-        --------------------------------------------------------------------
-
-        factor: Data, the factor data
-        forward: Data or None, the forward data
-        price: Data or None, the price data
-        group: Data or None, the group data
-        infer_forward: str or list, the forward data will be inferred from
-        '''
-        super().__init__(*args)
-        if isinstance(infer_forward, str):
-            infer_forward = [infer_forward]
-
-        if infer_forward is not None and price is not None:
-            if forward is not None:
-                print(f'[!] forward is not None, infer_forward {infer_forward} cover forward')
-            forward = self.__infer_forward_from_price(price, infer_forward)
-        
-        self.factor = factor
-        self.forward = forward if forward is not None else Data(name='forward')
-        self.price = price if price is not None else Data(name='price')
-        self.group = group if group is not None else Data(name='group')
-        self.data_dict.update({
-            "factor": self.factor,
-            "forward": self.forward,
-            "price": self.price,
-            "group": self.group
-        })
-
-    def __infer_forward_from_price(self, price: 'Data', infer_forward: 'list') -> 'pd.Series':
-        '''infer forward return from ohlc price data'''
-        def _infer(start_name: 'str', end_name: 'str') -> 'dict':
-            forward = {}
-            for iff in infer_forward:
-                price_start = price[start_name].resample(iff).first()
-                price_end = price[end_name].resample(iff).last()
-                forward[iff] = (price_end - price_start) / price_start
-            return forward
-
-        price = price.copy()
-        has_close = price.get('close', False)
-        has_open = price.get('open', False)
-        if len(price) == 1:
-            forward = _infer(price.indicators[0], price.indicators[0])
-        elif not has_close and not has_open:
-            raise ValueError('Ambiguous infer forward, Please calculate manually')
-        elif not has_close and has_open:
-            print('[!] Not find close price, infer forward from open price')
-            forward = _infer('open', 'open')
-        elif has_close and not has_open:
-            print('[!] Not find open price, use close price to infer forward')
-            forward = _infer('close', 'close')
-        else:
-            forward = _infer('open', 'close')
-
-        return Data(name="forward", **forward)
-
-    def __bool__(self) -> bool:
-        return self.price.__bool__() or self.forward.__bool__()
 
 class Analyzer(object):
     '''Analyzer is a general analyst dedicated to analyze the AnalyzeData

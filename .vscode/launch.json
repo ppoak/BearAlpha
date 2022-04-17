@@ -64,28 +64,28 @@
 			"module": "dropbear.__init__"
 		},
 		{
-			"name": "dropbear/core/analyzer",
+			"name": "dropbear/tools/treatment",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.core.analyzer"
+			"module": "dropbear.tools.treatment"
 		},
 		{
-			"name": "dropbear/core/__init__",
+			"name": "dropbear/tools/converter",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.core.__init__"
+			"module": "dropbear.tools.converter"
 		},
 		{
-			"name": "dropbear/core/api",
+			"name": "dropbear/tools/__init__",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.core.api"
+			"module": "dropbear.tools.__init__"
 		},
 		{
-			"name": "dropbear/core/base",
+			"name": "dropbear/tools/prepare",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.core.base"
+			"module": "dropbear.tools.prepare"
 		},
 		{
 			"name": "dropbear/define/technical",
@@ -112,34 +112,28 @@
 			"module": "dropbear.define.base"
 		},
 		{
-			"name": "dropbear/utils/config",
+			"name": "dropbear/staff/__init__",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.utils.config"
+			"module": "dropbear.staff.__init__"
 		},
 		{
-			"name": "dropbear/utils/treatment",
+			"name": "dropbear/staff/artist",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.utils.treatment"
+			"module": "dropbear.staff.artist"
 		},
 		{
-			"name": "dropbear/utils/__init__",
+			"name": "dropbear/staff/cleaner",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.utils.__init__"
+			"module": "dropbear.staff.cleaner"
 		},
 		{
-			"name": "dropbear/utils/overview",
+			"name": "dropbear/staff/analyst",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.utils.overview"
-		},
-		{
-			"name": "dropbear/utils/prepare",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.utils.prepare"
+			"module": "dropbear.staff.analyst"
 		},
 		{
 			"name": "industrial_momentum_and_reverse/run",

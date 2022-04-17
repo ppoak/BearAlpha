@@ -1,10 +1,10 @@
 import re
-import random
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 from .artist import Drawer
+from ..tools import item2list, price2fwd, periodkey
 from copy import deepcopy
 from typing import Iterable
 from pandas import ExcelWriter
@@ -56,7 +56,7 @@ class Data(object):
             
         for key, value in kwargs.items():
             if isinstance(value, (pd.Series, pd.DataFrame)):
-                key = self.daterange_key(key)
+                key = periodkey(key)
                 if isinstance(value, pd.Series):
                     value = value.to_frame()
                 data_dict[key] = value
@@ -101,13 +101,6 @@ class Data(object):
     def items(self) -> 'Iterable':
         return self.dic.items()
     
-    def daterange_key(self, key: 'str') -> 'str':
-        match = re.match(r'([ymwdYMWD])(\d+)', key)
-        if match:
-            return match.group(2) + match.group(1)
-        else:
-            return key
-
     def draw(self, *args, ax: plt.Axes = None, path: str = None, show: bool = True, **kwargs):
         '''Draw images on assigned ax with assigned data
         ------------------------------------------------
@@ -202,8 +195,13 @@ class Data(object):
     def shape(self) -> 'tuple':
         return (self.df.index.shape[0], self.df.columns.shape[0])
 
-    def __getitem__(self, key: 'str') -> pd.DataFrame:
-        return self.data_dict[key]
+    def __getitem__(self, key: 'str | int') -> pd.DataFrame:
+        if isinstance(key, str):
+            return self.data_dict[key]
+        elif isinstance(key, int):
+            return self.data_dict[self.indicators[key]]
+        else:
+            raise KeyError(f'{key} is not either a int or str')
 
     def __repr__(self) -> 'str':
         return f'{self.name}: {list(self.data_dict.keys())}'
@@ -312,8 +310,7 @@ class DataCollection(object):
         axes = np.array(axes).reshape(shape)
 
         for i, drawers in enumerate(args):
-            if isinstance(drawers, Drawer):
-                drawers = [drawers]
+            drawers = item2list(drawers)
             ax = axes[i // shape[1], i % shape[1]]
             self._draw(*drawers, show=False, ax=ax)
         
@@ -388,6 +385,66 @@ class DataCollection(object):
     def __bool__(self) -> bool:
         return bool(self.data_dict)
     
+class AnalyzeData(DataCollection):
+    '''A Collection of the Standarized Data Used for Analysis
+    ========================================================
+    
+    AnalyzeData can only contain Data class data,
+    and specifically, DataCollection is used for getting ready
+    for subsequent analysis.
+    '''
+    
+    def __init__(self, *args,
+        factor: 'Data', 
+        forward: 'Data' = None, 
+        price: 'Data' = None, 
+        group: 'Data' = None,
+        infer_forward: 'str | list' = None) -> 'None':
+        '''DataCollection is used for getting ready for subsequent analysis
+        --------------------------------------------------------------------
+
+        factor: Data, the factor data
+        forward: Data or None, the forward data
+        price: Data or None, the price data
+        group: Data or None, the group data
+        infer_forward: str or list, the forward data will be inferred from
+        '''
+        super().__init__(*args)
+        infer_forward = item2list(infer_forward)
+
+        if infer_forward is not None and price is not None:
+            if forward is not None:
+                print(f'[!] forward is not None, infer_forward {infer_forward} cover forward')
+            has_close = price.get('close', False)
+            has_open = price.get('open', False)
+            if len(price) == 1:
+                forward = price2fwd(price[0], price[0], infer_forward)
+            elif not has_close and not has_open:
+                raise ValueError('Ambiguous infer forward, Please calculate manually')
+            elif not has_close and has_open:
+                print('[!] Not find close price, infer forward from open price')
+                forward = price2fwd(price['open'], price['open'], infer_forward)
+            elif has_close and not has_open:
+                print('[!] Not find open price, use close price to infer forward')
+                forward = price2fwd(price['close'], price['close'], infer_forward)
+            else:
+                forward = price2fwd(price['open'], price['close'], infer_forward)
+            forward = Data(name='forward', **forward)
+
+        self.factor = factor
+        self.forward = forward if forward is not None else Data(name='forward')
+        self.price = price if price is not None else Data(name='price')
+        self.group = group if group is not None else Data(name='group')
+        self.data_dict.update({
+            "factor": self.factor,
+            "forward": self.forward,
+            "price": self.price,
+            "group": self.group
+        })
+
+    def __bool__(self) -> bool:
+        return self.price.__bool__() or self.forward.__bool__()
+
 
 if __name__ == "__main__":
     a = pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('20210101', periods=100),

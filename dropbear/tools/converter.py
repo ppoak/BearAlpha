@@ -1,3 +1,4 @@
+import re
 import datetime
 import pandas as pd
 import numpy as np
@@ -25,26 +26,35 @@ def item2list(item) -> list:
     return item
 
 def price2ret(open_price: 'pd.DataFrame | pd.Series', close_price: 'pd.DataFrame | pd.Series',
-    period: 'Iterable | str' = '1m') -> 'list[pd.DataFrame | pd.Series]':
+    period: 'Iterable | str' = '1m') -> 'dict':
     open_price = open_price.copy()
     close_price = close_price.copy()
     period = item2list(period)
-    ret = []
+    ret = {}
     for p in period:
+        p = periodkey(p)
         open_price = open_price.resample(p, lable='right').first()
         close_price = close_price.resample(p, lable='right').last()
-        ret.append((close_price - open_price) / open_price)
+        ret[p] =  (close_price - open_price) / open_price
     return ret
 
 def price2fwd(open_price: 'pd.DataFrame | pd.Series', close_price: 'pd.DataFrame | pd.Series',
-    period: 'Iterable | str' = '1m') -> 'list[pd.DataFrame | pd.Series]':
+    period: 'Iterable | str' = '1m') -> 'dict':
     open_price = open_price.copy()
     close_price = close_price.copy()
     period = item2list(period)
-    ret = []
+    ret = {}
     for p in period:
+        p = periodkey(p)
         open_price = open_price.resample(p, label='left').first()
         close_price = close_price.resample(p, label='left').last()
-        ret.append((close_price - open_price) / open_price)
+        ret[p] = (close_price - open_price) / open_price
     return ret
+    
+def periodkey(key: 'str') -> 'str':
+    match = re.match(r'([ymwdYMWD])(\d+)', key)
+    if match:
+        return match.group(2) + match.group(1)
+    else:
+        return key
     
