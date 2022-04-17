@@ -95,6 +95,29 @@ class Data(object):
     def get(self, key: 'str', default: 'any') -> 'pd.DataFrame':
         return self.dic.get(key, default)
 
+    def corr(self, indicators: 'str | list' = slice(None), dates: 'str | list' = slice(None), 
+        assets: 'str | list' = slice(None), ret_tvalue: bool = True) -> pd.DataFrame:
+        '''calculate the correlation between indicators or within indicator time series
+        ------------------------------------------------
+
+        indicators: list of str, the name of the indicators
+        date: str, the date of the correlation
+        '''
+        if isinstance(indicators, str) and isinstance(dates, str):
+            raise TypeError('at least one of the indicators and dates should be list')
+        indicators = item2list(indicators)
+        dates = item2list(dates)
+        assets = item2list(assets)
+        data = self.df.loc[(dates, assets), indicators].copy()
+        cor = data.groupby('datetime').corr()
+        if not ret_tvalue:
+            return cor
+        else:
+            cor_mean = cor.groupby(level='indicator').mean()
+            cor_std = cor.groupby(level='indicator').std()
+            cor_n = cor.index.get_level_values('datetime').unique().size
+            return (cor_mean / (cor_std / np.sqrt(cor_n))).replace(np.inf, np.nan)
+
     def copy(self) -> 'Data':
         return deepcopy(self)
     
@@ -456,18 +479,20 @@ if __name__ == "__main__":
         [pd.date_range('20210101', periods=100), list('abcde')]), name='id6')
     data0 = Data(b, c, id7=a)
     data1 = Data(id8=a, name='23333')
-    collection = DataCollection(data0, data1)
+    result = data0.corr()
+    print(result)
+    # collection = DataCollection(data0, data1)
     # collection.to_file('test.xlsx') # data.to_file('test.csv')
     # data.to_file('test.xlsx')
     # data0.draw(Drawer(method='bar', indexer=[(slice(None), 'a'), 'id6']))
     # collection._draw(
     #     Drawer(method='bar', asset='a', name='data', indicator='id2')
     # )
-    collection.gallery(
-        Drawer('line', asset='a', name='data', indicator='id1', title='a_company_for_id1'),
-        Drawer('bar', date='20210101', name='data', indicator='id7', title='all_company_on_20210101_for_id7'),
-        Drawer('line', asset='c', name='data', indicator=['id3', 'id4'], title='c_company_for_id3_id4'),
-        Drawer('bar', date=['20210102', '20210107'], asset=['a', 'c'], name=['data', '23333'] ,indicator=['id2', 'id7'], title='a_c_company_on_20210101_20210102_for_id2_id7'),
-        shape=(2, 2)
-    )
+    # collection.gallery(
+    #     Drawer('line', asset='a', name='data', indicator='id1', title='a_company_for_id1'),
+    #     Drawer('bar', date='20210101', name='data', indicator='id7', title='all_company_on_20210101_for_id7'),
+    #     Drawer('line', asset='c', name='data', indicator=['id3', 'id4'], title='c_company_for_id3_id4'),
+    #     Drawer('bar', date=['20210102', '20210107'], asset=['a', 'c'], name=['data', '23333'] ,indicator=['id2', 'id7'], title='a_c_company_on_20210101_20210102_for_id2_id7'),
+    #     shape=(2, 2)
+    # )
     
