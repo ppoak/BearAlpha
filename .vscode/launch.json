@@ -28,6 +28,12 @@
 			"module": "other.amount_concentration.validate"
 		},
 		{
+			"name": "other/financial_ratio/scripts",
+			"type": "python",
+			"request": "launch",
+			"module": "other.financial_ratio.scripts"
+		},
+		{
 			"name": "utils/database",
 			"type": "python",
 			"request": "launch",
@@ -58,6 +64,36 @@
 			"module": "utils.common"
 		},
 		{
+			"name": "factor/tools/prepare",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.tools.prepare"
+		},
+		{
+			"name": "factor/define/technical",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.technical"
+		},
+		{
+			"name": "factor/define/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.__init__"
+		},
+		{
+			"name": "factor/define/size",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.size"
+		},
+		{
+			"name": "factor/define/base",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.base"
+		},
+		{
 			"name": "dropbear/__init__",
 			"type": "python",
 			"request": "launch",
@@ -82,34 +118,10 @@
 			"module": "dropbear.tools.__init__"
 		},
 		{
-			"name": "dropbear/tools/prepare",
+			"name": "dropbear/tools/core",
 			"type": "python",
 			"request": "launch",
-			"module": "dropbear.tools.prepare"
-		},
-		{
-			"name": "dropbear/define/technical",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.define.technical"
-		},
-		{
-			"name": "dropbear/define/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.define.__init__"
-		},
-		{
-			"name": "dropbear/define/size",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.define.size"
-		},
-		{
-			"name": "dropbear/define/base",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.define.base"
+			"module": "dropbear.tools.core"
 		},
 		{
 			"name": "dropbear/staff/__init__",
@@ -118,16 +130,16 @@
 			"module": "dropbear.staff.__init__"
 		},
 		{
+			"name": "dropbear/staff/processor",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.staff.processor"
+		},
+		{
 			"name": "dropbear/staff/artist",
 			"type": "python",
 			"request": "launch",
 			"module": "dropbear.staff.artist"
-		},
-		{
-			"name": "dropbear/staff/cleaner",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.staff.cleaner"
 		},
 		{
 			"name": "dropbear/staff/analyst",

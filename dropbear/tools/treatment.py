@@ -87,28 +87,6 @@ def zscore(data):
     new_data = (data - mean) / std
     return new_data
 
-def standard(data, standard_type='zscore'):
-    """standardization ways
-    -----------------
-
-    data: np.array, raw data
-    standard_type: str, standardization type must be one of these:
-        'zscore': z-score standardization
-        'weight': weight standardization
-        'rank': rank standardization
-    return: np.array, 标准化后的因子数据
-    """
-    if standard_type == 'zscore':
-        new_data = zscore(data)
-    elif standard_type == 'weight':
-        # TODO: 市值加权标准化待完成
-        pass
-    elif standard_type == 'rank':
-        # TODO: 排序标准化待完成
-        pass
-    else:
-        raise ValueError("type should be chosen in ['zscore', 'weight', 'rank']")
-    return new_data
 
 def drop_na(data):
     new_data = data.copy()
