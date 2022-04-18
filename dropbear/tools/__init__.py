@@ -7,11 +7,17 @@ from .converter import (
     datetime2str, str2datetime, 
     logret2algret, algret2logret, 
     item2list, periodkey,
-    price2ret, price2fwd)
+    price2ret, price2fwd
+    )
+
+from .util import (
+    index_dim
+    )
 
 __all__ = [
     'datetime2str', 'str2datetime',
     'logret2algret', 'algret2logret',
     'item2list', 'periodkey',
     'price2ret', 'price2fwd',
+    'index_dim'
     ]

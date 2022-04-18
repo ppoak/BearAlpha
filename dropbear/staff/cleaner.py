@@ -1,15 +1,153 @@
-import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-from .artist import Drawer
-from ..tools import item2list, price2fwd, periodkey
+# from ..tools import item2list, price2fwd, periodkey
+# from ..tools.util import index_dim
 from copy import deepcopy
 from typing import Iterable
 from pandas import ExcelWriter
 
 
+class PanelFrame(pd.DataFrame):
+    '''A Panel Data Class Based On Pandas MultiIndex DataFrame'''
+
+    def __init__(self, indicators: dict = None, assets: dict = None, datetimes: dict = None, **kwargs):
+        '''Create a Panel DataFrame
+        ----------------------------
+        
+        indicators: dict, giving data in a indicator vision, the dictionary must conform 
+            <indicator name>: <DataFrame> (DataFrame index must be DatetimeIndex)
+        assets: dict, giving data in a asset vision, the dictionary must conform
+            <asset name>: <DataFrame> (DataFrame index must be DatetimeIndex)
+        datetimes: dict, giving data in a datetime vision, the dictionary must conform 
+            <datetime name>: <DataFrame> (DataFrame index must be assets names)
+        kwargs: some keyword arguments passed to create the DataFrame
+        '''
+
+        status = (indicators is not None, assets is not None, datetimes is not None)
+        data = []
+        if status == (False, False, False):
+            raise ValueError('at least one of assets, indicators or dates should be passed!')
+            
+        elif status == (True, False, False):
+            for name, indicator in indicators.items():
+                if not isinstance(indicator.index, pd.DatetimeIndex):
+                    raise IndexError('indicator index should be a DatetimeIndex!')
+                indicator = indicator.stack()
+                data.append(indicator)
+            data = pd.concat(data, axis=1)
+            data.columns = indicators.keys()
+
+        elif status == (False, True, False):
+            for name, asset in assets.items():
+                if not isinstance(asset.index, pd.DatetimeIndex):
+                    raise IndexError('asset index should be a DatetimeIndex!')
+                asset.index = pd.MultiIndex.from_product([asset.index, [name]])
+                data.append(asset)
+            data = pd.concat(data).sort_index()
+            
+        elif status == (False, False, True):
+            data =[]
+            for name, datetime in datetimes.items():
+                datetime.index = pd.MultiIndex.from_product([[name], datetime.index])
+                data.append(datetime)
+            data = pd.concat(data)
+
+        else:
+            raise ValueError('only one of assets, indicators or dates should be passed!')
+
+        super().__init__(data.values, index=data.index, columns=data.columns, **kwargs)
+
+    @property
+    def data(self) -> dict:
+        data_dict = {}
+        for col in self.columns:
+            data_dict[col] = self[col].unstack(level=1)
+        return data_dict
+    
+    @property
+    def levshape(self) -> tuple:
+        return self.index.levshape + (len(self.columns),)
+    
+    @property
+    def indicators(self):
+        return self.columns
+    
+    @property
+    def datetimes(self):
+        return self.index.levels[0]
+    
+    @property
+    def assets(self):
+        return self.index.levels[1]
+    
+    def to_excel(self, path, multisheet: bool = True, **kwargs):
+        '''Export to Excel
+        -----------------
+        
+        path: str, the path to save the excel file
+        multisheet: bool, whether to export to multiple sheets
+        **kwargs: some keyword arguments passed to pandas.DataFrame.to_excel
+        '''
+        if multisheet:
+            with ExcelWriter(path) as writer:
+                for col in self.columns:
+                    self[col].unstack(level=1).to_excel(writer, sheet_name=col)
+        else:
+            super().to_excel(path, **kwargs)
+    
+    def tcorr(self, method: str = 'pearson', tvalue: bool = True):
+        '''Give the Correspondant Coefficient t value During Time Series'''
+        corr_series = self.groupby(level=0).corr(method=method)
+        if not tvalue:
+            return corr_series
+        n = corr_series.index.levels[0].size
+        corr_mean = corr_series.groupby(level=1).mean()
+        corr_std = corr_series.groupby(level=1).std()
+        return (corr_mean / corr_std).replace(np.inf, np.nan) * np.sqrt(n - 1)
+    
+    def cut(self, datetime: str = slice(None), asset: str = slice(None), indicator: str = slice(None)):
+        '''Cut the PanelFrame into Cross Section DataFrame or Time Series DataFrame
+        ---------------------------------------------------------------------------
+        
+        datetime: str, the datetime to cut
+        asset: str, the asset to cut
+        indicator: str, the indicator to cut
+        
+        **cut returns a copy of the original data, so it cannot be used to modify the original data
+        '''
+        status = (isinstance(datetime, str), isinstance(asset, str), isinstance(indicator, str))
+        data = self.loc[(datetime, asset), indicator].copy()
+        if status == (False, False, False):
+            raise IndexError('at least one of datetime, asset or indicator should be str type!')
+        elif status[0]:
+            data = data.droplevel(0)
+        elif status[1]:
+            data = data.droplevel(1)
+        elif status[2]:
+            data = data.unstack(level=1)
+        return data
+
+    def draw(self, kind: str, datetime: str = slice(None), 
+        asset: str = slice(None), indicator: str = slice(None), **kwargs):
+        '''Draw the Cross Section or Time Series DataFrame
+        -------------------------------------------------
+
+        kind: str, the kind of plot, can be 'line', 'bar', 'hist', 'box', 'kde', 'area', 'scatter'
+        datetime: str, the datetime to draw
+        asset: str, the asset to draw
+        '''
+        data = self.cut(datetime, asset, indicator)
+        if not isinstance(data, (pd.Series, pd.DataFrame)):
+            raise ValueError('Your cut seems to be a number instead of Series or DataFrame')
+        if isinstance(datetime, str):
+            data.plot(kind=kind, **kwargs)
+        else:
+            data.index = data.index.strftime(r'%Y-%m-%d')
+            data.plot(kind=kind, **kwargs)
+  
+"""
 class Data(object):
     '''This is a Standard Data Set for Containing Different Data
     ===========================================================
@@ -32,48 +170,62 @@ class Data(object):
     level 1 should be the assets name.
     '''                              
 
-    def __init__(self, *args, name: 'str' = 'data', **kwargs):
+    def __init__(self, assets: dict = None, 
+        indicators: dict = None, dates: dict = None, 
+        name: 'str' = 'data'):
         '''Standarized data used in dropbear framework
         ----------------------------------------------
         
         name: str, the name of the data
-        args: list of DataFrame or Series, but they must be in MultiIndex form,
-            because if data in single index, the name of the frame or series 
-            will be lost
-        kwargs: dict of DataFrame or Series, they can in single index form
         '''
+        # set Data name to name
         self.name = name
-
-        data_dict = {}
+        if assets is None and indicators is None and dates is None:
+            raise ValueError('at least one of assets, indicators or dates should be passed!')
+        elif assets is not None and indicators is None and dates is None:
+            self.dic = assets
+        elif assets is None and indicators is not None and dates is None:
+            self.dic = indicators
+        elif assets is None and indicators is None and dates is not None:
+            self.dic = dates
+        else:
+            raise ValueError('only one of assets, indicators or dates should be passed!')
+        
+        # if using *args to pass the parameters, the args should be in MultiIndex form
         for arg in args:
             if isinstance(arg, (pd.DataFrame, pd.Series)):
-                if self.__index_dim(arg) > 1:
-                    data_dict.update(self.__process_multiindex(arg))
+                if index_dim(arg) > 1:
+                    dic.update(self.__process_multiindex(arg))
                 else:
                     raise TypeError('If single index dataframe is pass, please use keyword argument')
             else:
                 raise TypeError('DataFrame or Series with Multiindex is required')
-            
+        
         for key, value in kwargs.items():
             if isinstance(value, (pd.Series, pd.DataFrame)):
                 key = periodkey(key)
                 if isinstance(value, pd.Series):
                     value = value.to_frame()
-                data_dict[key] = value
+                dic[key] = value
             else:
                 raise TypeError('DataFrame or Series is required')
 
-        idx_dims = []
-        for name, data in data_dict.items():
-            idx_dims.append(self.__index_dim(data))
+        # naming the data in Data.dic
+        for data in dic.values():
             data.index.name = 'datetime'
             data.columns.name = 'asset'
-        if len(set(idx_dims)) > 1:
-            print("[!] Some dataframe isn't consistent with the index dimension, "
-                "not that data.df will no longer be availale\n"
-                f"index dimensions in Data: {self.name} {idx_dims}")
+        self.dic = dic
 
-        self.data_dict = data_dict
+        # constructing Data.df, mind that if there are unmatched
+        # single index and multiindex data, the constructing will fail
+        df = []
+        for key, value in dic.items():
+            tmp = value.stack()
+            tmp.name = key
+            df.append(tmp)
+        df = pd.concat(df, axis=1)
+        df.columns.name = 'indicator'
+        self.df = df
 
     def __process_multiindex(self, data: 'pd.DataFrame | pd.Series') -> 'dict':
         '''multiindex data process'''
@@ -84,16 +236,8 @@ class Data(object):
             data_dict[col] = data[col].unstack()
         return data_dict
 
-    def __index_dim(self, data: 'pd.DataFrame | pd.Series') -> int:
-        '''return the index dimension number of given data'''
-        try:
-            dim = len(data.index.levshape)
-        except:
-            dim = 1
-        return dim
-
     def get(self, key: 'str', default: 'any') -> 'pd.DataFrame':
-        return self.dic.get(key, default)
+        return self.dic.get(key, default)  
 
     def corr(self, indicators: 'str | list' = slice(None), dates: 'str | list' = slice(None), 
         assets: 'str | list' = slice(None), ret_tvalue: bool = True) -> pd.DataFrame:
@@ -186,11 +330,11 @@ class Data(object):
             raise ValueError(f"The file format {path.split('.')[-1]} is not supported")
 
     @property
-    def dic(self) -> 'dict':
+    def dict(self) -> 'dict':
         return self.data_dict
     
     @property
-    def df(self) -> 'pd.DataFrame':
+    def frame(self) -> 'pd.DataFrame':
         if not self.data_dict:
             return pd.DataFrame()
         df = []
@@ -218,13 +362,18 @@ class Data(object):
     def shape(self) -> 'tuple':
         return (self.df.index.shape[0], self.df.columns.shape[0])
 
-    def __getitem__(self, key: 'str | int') -> pd.DataFrame:
+    def __getitem__(self, key: 'str | int | tuple') -> pd.DataFrame:
         if isinstance(key, str):
             return self.data_dict[key]
         elif isinstance(key, int):
             return self.data_dict[self.indicators[key]]
+        elif isinstance(key, tuple):
+            return self.df.loc[key]
         else:
             raise KeyError(f'{key} is not either a int or str')
+
+    def __setitem__(self, key: 'str', value):
+        self.df.loc[key] = value
 
     def __repr__(self) -> 'str':
         return f'{self.name}: {list(self.data_dict.keys())}'
@@ -467,32 +616,62 @@ class AnalyzeData(DataCollection):
 
     def __bool__(self) -> bool:
         return self.price.__bool__() or self.forward.__bool__()
+"""
 
 
 if __name__ == "__main__":
-    a = pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('20210101', periods=100),
-        columns=['a', 'b', 'c', 'd', 'e'])
-    b = pd.DataFrame(np.random.rand(500, 5), index=pd.MultiIndex.from_product(
-        [pd.date_range('20210101', periods=100), list('abcde')]),
-        columns=['id1', 'id2', 'id3', 'id4', 'id5'])
-    c = pd.Series(np.random.rand(500), index=pd.MultiIndex.from_product(
-        [pd.date_range('20210101', periods=100), list('abcde')]), name='id6')
-    data0 = Data(b, c, id7=a)
-    data1 = Data(id8=a, name='23333')
-    result = data0.corr()
-    print(result)
-    # collection = DataCollection(data0, data1)
-    # collection.to_file('test.xlsx') # data.to_file('test.csv')
-    # data.to_file('test.xlsx')
-    # data0.draw(Drawer(method='bar', indexer=[(slice(None), 'a'), 'id6']))
-    # collection._draw(
-    #     Drawer(method='bar', asset='a', name='data', indicator='id2')
-    # )
-    # collection.gallery(
-    #     Drawer('line', asset='a', name='data', indicator='id1', title='a_company_for_id1'),
-    #     Drawer('bar', date='20210101', name='data', indicator='id7', title='all_company_on_20210101_for_id7'),
-    #     Drawer('line', asset='c', name='data', indicator=['id3', 'id4'], title='c_company_for_id3_id4'),
-    #     Drawer('bar', date=['20210102', '20210107'], asset=['a', 'c'], name=['data', '23333'] ,indicator=['id2', 'id7'], title='a_c_company_on_20210101_20210102_for_id2_id7'),
-    #     shape=(2, 2)
-    # )
+    import numpy as np
+    import matplotlib.pyplot as plt
+    
+    indicators = dict(zip(
+        [f'indicator{i + 1}' for i in range(5)],
+        [pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('2020-01-01', periods=100), columns=list('abcde')) for _ in range(5)]
+        ))
+    assets = dict(zip(
+        list('abcde'),
+        [pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('2020-01-01', periods=100), columns=[f'indicator{i+1}' for i in range(5)]) for _ in range(5)]
+    ))    
+    datetimes = dict(zip(
+        pd.date_range('2020-01-01', periods=100),
+        [pd.DataFrame(np.random.rand(5, 5), index=list('abcde'), columns=[f'indicator{i+1}' for i in range(5)]) for _ in range(100)]
+    ))
+
+    pfi = PanelFrame(indicators=indicators)
+    pfa = PanelFrame(assets=assets)
+    pfd = PanelFrame(datetimes=datetimes)
+    
+    print('=' * 20 + ' PanelFrame ' + '=' * 20)
+    print(pfi)
+    print(pfa)
+    print(pfd)
+
+    print('=' * 20 + ' PanelFrame attributes ' + '=' * 20)
+    print(pfi.datetimes, pfi.assets, pfi.indicators)
+    print(pfa.datetimes, pfa.assets, pfa.indicators)
+    print(pfd.datetimes, pfd.assets, pfd.indicators)
+
+    print('=' * 20 + ' PanelFrame data ' + '=' * 20)
+    print(pfi.levshape, pfi.data)
+    print(pfa.levshape, pfa.data)
+    print(pfd.levshape, pfd.data)
+
+    pfi.to_excel('pfi.xlsx')
+    pfa.to_excel('pfa.xlsx')
+    pfd.to_excel('pfd.xlsx')
+
+    print('=' * 20 + ' PanelFrame corr ' + '=' * 20)
+    print(pfi.tcorr())
+    print(pfa.tcorr())
+    print(pfd.tcorr())
+
+    print('=' * 20 + ' PanelFrame cut ' + '=' * 20)
+    print(pfi.cut(indicator='indicator1'))
+    print(pfa.cut(datetime='20200101'))
+    print(pfd.cut(asset='a'))
+
+    pfi.draw('line', asset='a', indicator='indicator1')
+    # pfa.draw('bar', datetime='20200101', indicator=['indicator1', 'indicator2'])
+    # pfd.draw('hist', datetime='20200104', indicator='indicator4')
+
+    plt.show()
     
