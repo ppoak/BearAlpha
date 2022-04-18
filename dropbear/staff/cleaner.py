@@ -12,7 +12,9 @@ from pandas import ExcelWriter
 class PanelFrame(pd.DataFrame):
     '''A Panel Data Class Based On Pandas MultiIndex DataFrame'''
 
-    def __init__(self, indicators: dict = None, assets: dict = None, datetimes: dict = None, **kwargs):
+    def __init__(self, indicators: dict = None, 
+        assets: dict = None, datetimes: dict = None,
+        dataframe: pd.DataFrame = None, **kwargs):
         '''Create a Panel DataFrame
         ----------------------------
         
@@ -22,15 +24,20 @@ class PanelFrame(pd.DataFrame):
             <asset name>: <DataFrame> (DataFrame index must be DatetimeIndex)
         datetimes: dict, giving data in a datetime vision, the dictionary must conform 
             <datetime name>: <DataFrame> (DataFrame index must be assets names)
+        data: pd.DataFrame, if data is passed, it must be a multi index DataFrame,
+            index level0 being datetime, index level1 being assets, columns being indicators
         kwargs: some keyword arguments passed to create the DataFrame
         '''
 
-        status = (indicators is not None, assets is not None, datetimes is not None)
+        status = (indicators is not None, assets is not None, datetimes is not None, dataframe is not None)
         data = []
-        if status == (False, False, False):
+        if status == (False, False, False, False):
             raise ValueError('at least one of assets, indicators or dates should be passed!')
+
+        elif status == (False, False, False, True):
+            data = dataframe
             
-        elif status == (True, False, False):
+        elif status == (True, False, False, False):
             for name, indicator in indicators.items():
                 if not isinstance(indicator.index, pd.DatetimeIndex):
                     raise IndexError('indicator index should be a DatetimeIndex!')
@@ -39,7 +46,7 @@ class PanelFrame(pd.DataFrame):
             data = pd.concat(data, axis=1)
             data.columns = indicators.keys()
 
-        elif status == (False, True, False):
+        elif status == (False, True, False, False):
             for name, asset in assets.items():
                 if not isinstance(asset.index, pd.DatetimeIndex):
                     raise IndexError('asset index should be a DatetimeIndex!')
@@ -47,7 +54,7 @@ class PanelFrame(pd.DataFrame):
                 data.append(asset)
             data = pd.concat(data).sort_index()
             
-        elif status == (False, False, True):
+        elif status == (False, False, True, False):
             data =[]
             for name, datetime in datetimes.items():
                 datetime.index = pd.MultiIndex.from_product([[name], datetime.index])
@@ -55,12 +62,12 @@ class PanelFrame(pd.DataFrame):
             data = pd.concat(data)
 
         else:
-            raise ValueError('only one of assets, indicators or dates should be passed!')
+            raise ValueError('only one of assets, indicators or dates should be passed, or just pass a dataframe!')
 
         super().__init__(data.values, index=data.index, columns=data.columns, **kwargs)
 
     @property
-    def data(self) -> dict:
+    def dict(self) -> dict:
         data_dict = {}
         for col in self.columns:
             data_dict[col] = self[col].unstack(level=1)
@@ -651,9 +658,9 @@ if __name__ == "__main__":
     print(pfd.datetimes, pfd.assets, pfd.indicators)
 
     print('=' * 20 + ' PanelFrame data ' + '=' * 20)
-    print(pfi.levshape, pfi.data)
-    print(pfa.levshape, pfa.data)
-    print(pfd.levshape, pfd.data)
+    print(pfi.levshape, pfi.dict)
+    print(pfa.levshape, pfa.dict)
+    print(pfd.levshape, pfd.dict)
 
     pfi.to_excel('pfi.xlsx')
     pfa.to_excel('pfa.xlsx')
