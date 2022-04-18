@@ -21,7 +21,7 @@ def algret2logret(algret):
     return np.log(algret + 1)
 
 def item2list(item) -> list:
-    if not isinstance(item, (Iterable, slice)):
+    if not isinstance(item, (list, tuple, slice)):
         item = [item]
     return item
 

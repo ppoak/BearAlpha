@@ -1,11 +1,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-# from ..tools import item2list, price2fwd, periodkey
-# from ..tools.util import index_dim
-from copy import deepcopy
-from typing import Iterable
 from pandas import ExcelWriter
 
 
@@ -676,7 +671,7 @@ if __name__ == "__main__":
     print(pfa.cut(datetime='20200101'))
     print(pfd.cut(asset='a'))
 
-    pfi.draw('line', asset='a', indicator='indicator1')
+    pfi.draw('line', asset='a', indicator='indicator1', title='Test', figsize=(20, 8))
     # pfa.draw('bar', datetime='20200101', indicator=['indicator1', 'indicator2'])
     # pfd.draw('hist', datetime='20200104', indicator='indicator4')
 
