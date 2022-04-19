@@ -62,9 +62,17 @@ def category2dummy(data: 'pd.DataFrame | pd.Series', **kwargs) -> pd.DataFrame:
     dummydata = pd.get_dummies(data, **kwargs)
     return dummydata
 
-def dummy2category(data: 'pd.DataFrame | pd.Series', category_name: str = "group") -> pd.DataFrame:
-    data = data.stack().copy()
-    data = data.loc[data == 1].reset_index().drop(0, axis=1)
-    data = data.set_index(data.columns[0])
-    data.columns = [category_name]
-    return data
+def dummy2category(data: 'pd.DataFrame | pd.Series', category_name: str = None) -> pd.DataFrame:
+    columns = pd.DataFrame(
+        data.columns.values.reshape((1, -1)).repeat(data.shape[0], axis=0),
+        index=data.index, columns=data.columns)
+    category = columns[data.astype('bool')].replace(np.nan, '').astype('str').sum(axis=1)
+    if category_name:
+        category = category.to_frame(name=category_name)
+    return category
+
+if __name__ == "__main__":
+    a = pd.read_csv("assets/data/stock.nosync/status/df_stock_status_2005-01-04.csv", index_col=0, parse_dates=True)
+    a = a.iloc[:, list([2]) + list(range(22, 52))]
+    a = a.set_index('stock_id')
+    print(dummy2category(a, 'group'))

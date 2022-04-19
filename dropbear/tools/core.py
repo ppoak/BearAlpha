@@ -77,9 +77,9 @@ class PanelFrame(pd.DataFrame):
         elif status == (False, False, True, False):
             data =[]
             for name, datetime in datetimes.items():
-                datetime.index = pd.MultiIndex.from_product([[name], datetime.index])
+                datetime.index = pd.MultiIndex.from_product([pd.to_datetime([name]), datetime.index])
                 data.append(datetime)
-            data = pd.concat(data)
+            data = pd.concat(data).sort_index()
 
         else:
             raise ValueError('only one of assets, indicators or dates should be passed, or just pass a dataframe!')
