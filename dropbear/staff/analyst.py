@@ -1,8 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-from .core import PanelFrame
-from ..tools import price2fwd
+from ..tools import price2fwd, category2dummy, PanelFrame
 
 
 class Analyzer(object):
@@ -75,7 +74,7 @@ class Analyzer(object):
         period: str, the period of regression
         '''
         def _reg(d):
-            dg = pd.get_dummies(d.loc[:, 'group']).iloc[:, :-1]
+            dg = category2dummy(d.loc[:, 'group'], drop_first=True)
             x = pd.concat([d.loc[:, 'factor'], dg], axis=1)
             x = sm.add_constant(x)
             y = d.loc[:, 'forward']
@@ -263,5 +262,5 @@ if __name__ == "__main__":
     groups = PanelFrame(datetimes=groups)
 
     analyzer = Analyzer(factor=factors, price=prices, group=groups, infer_forward='5d')
-    analyzer.layering()
-    analyzer.layering_plot(path='test.png')
+    analyzer.regression()
+    analyzer.regression_plot(show=True)

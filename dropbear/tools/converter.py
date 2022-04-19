@@ -58,3 +58,13 @@ def periodkey(key: 'str') -> 'str':
     else:
         return key
     
+def category2dummy(data: 'pd.DataFrame | pd.Series', **kwargs) -> pd.DataFrame:
+    dummydata = pd.get_dummies(data, **kwargs)
+    return dummydata
+
+def dummy2category(data: 'pd.DataFrame | pd.Series', category_name: str = "group") -> pd.DataFrame:
+    data = data.stack().copy()
+    data = data.loc[data == 1].reset_index().drop(0, axis=1)
+    data = data.set_index(data.columns[0])
+    data.columns = [category_name]
+    return data
