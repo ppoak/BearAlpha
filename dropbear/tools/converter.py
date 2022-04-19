@@ -71,8 +71,10 @@ def dummy2category(data: 'pd.DataFrame | pd.Series', category_name: str = None) 
         category = category.to_frame(name=category_name)
     return category
 
+
 if __name__ == "__main__":
     a = pd.read_csv("assets/data/stock.nosync/status/df_stock_status_2005-01-04.csv", index_col=0, parse_dates=True)
     a = a.iloc[:, list([2]) + list(range(22, 52))]
     a = a.set_index('stock_id')
     print(dummy2category(a, 'group'))
+    

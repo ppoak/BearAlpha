@@ -83,7 +83,7 @@ class PanelFrame(pd.DataFrame):
 
         else:
             raise ValueError('only one of assets, indicators or dates should be passed, or just pass a dataframe!')
-
+        
         super().__init__(data.values, index=data.index, columns=data.columns, **kwargs)
 
     @property
@@ -129,7 +129,7 @@ class PanelFrame(pd.DataFrame):
         else:
             super().to_excel(path, **kwargs)
     
-    def tcorr(self, method: str = 'pearson', tvalue: bool = True) -> pd.DataFrame:
+    def tcorr(self, method: str = 'pearson', tvalue: bool = True) -> 'pd.DataFrame | PanelFrame':
         '''Give the Correspondant Coefficient t value During Time Series
         ---------------------------------------------------------------
 
@@ -139,7 +139,7 @@ class PanelFrame(pd.DataFrame):
         '''
         corr_series = self.groupby(level=0).corr(method=method)
         if not tvalue:
-            return corr_series
+            return PanelFrame(dataframe=corr_series)
         n = corr_series.index.levels[0].size
         corr_mean = corr_series.groupby(level=1).mean()
         corr_std = corr_series.groupby(level=1).std()
@@ -167,6 +167,46 @@ class PanelFrame(pd.DataFrame):
             data = data.unstack(level=1)
         return data
 
+    def csdiff(self, cumlabel: 'str | list' = None, keep_first: bool = True, period: int = 1) -> 'PanelFrame':
+        '''Calculate the Cross Section Differenciate Value
+        ---------------------------------------------------
+        
+        this method is specifically used to process financial cumulative
+        data like net profit, which reports 4 times a year, while the latest
+        value is the cumulative sum of the preivious values, so you can
+        use this method to infer the single season value
+
+        keep_first: bool, whether to keep the first value of the cross section
+        period: int, the period of the differenciate
+        cumlabel: str or list, the label of the cumulative sum, like the financial 
+            report, updates values once a year, so set it to year; or if you get
+            a irregular period (exclude month, day, year ... ), set it to list, with
+            the cumulative values within the same label
+        return: PanelFrame, the cross section differenciate value
+        '''
+        def _diff(d, n, k):
+            r = d.diff(n)
+            if k:
+                r.iloc[:n] = d.iloc[:n]
+            return r
+        
+        data =self.copy()
+
+        if cumlabel is None:
+            data['label'] = 1
+        if cumlabel == "year":
+            data['label'] = data.index.get_level_values(0).year
+        elif cumlabel == "month":
+            data['label'] = data.index.get_level_values(0).month
+        elif cumlabel == "day":
+            data['label'] = data.index.get_level_values(0).day
+        else:
+            data['label'] = cumlabel
+        
+        res = data.groupby('label').apply(lambda x: x.groupby(level=1)\
+            .apply(_diff, n=period, k=keep_first)).drop('label', axis=1)
+        return PanelFrame(dataframe=res)
+
     def draw(self, kind: str, datetime: str = slice(None), 
         asset: str = slice(None), indicator: str = slice(None), **kwargs):
         '''Draw the Cross Section or Time Series DataFrame
@@ -189,7 +229,7 @@ class PanelFrame(pd.DataFrame):
 if __name__ == "__main__":
     import numpy as np
     import matplotlib.pyplot as plt
-    
+
     indicators = dict(zip(
         [f'indicator{i + 1}' for i in range(5)],
         [pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('2020-01-01', periods=100), columns=list('abcde')) for _ in range(5)]
@@ -237,8 +277,8 @@ if __name__ == "__main__":
     print(pfd.cut(asset='a'))
 
     pfi.draw('line', asset='a', indicator='indicator1', title='Test', figsize=(20, 8))
-    # pfa.draw('bar', datetime='20200101', indicator=['indicator1', 'indicator2'])
-    # pfd.draw('hist', datetime='20200104', indicator='indicator4')
+    pfa.draw('bar', datetime='20200101', indicator=['indicator1', 'indicator2'])
+    pfd.draw('hist', datetime='20200104', indicator='indicator4')
 
     plt.show()
     
