@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pandas import ExcelWriter
+from .converter import cum2diff
 
 
 class PanelFrame(pd.DataFrame):
@@ -84,7 +85,9 @@ class PanelFrame(pd.DataFrame):
         else:
             raise ValueError('only one of assets, indicators or dates should be passed, or just pass a dataframe!')
         
+        # mind that before initializing super() class, we cannot set any attributes
         super().__init__(data.values, index=data.index, columns=data.columns, **kwargs)
+        # after initialization, we can set some data container as normal class
 
     @property
     def dict(self) -> dict:
@@ -178,33 +181,20 @@ class PanelFrame(pd.DataFrame):
 
         keep_first: bool, whether to keep the first value of the cross section
         period: int, the period of the differenciate
-        cumlabel: str or list, the label of the cumulative sum, like the financial 
-            report, updates values once a year, so set it to year; or if you get
+        cumlabel: str or list, the label of the cumulative sum, you should set
+            it to time format string, such as '%Y'. It is used under some condition, 
+            like the financial report, updates values once a year, so set it to year; or if you get
             a irregular period (exclude month, day, year ... ), set it to list, with
             the cumulative values within the same label
         return: PanelFrame, the cross section differenciate value
         '''
-        def _diff(d, n, k):
-            r = d.diff(n)
-            if k:
-                r.iloc[:n] = d.iloc[:n]
-            return r
-        
-        data =self.copy()
-
-        if cumlabel is None:
-            data['label'] = 1
-        if cumlabel == "year":
-            data['label'] = data.index.get_level_values(0).year
-        elif cumlabel == "month":
-            data['label'] = data.index.get_level_values(0).month
-        elif cumlabel == "day":
-            data['label'] = data.index.get_level_values(0).day
+        data = self.copy()
+        if isinstance(cumlabel, str):
+            data['label'] = data.index.get_level_values(0).strftime(cumlabel)
         else:
             data['label'] = cumlabel
-        
         res = data.groupby('label').apply(lambda x: x.groupby(level=1)\
-            .apply(_diff, n=period, k=keep_first)).drop('label', axis=1)
+            .apply(cum2diff, keep_first=keep_first, period=period))
         return PanelFrame(dataframe=res)
 
     def draw(self, kind: str, datetime: str = slice(None), 
@@ -246,6 +236,9 @@ if __name__ == "__main__":
     pfi = PanelFrame(indicators=indicators)
     pfa = PanelFrame(assets=assets)
     pfd = PanelFrame(datetimes=datetimes)
+    
+    week_increment = pfi.csdiff('%w')
+    print(week_increment)
     
     print('=' * 20 + ' PanelFrame ' + '=' * 20)
     print(pfi)

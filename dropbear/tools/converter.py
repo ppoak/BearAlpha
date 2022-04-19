@@ -71,6 +71,12 @@ def dummy2category(data: 'pd.DataFrame | pd.Series', category_name: str = None) 
         category = category.to_frame(name=category_name)
     return category
 
+def cum2diff(data: 'pd.DataFrame | pd.Series', keep_first: bool = True, period: int = 1) -> 'pd.DataFrame | pd.Series':
+    diff = data.iloc[:, :-1].diff(period)
+    if keep_first:
+        diff.iloc[:period] = data.iloc[:period]
+    return diff
+
 
 if __name__ == "__main__":
     a = pd.read_csv("assets/data/stock.nosync/status/df_stock_status_2005-01-04.csv", index_col=0, parse_dates=True)
