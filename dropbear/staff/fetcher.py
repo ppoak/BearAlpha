@@ -34,4 +34,24 @@ def read_excel(path, index_col=None, parse_dates=True,
     else:
         return pd.read_excel(path, index_col=index_col, parse_dates=parse_dates, **kwargs)
             
-                
+@pd.api.extensions.register_dataframe_accessor("fetcher")
+class Fetcher(Worker):
+    def __init__(self, dataframe: pd.DataFrame, **kwargs):
+        super().__init__(dataframe)
+    
+    def to_multisheet_excel(self, path, **kwargs):
+        if self.type_ == Worker.PANEL:
+            with pd.ExcelWriter(path) as writer:
+                for column in self.dataframe.columns:
+                    self.dataframe[column].unstack(level=1).to_excel(writer, sheet_name=str(column), **kwargs)
+        
+        else:
+            self.dataframe.to_excel(path, **kwargs)
+
+
+if __name__ == '__main__':
+    import numpy as np
+
+    data = pd.DataFrame(np.random.rand(100, 20), 
+        index=pd.MultiIndex.from_product([pd.date_range('20210101', periods=5), range(20)]))
+    data.fetcher.to_multisheet_excel('test.xlsx')

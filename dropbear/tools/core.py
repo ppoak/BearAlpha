@@ -187,6 +187,35 @@ class PanelFrame(pd.DataFrame):
             data.index = data.index.strftime(r'%Y-%m-%d')
             data.plot(kind=kind, **kwargs)
 
+class Worker(object):
+    CROSSSECTION = 1
+    TIMESERIES = 2
+    PANEL = 3
+    
+    def __init__(self, dataframe: pd.DataFrame):
+        self.type_ = self._validate(dataframe)
+        self.dataframe = dataframe
+
+    def _validate(self, dataframe: pd.DataFrame):
+        if not isinstance(dataframe, pd.DataFrame):
+            raise TypeError('Dataframe must be a DataFrame')
+
+        if dataframe.empty:
+            raise ValueError('Dataframe is empty')
+
+        if isinstance(dataframe.index, pd.MultiIndex):
+            if isinstance(dataframe.index.levels[0], pd.DatetimeIndex) and len(dataframe.index.levshape) == 2:
+                return Worker.PANEL
+            
+            else:
+                raise TypeError('A panel index must be 2 level index with DatetimeIndex as level 0')
+        
+        else:
+            if not isinstance(dataframe.index, pd.DatetimeIndex):
+                return Worker.CROSSSECTION
+            else:
+                return Worker.TIMESERIES
+    
 
 if __name__ == "__main__":
     import numpy as np
