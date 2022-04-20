@@ -20,7 +20,7 @@ def concat(objs: 'pd.DataFrame | pd.Series | PanelFrame', **kwargs) -> 'pd.DataF
     else:
         return pd.concat(objs, **kwargs)
 
-class PreProcessor(object):
+class PreProcessor_(object):
     '''Data PreProcessor, using to preprocess data before passing panel data to calculation
     ======================================================================================
 
@@ -127,21 +127,56 @@ class PreProcessor(object):
         data = self.panel.groupby(level=0).apply(eval(f'_{method}'))
         return PanelFrame(dataframe=data)
 
+@pd.api.extensions.register_dataframe_accessor("preprocessor")
+class PreProcessor(Worker):
+    
+    def price2ret(self, period: str, open_column: str = 'close', close_column: str = 'close'):
+        if self.type_ == Worker.PANEL:
+            # https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html
+            # https://stackoverflow.com/questions/15799162/
+            close_price = self.dataframe.groupby([
+                pd.Grouper(level=0, freq=period, label='right'),
+                pd.Grouper(level=1)
+            ]).last().loc[:, close_column]
+            open_price = self.dataframe.groupby([
+                pd.Grouper(level=0, freq=period, label='right'),
+                pd.Grouper(level=1)
+            ]).first().loc[:, open_column]
+
+        elif self.type_ == Worker.TIMESERIES:
+            close_price = self.dataframe.resample(period, label='right')\
+                .last().loc[:, close_column]
+            open_price = self.dataframe.resample(period, label='right')\
+                .first().loc[:, open_column]
+
+        return (close_price - open_price) / open_price
+
+    def price2fwd(self, period: str, open_column: str = 'open', close_column: str = 'close'):
+        if self.type_ == Worker.PANEL:
+            # https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html
+            # https://stackoverflow.com/questions/15799162/
+            close_price = self.dataframe.groupby([
+                pd.Grouper(level=0, freq=period, label='left'),
+                pd.Grouper(level=1)
+            ]).last().loc[:, close_column]
+            open_price = self.dataframe.groupby([
+                pd.Grouper(level=0, freq=period, label='left'),
+                pd.Grouper(level=1)
+            ]).first().loc[:, open_column]
+
+        elif self.type_ == Worker.TIMESERIES:
+            close_price = self.dataframe.resample(period, label='left')\
+                .last().loc[:, close_column]
+            open_price = self.dataframe.resample(period, label='left')\
+                .first().loc[:, open_column]
+
+        return (close_price - open_price) / open_price
+        
+
 
 if __name__ == "__main__":
-    indicators = dict(zip(
-        [f'indicator{i + 1}' for i in range(5)],
-        [pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('2020-01-01', periods=100), columns=list('abcde')) for _ in range(5)]
-        ))
-    panel = PanelFrame(indicators=indicators)
-
-    processor = PreProcessor(panel=panel)
-    print(processor.deextreme('median_correct', n=5))
-    print(processor.deextreme('fix_odd', n=[0.1, 0.9]))
-    print(processor.deextreme('fix_odd', n=0.1))
-    print(processor.deextreme('mean_std', n=3))
-    print(processor.standard('zscore'))
-    print(processor.missing_fill('fillzero'))
-    print(processor.missing_fill('dropna'))
-    print(processor.missing_fill('fillmean'))
-    print(processor.missing_fill('fillmedian'))
+    import numpy as np
+    price = pd.DataFrame(np.random.rand(500, 4), columns=['open', 'high', 'low', 'close'],
+        index=pd.MultiIndex.from_product([pd.date_range('20100101', periods=100), list('abced')]))
+    
+    

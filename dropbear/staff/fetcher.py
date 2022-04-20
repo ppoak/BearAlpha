@@ -36,8 +36,6 @@ def read_excel(path, index_col=None, parse_dates=True,
             
 @pd.api.extensions.register_dataframe_accessor("fetcher")
 class Fetcher(Worker):
-    def __init__(self, dataframe: pd.DataFrame, **kwargs):
-        super().__init__(dataframe)
     
     def to_multisheet_excel(self, path, **kwargs):
         if self.type_ == Worker.PANEL:

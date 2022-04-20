@@ -10,10 +10,154 @@
 			"justMyCode": true
 		},
 		{
+			"name": "factor/tools/prepare",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.tools.prepare"
+		},
+		{
+			"name": "factor/define/size",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.size"
+		},
+		{
+			"name": "factor/define/technical",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.technical"
+		},
+		{
+			"name": "factor/define/base",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.base"
+		},
+		{
+			"name": "factor/define/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.__init__"
+		},
+		{
+			"name": "utils/common",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.common"
+		},
+		{
+			"name": "utils/database",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.database"
+		},
+		{
+			"name": "utils/getdata",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.getdata"
+		},
+		{
+			"name": "utils/io",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.io"
+		},
+		{
+			"name": "utils/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "utils.__init__"
+		},
+		{
 			"name": "sw_quadrant/run",
 			"type": "python",
 			"request": "launch",
 			"module": "sw_quadrant.run"
+		},
+		{
+			"name": "dropbear/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.__init__"
+		},
+		{
+			"name": "dropbear/tools/core",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.tools.core"
+		},
+		{
+			"name": "dropbear/tools/converter",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.tools.converter"
+		},
+		{
+			"name": "dropbear/tools/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.tools.__init__"
+		},
+		{
+			"name": "dropbear/staff/fetcher",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.staff.fetcher"
+		},
+		{
+			"name": "dropbear/staff/processor",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.staff.processor"
+		},
+		{
+			"name": "dropbear/staff/analyst",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.staff.analyst"
+		},
+		{
+			"name": "dropbear/staff/artist",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.staff.artist"
+		},
+		{
+			"name": "dropbear/staff/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "dropbear.staff.__init__"
+		},
+		{
+			"name": "absorb_ratio/compcontrib",
+			"type": "python",
+			"request": "launch",
+			"module": "absorb_ratio.compcontrib"
+		},
+		{
+			"name": "absorb_ratio/ar",
+			"type": "python",
+			"request": "launch",
+			"module": "absorb_ratio.ar"
+		},
+		{
+			"name": "absorb_ratio/test",
+			"type": "python",
+			"request": "launch",
+			"module": "absorb_ratio.test"
+		},
+		{
+			"name": "industrial_momentum_and_reverse/matprocessor",
+			"type": "python",
+			"request": "launch",
+			"module": "industrial_momentum_and_reverse.matprocessor"
+		},
+		{
+			"name": "industrial_momentum_and_reverse/run",
+			"type": "python",
+			"request": "launch",
+			"module": "industrial_momentum_and_reverse.run"
 		},
 		{
 			"name": "other/amount_concentration/calculate",
@@ -32,150 +176,6 @@
 			"type": "python",
 			"request": "launch",
 			"module": "other.financial_ratio.scripts"
-		},
-		{
-			"name": "utils/database",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.database"
-		},
-		{
-			"name": "utils/io",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.io"
-		},
-		{
-			"name": "utils/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.__init__"
-		},
-		{
-			"name": "utils/getdata",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.getdata"
-		},
-		{
-			"name": "utils/common",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.common"
-		},
-		{
-			"name": "factor/tools/prepare",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.tools.prepare"
-		},
-		{
-			"name": "factor/define/technical",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.technical"
-		},
-		{
-			"name": "factor/define/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.__init__"
-		},
-		{
-			"name": "factor/define/size",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.size"
-		},
-		{
-			"name": "factor/define/base",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.base"
-		},
-		{
-			"name": "dropbear/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.__init__"
-		},
-		{
-			"name": "dropbear/tools/treatment",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.tools.treatment"
-		},
-		{
-			"name": "dropbear/tools/converter",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.tools.converter"
-		},
-		{
-			"name": "dropbear/tools/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.tools.__init__"
-		},
-		{
-			"name": "dropbear/tools/core",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.tools.core"
-		},
-		{
-			"name": "dropbear/staff/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.staff.__init__"
-		},
-		{
-			"name": "dropbear/staff/processor",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.staff.processor"
-		},
-		{
-			"name": "dropbear/staff/artist",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.staff.artist"
-		},
-		{
-			"name": "dropbear/staff/analyst",
-			"type": "python",
-			"request": "launch",
-			"module": "dropbear.staff.analyst"
-		},
-		{
-			"name": "industrial_momentum_and_reverse/run",
-			"type": "python",
-			"request": "launch",
-			"module": "industrial_momentum_and_reverse.run"
-		},
-		{
-			"name": "industrial_momentum_and_reverse/matprocessor",
-			"type": "python",
-			"request": "launch",
-			"module": "industrial_momentum_and_reverse.matprocessor"
-		},
-		{
-			"name": "absorb_ratio/compcontrib",
-			"type": "python",
-			"request": "launch",
-			"module": "absorb_ratio.compcontrib"
-		},
-		{
-			"name": "absorb_ratio/test",
-			"type": "python",
-			"request": "launch",
-			"module": "absorb_ratio.test"
-		},
-		{
-			"name": "absorb_ratio/ar",
-			"type": "python",
-			"request": "launch",
-			"module": "absorb_ratio.ar"
 		}
 	]
 }

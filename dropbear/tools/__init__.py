@@ -1,5 +1,5 @@
 from .core import (
-    PanelFrame, 
+    PanelFrame, Worker
     )
 
 from .converter import (
@@ -13,11 +13,11 @@ from .converter import (
 
 
 __all__ = [
+    'PanelFrame', 'Worker',
     'datetime2str', 'str2datetime',
     'logret2algret', 'algret2logret',
     'item2list', 'periodkey',
     'price2ret', 'price2fwd',
     'category2dummy', 'dummy2category',
-    'cum2diff',
-    'PanelFrame'
+    'cum2diff'
     ]

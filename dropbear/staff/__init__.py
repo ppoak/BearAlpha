@@ -1,7 +1,8 @@
 from .analyst import (Analyzer)
 
 from .fetcher import (
-    read_csv, read_excel
+    read_csv, read_excel,
+    Fetcher
     )
     
 from .processor import (
@@ -13,6 +14,7 @@ from .processor import (
 __all__ = [
     'Analyzer', 
     'read_csv', 'read_excel',
+    'Fetcher',
     'merge', 'concat',
     'PreProcessor',
     ]
