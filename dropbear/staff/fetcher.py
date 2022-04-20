@@ -9,8 +9,6 @@ def read_csv(path, index_col=None, parse_dates=True, panel=False, **kwargs):
             index_col = [0, 1]
         return PanelFrame(dataframe=pd.read_csv(path, index_col=index_col, parse_dates=parse_dates, **kwargs))
     else:
-        if index_col is None:
-            index_col = 0
         return pd.read_csv(path, index_col=index_col, parse_dates=parse_dates, **kwargs)
 
 def read_excel(path, index_col=None, parse_dates=True, 
@@ -34,8 +32,6 @@ def read_excel(path, index_col=None, parse_dates=True,
         return PanelFrame(dataframe=pf)
     
     else:
-        if index_col is None:
-            index_col = 0
         return pd.read_excel(path, index_col=index_col, parse_dates=parse_dates, **kwargs)
             
                 
