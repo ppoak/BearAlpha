@@ -172,6 +172,35 @@ class PreProcessor(Worker):
 
         return (close_price - open_price) / open_price
         
+    def cum2diff(self, grouper = None, period: int = 1, axis: int = ..., keep: bool = True):
+        def _diff(data):
+            diff = data.diff(period, axis=axis)
+            if keep:
+                diff.iloc[:period] = data.iloc[period:]
+        
+        if grouper is None:
+            diff = _diff(self.dataframe)
+        else:
+            diff = self.dataframe.groupby(grouper).apply(_diff)
+            
+        return diff
+
+    def dummy2category(self, dummy_columns, name: str = 'group'):
+        columns = pd.DataFrame(
+            dummy_columns.values.reshape((1, -1))\
+            .repeat(self.dataframe.shape[0], axis=0),
+            index=self.dataframe.index, columns=self.dataframe.columns
+        )
+        category = columns[self.dataframe.loc[:, dummy_columns].astype('bool')]\
+            .replace(np.nan, '').astype('str').sum(axis=1)
+        category.name = name
+        return category
+
+    def logret2algret(logret):
+        return np.exp(logret) - 1
+    
+    def algret2logret(algret):
+        return np.log(algret + 1)
 
 
 if __name__ == "__main__":
