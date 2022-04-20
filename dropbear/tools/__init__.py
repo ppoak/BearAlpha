@@ -18,5 +18,6 @@ __all__ = [
     'item2list', 'periodkey',
     'price2ret', 'price2fwd',
     'category2dummy', 'dummy2category',
+    'cum2diff',
     'PanelFrame'
     ]

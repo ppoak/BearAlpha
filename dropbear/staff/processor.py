@@ -1,6 +1,24 @@
 import numpy as np
-from ..tools import PanelFrame
+import pandas as pd
+from ..tools import *
 
+
+def merge(left: 'pd.DataFrame | pd.Series | PanelFrame', right: 'pd.DataFrame | pd.Series | PanelFrame', 
+    **kwargs) -> 'pd.DataFrame | pd.Series | PanelFrame':
+    '''A dummy function for pandas.merge, if both left and right are PanelFrame,
+    then return a PanelFrame, otherwise return a pd.DataFrame'''
+    if isinstance(left, PanelFrame) and isinstance(right, PanelFrame):
+        return PanelFrame(dataframe=pd.merge(left, right, **kwargs))
+    else:
+        return pd.merge(left, right, **kwargs)
+
+def concat(objs: 'pd.DataFrame | pd.Series | PanelFrame', **kwargs) -> 'pd.DataFrame | pd.Series | PanelFrame':
+    '''A dummy function for pandas.concat, if all objects are PanelFrame, 
+    then return a PanelFrame, otherwise return a pd.DataFrame'''
+    if all(list(map(lambda x: isinstance(x, PanelFrame), objs))):
+        return PanelFrame(dataframe=pd.concat(objs, **kwargs))
+    else:
+        return pd.concat(objs, **kwargs)
 
 class PreProcessor(object):
     '''Data PreProcessor, using to preprocess data before passing panel data to calculation
@@ -111,9 +129,6 @@ class PreProcessor(object):
 
 
 if __name__ == "__main__":
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    
     indicators = dict(zip(
         [f'indicator{i + 1}' for i in range(5)],
         [pd.DataFrame(np.random.rand(100, 5), index=pd.date_range('2020-01-01', periods=100), columns=list('abcde')) for _ in range(5)]

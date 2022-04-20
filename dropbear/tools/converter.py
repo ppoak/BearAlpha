@@ -72,7 +72,7 @@ def dummy2category(data: 'pd.DataFrame | pd.Series', category_name: str = None) 
     return category
 
 def cum2diff(data: 'pd.DataFrame | pd.Series', keep_first: bool = True, period: int = 1) -> 'pd.DataFrame | pd.Series':
-    diff = data.iloc[:, :-1].diff(period)
+    diff = data.diff(period)
     if keep_first:
         diff.iloc[:period] = data.iloc[:period]
     return diff
