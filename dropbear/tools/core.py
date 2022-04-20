@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pandas import ExcelWriter
-from .converter import cum2diff
 
 
 class PanelFrame(pd.DataFrame):
@@ -169,33 +168,6 @@ class PanelFrame(pd.DataFrame):
         elif status[2]:
             data = data.unstack(level=1)
         return data
-
-    def csdiff(self, cumlabel: 'str | list' = None, keep_first: bool = True, period: int = 1) -> 'PanelFrame':
-        '''Calculate the Cross Section Differenciate Value
-        ---------------------------------------------------
-        
-        this method is specifically used to process financial cumulative
-        data like net profit, which reports 4 times a year, while the latest
-        value is the cumulative sum of the preivious values, so you can
-        use this method to infer the single season value
-
-        keep_first: bool, whether to keep the first value of the cross section
-        period: int, the period of the differenciate
-        cumlabel: str or list, the label of the cumulative sum, you should set
-            it to time format string, such as '%Y'. It is used under some condition, 
-            like the financial report, updates values once a year, so set it to year; or if you get
-            a irregular period (exclude month, day, year ... ), set it to list, with
-            the cumulative values within the same label
-        return: PanelFrame, the cross section differenciate value
-        '''
-        data = self.copy()
-        if isinstance(cumlabel, str):
-            data['label'] = data.index.get_level_values(0).strftime(cumlabel)
-        else:
-            data['label'] = cumlabel
-        res = data.groupby('label').apply(lambda x: x.groupby(level=1)\
-            .apply(cum2diff, keep_first=keep_first, period=period))
-        return PanelFrame(dataframe=res)
 
     def draw(self, kind: str, datetime: str = slice(None), 
         asset: str = slice(None), indicator: str = slice(None), **kwargs):

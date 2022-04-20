@@ -7,7 +7,8 @@ from .converter import (
     logret2algret, algret2logret, 
     item2list, periodkey,
     price2ret, price2fwd,
-    category2dummy, dummy2category
+    category2dummy, dummy2category,
+    cum2diff
     )
 
 
