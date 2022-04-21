@@ -172,16 +172,17 @@ class PreProcessor(Worker):
 
         return (close_price - open_price) / open_price
         
-    def cum2diff(self, grouper = None, period: int = 1, axis: int = ..., keep: bool = True):
+    def cum2diff(self, grouper = None, period: int = 1, axis: int = 0, keep: bool = True):
         def _diff(data):
             diff = data.diff(period, axis=axis)
             if keep:
-                diff.iloc[:period] = data.iloc[period:]
+                diff.iloc[:period] = data.iloc[:period]
+            return diff
         
         if grouper is None:
             diff = _diff(self.dataframe)
         else:
-            diff = self.dataframe.groupby(grouper).apply(_diff)
+            diff = self.dataframe.groupby(grouper).apply(lambda x: x.groupby(level=1).apply(_diff))
             
         return diff
 
