@@ -208,4 +208,3 @@ if __name__ == "__main__":
     price = pd.DataFrame(np.random.rand(500, 4), columns=['open', 'high', 'low', 'close'],
         index=pd.MultiIndex.from_product([pd.date_range('20100101', periods=100), list('abced')]))
     
-    
