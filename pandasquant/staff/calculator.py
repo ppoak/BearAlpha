@@ -5,7 +5,7 @@ from ..tools import *
 @pd.api.extensions.register_dataframe_accessor("calculator")
 class Calculator(Worker):
     
-    def rolling(self, window: int, func, *args, grouper = None, **kwargs):
+    def rolling(self, window: int, func, grouper = None, *args, **kwargs):
         ''''''
         if self.type_ == Worker.TIMESERIES:
             datetime_index = self.dataframe.index
@@ -15,9 +15,8 @@ class Calculator(Worker):
             raise TypeError('rolling only support for panel or time series data')
         
         result = []
-        for i in range(window - 1, datetime_index.size):
-            window_data = self.dataframe.loc[datetime_index[i - window + 1]:datetime_index[i]].copy()
-            window_data.index = window_data.index.remove_unused_levels()
+        for i in range(window, datetime_index.size):
+            window_data = self.dataframe.loc[datetime_index[i - window]:datetime_index[i]].copy()
             if grouper is not None:
                 window_result = window_data.groupby(grouper).apply(func, *args, **kwargs)
             else:
