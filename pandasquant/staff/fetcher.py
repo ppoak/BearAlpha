@@ -1,35 +1,116 @@
+import os
+import re
 import pandas as pd
 from ..tools import *
 
 
-def read_excel(path, indicators=False, assets=False, datetimes=False, **kwargs):
+def read_excel(path, perspective: str = None, **kwargs):
     '''A dummy function of pd.read_csv, which provide multi sheet reading function'''
-    if indicators or assets or datetimes:
-        sheets_dict = pd.read_excel(path, sheet_name=None)
-        datas = []
-        
-        if indicators and not assets and not datetimes:
-            for indicator, data in sheets_dict.items():
-                data = data.stack()
-                data.name = indicator
-                datas.append(data)
-
-        elif not indicators and assets and not datetimes:
-            for asset, data in sheets_dict.items():
-                data.index = pd.MultiIndex.from_product([data.index, [asset]])
-                datas.append(data)
-
-        elif not indicators and not assets and datetimes:
-            for datetime, data in sheets_dict.items():
-                data.index = pd.MultiIndex.from_product([[datetime], data.index])
-                datas.append(data)
-        
-        else:
-            raise ValueError('at most one of indicators, assets, datetimes can be True')
-
-    else:
+    if perspective is None:
         return pd.read_excel(path, **kwargs)
-            
+    
+    sheets_dict = pd.read_excel(path, sheet_name=None, **kwargs)
+    datas = []
+    if perspective == "indicator":
+        for indicator, data in sheets_dict.items():
+            data = data.stack()
+            data.name = indicator
+            datas.append(data)
+        datas = pd.concat(datas, axis=1)
+
+    elif perspective == "asset":
+        for asset, data in sheets_dict.items():
+            data.index = pd.MultiIndex.from_product([data.index, [asset]])
+            datas.append(data)
+        datas = pd.concat(datas)
+        datas = data.sort_index()
+
+    elif perspective == "datetime":
+        for datetime, data in sheets_dict.items():
+            data.index = pd.MultiIndex.from_product([[datetime], data.index])
+            datas.append(data)
+        datas = pd.concat(datas)
+    else:
+        raise ValueError('perspective must be in one of datetime, indicator or asset')
+    
+    return datas
+
+def read_csv_directory(path, perspective: str, **kwargs):
+    '''A enhanced function for reading files in a directory to a panel DataFrame
+    ----------------------------------------------------------------------------
+
+    path: path to the directory
+    perspective: 'datetime', 'asset', 'indicator'
+    kwargs: other arguments for pd.read_csv
+
+    **note: the name of the file in the directory will be interpreted as the 
+    sign(column or index) to the data, so set it to the brief one
+    '''
+    files = os.listdir(path)
+    datas = []
+    
+    if perspective == "indicator":
+        for file in files:
+            data = pd.read_csv(os.path.join(path, file), **kwargs)
+            data = data.stack()
+            data.name = file
+            datas.append(data)
+        datas = pd.concat(data, axis=1)
+
+    elif perspective == "asset":
+        for file in files:
+            data = pd.read_csv(os.path.join(path, file), **kwargs)
+            data.index = pd.MultiIndex.from_product([data.index, [file]])
+            datas.append(data)
+        datas = pd.concat(data)
+        
+    elif perspective == "datetime":
+        for file in files:
+            data = pd.read_csv(os.path.join(path, file), **kwargs)
+            data.index = pd.MultiIndex.from_product([pd.to_datetime([file]), data.index])
+            datas.append(data)
+        datas = pd.concat(data)
+    
+    return datas
+
+def read_excel_directory(path, perspective: str, **kwargs):
+    '''A enhanced function for reading files in a directory to a panel DataFrame
+    ----------------------------------------------------------------------------
+
+    path: path to the directory
+    perspective: 'datetime', 'asset', 'indicator'
+    kwargs: other arguments for pd.read_excel
+
+    **note: the name of the file in the directory will be interpreted as the 
+    sign(column or index) to the data, so set it to the brief one
+    '''
+    files = os.listdir(path)
+    datas = []
+    
+    if perspective == "indicator":
+        for file in files:
+            data = pd.read_excel(os.path.join(path, file), **kwargs)
+            data = data.stack()
+            data.name = file
+            datas.append(data)
+        datas = pd.concat(data, axis=1)
+
+    elif perspective == "asset":
+        for file in files:
+            data = pd.read_excel(os.path.join(path, file), **kwargs)
+            data.index = pd.MultiIndex.from_product([data.index, [file]])
+            datas.append(data)
+        datas = pd.concat(data)
+        
+    elif perspective == "datetime":
+        for file in files:
+            data = pd.read_excel(os.path.join(path, file), **kwargs)
+            data.index = pd.MultiIndex.from_product([pd.to_datetime([file]), data.index])
+            datas.append(data)
+        datas = pd.concat(data)
+    
+    return datas
+
 @pd.api.extensions.register_dataframe_accessor("fetcher")
 class Fetcher(Worker):
     
