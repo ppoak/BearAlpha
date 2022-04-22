@@ -4,9 +4,12 @@ from .fetcher import (
     read_excel,
     Fetcher
     )
+
+from .calculator import (
+    Calculator
+)
     
 from .processor import (
-    merge, concat,
     PreProcessor
 )
 
@@ -15,6 +18,6 @@ __all__ = [
     'Analyzer', 
     'read_excel',
     'Fetcher',
-    'merge', 'concat',
+    'Calculator',
     'PreProcessor',
     ]
