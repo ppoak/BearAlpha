@@ -30,6 +30,7 @@ def read_excel(path, perspective: str = None, **kwargs):
             data.index = pd.MultiIndex.from_product([[datetime], data.index])
             datas.append(data)
         datas = pd.concat(datas)
+
     else:
         raise ValueError('perspective must be in one of datetime, indicator or asset')
     
@@ -51,25 +52,28 @@ def read_csv_directory(path, perspective: str, **kwargs):
     
     if perspective == "indicator":
         for file in files:
+            name = os.path.splitext(file)[0]
             data = pd.read_csv(os.path.join(path, file), **kwargs)
             data = data.stack()
-            data.name = file
+            data.name = name
             datas.append(data)
-        datas = pd.concat(data, axis=1)
+        datas = pd.concat(datas, axis=1).sort_index()
 
     elif perspective == "asset":
         for file in files:
+            name = os.path.splitext(file)[0]
             data = pd.read_csv(os.path.join(path, file), **kwargs)
-            data.index = pd.MultiIndex.from_product([data.index, [file]])
+            data.index = pd.MultiIndex.from_product([data.index, [name]])
             datas.append(data)
-        datas = pd.concat(data)
+        datas = pd.concat(datas).sort_index()
         
     elif perspective == "datetime":
         for file in files:
+            name = os.path.splitext(file)[0]
             data = pd.read_csv(os.path.join(path, file), **kwargs)
-            data.index = pd.MultiIndex.from_product([pd.to_datetime([file]), data.index])
+            data.index = pd.MultiIndex.from_product([pd.to_datetime([name]), data.index])
             datas.append(data)
-        datas = pd.concat(data)
+        datas = pd.concat(datas).sort_index()
     
     return datas
 
@@ -89,25 +93,28 @@ def read_excel_directory(path, perspective: str, **kwargs):
     
     if perspective == "indicator":
         for file in files:
+            name = os.path.splitext(file)[0]
             data = pd.read_excel(os.path.join(path, file), **kwargs)
             data = data.stack()
-            data.name = file
+            data.name = name
             datas.append(data)
-        datas = pd.concat(data, axis=1)
+        datas = pd.concat(datas, axis=1).sort_index()
 
     elif perspective == "asset":
         for file in files:
+            name = os.path.splitext(file)[0]
             data = pd.read_excel(os.path.join(path, file), **kwargs)
-            data.index = pd.MultiIndex.from_product([data.index, [file]])
+            data.index = pd.MultiIndex.from_product([data.index, [name]])
             datas.append(data)
-        datas = pd.concat(data)
+        datas = pd.concat(datas).sort_index()
         
     elif perspective == "datetime":
         for file in files:
+            name = os.path.splitext(file)[0]
             data = pd.read_excel(os.path.join(path, file), **kwargs)
-            data.index = pd.MultiIndex.from_product([pd.to_datetime([file]), data.index])
+            data.index = pd.MultiIndex.from_product([pd.to_datetime([name]), data.index])
             datas.append(data)
-        datas = pd.concat(data)
+        datas = pd.concat(datas).sort_index()
     
     return datas
 
