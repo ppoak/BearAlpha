@@ -5,7 +5,7 @@ from ..tools import *
 @pd.api.extensions.register_dataframe_accessor("calculator")
 class Calculator(Worker):
     
-    def rolling(self, window: int, func, grouper = None, *args, **kwargs):
+    def rolling(self, window: int, func, *args, grouper = None, **kwargs):
         ''''''
         if self.type_ == Worker.TIMESERIES:
             datetime_index = self.dataframe.index
