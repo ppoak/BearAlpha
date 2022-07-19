@@ -150,7 +150,8 @@ class Cache(diskcache.Cache):
         expire_time: float = 3600,
     ):
         if directory is None:
-            directory = os.path.join(os.path.split(os.path.abspath(__file__))[0] ,'..', 'cache')
+            directory = os.path.join(os.path.split(
+                os.path.abspath(__file__))[0] , '..', '..', 'cache')
         self.prefix = prefix
         self.expire_time = expire_time
         super().__init__(directory)

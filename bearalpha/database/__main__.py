@@ -93,8 +93,12 @@ configs = dict(
     tushare_market_daily_config = tushare_market_daily_config,
 )
 
-if __name__ == "__main__":
+def main():
     config_name = sys.argv[1]
     config = configs[config_name]
     loader = config['loader'](config)
     loader()
+
+
+if __name__ == "__main__":
+    main()
