@@ -1,11 +1,11 @@
 [submodule "research"]
     path = "research"
-    url = https://github.com:ppoak/research
+    url = https://github.com/ppoak/research
 
 [submodule "backtest"]
     path = "backtest"
-    url = https://github.com:ppoak/backtest
+    url = https://github.com/ppoak/backtest
 
 [submodule "factor"]
     path = "factor"
-    url = https://github.com:ppoak/factor
+    url = https://github.com/ppoak/factor
