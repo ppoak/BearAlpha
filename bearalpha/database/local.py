@@ -1,5 +1,5 @@
 import pandas as pd
-from ..tools import Loader
+from ..core import *
 
 
 class Local(Loader):

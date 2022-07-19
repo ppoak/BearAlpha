@@ -1,7 +1,7 @@
 import pandas as pd
 import tushare as ts
-import quool as ql
 from ..tools import *
+from ..core import *
 
 
 class Stock(DataBase):
@@ -156,8 +156,8 @@ class TuShare:
         end: str = None, 
         code: str = None,
     ):
-        start = ql.time2str(start).replace('-', '') if start is not None else None
-        end = ql.time2str(end).replace('-', '') if end is not None else None
+        start = time2str(start).replace('-', '') if start is not None else None
+        end = time2str(end).replace('-', '') if end is not None else None
         data = self.datasource.daily(start_date=start, end_date=end, code=code)
         if data.empty:
             return None
@@ -167,8 +167,4 @@ class TuShare:
 
 
 if __name__ == '__main__':
-    stock = ql.Stock(ql.Cache().get('local'))
-    stock.index_weights(start='20200101', end='20200110', 
-        code='000300.XSHG', fields=None).round(4).printer.display(title='test')
-    tus = TuShare(ql.Cache().get('tushare'))
-    tus.market_daily('20211231', '20211231').printer.display(indicator='close', title='close')
+    pass

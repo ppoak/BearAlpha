@@ -3,6 +3,7 @@ import re
 import sys
 import pandas as pd
 import sqlalchemy as sql
+from ..core import *
 from ..tools import *
 
 
@@ -373,12 +374,4 @@ class Databaser(Worker):
 
 
 if __name__ == '__main__':
-    # fetcher = StockUS("guflrppo3jct4mon7kw13fmv3dsz9kf2")
-    # price = fetcher.cn_price('000001.SZ', '20100101', '20200101')
-    # print(price)
-    from .provider import Stock
-    import numpy as np
-    con = sql.create_engine('sqlite:///./data.nosync/stock.db')
-    Stock.trade_date('20200101', '20220101').databaser.to_sql('test', con)
-    # conn = sql.create_engine('mysql+pymysql://windreader:password1@221.226.96.114:10087/wind')
-    
+    pass

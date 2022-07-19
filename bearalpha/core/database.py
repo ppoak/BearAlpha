@@ -3,9 +3,9 @@ import time
 import random
 import requests
 import datetime
-import quool as ql
 import pandas as pd
 import sqlalchemy as sql
+from ..tools import *
 from lxml import etree
 from bs4 import BeautifulSoup
 
@@ -20,13 +20,13 @@ class DataBase:
         index_col: 'str | list', and_: 'list | str', or_: 'str | list'):
         start = start or '20070104'
         end = end or self.today
-        start = ql.str2time(start)
-        end = ql.str2time(end)
-        code = ql.item2list(code)
-        fields = ql.item2list(fields)
-        index_col = ql.item2list(index_col)
-        and_ = ql.item2list(and_)
-        or_ = ql.item2list(or_)
+        start = str2time(start)
+        end = str2time(end)
+        code = item2list(code)
+        fields = item2list(fields)
+        index_col = item2list(index_col)
+        and_ = item2list(and_)
+        or_ = item2list(or_)
 
         if fields:
             fields = set(fields).union(set(index_col))
@@ -114,6 +114,7 @@ class Loader:
     def __call__(self):
         raise NotImplementedError
 
+
 class Request(object):
 
     def __init__(self, url, headers: dict = None, **kwargs):
@@ -144,7 +145,6 @@ class Request(object):
         }
         return base_header
 
-    # @cache()
     def get(self):
         try:
             response = requests.get(self.url, headers=self.headers, **self.kwargs)

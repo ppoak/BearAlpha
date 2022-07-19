@@ -1,6 +1,7 @@
 import datetime
-import quool as ql
 import pandas as pd
+from ..core import *
+from ..tools import *
 
 
 class Em:
@@ -14,7 +15,7 @@ class Em:
         date: str or datetime, the given date
         return: pd.DataFrame, a dataframe containing information on eastmoney
         '''
-        date = ql.time2str(date)
+        date = time2str(date)
         params = {
             "sortColumns": "TOTAL_NETAMT,ONLIST_DATE,OPERATEDEPT_CODE",
             "sortTypes": "-1,-1,1",
@@ -29,7 +30,7 @@ class Em:
         headers = {
             "Referer": "https://data.eastmoney.com/"
         }
-        res = ql.Request(cls.__data_center, headers=headers, params=params).get().json
+        res = Request(cls.__data_center, headers=headers, params=params).get().json
         data = res['result']['data']
         data = pd.DataFrame(data)
         data = data.rename(columns=dict(zip(data.columns, data.columns.map(lambda x: x.lower()))))
@@ -38,7 +39,7 @@ class Em:
     
     @classmethod
     def active_opdep_details(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
-        date = ql.time2str(date)
+        date = time2str(date)
         params = {
             "sortColumns": "TOTAL_NETAMT,ONLIST_DATE,OPERATEDEPT_CODE",
             "sortTypes": "-1,-1,1",
@@ -53,7 +54,7 @@ class Em:
         headers = {
             "Referer": "https://data.eastmoney.com/"
         }
-        res = ql.Request(cls.__data_center, headers=headers, params=params).get().json
+        res = Request(cls.__data_center, headers=headers, params=params).get().json
         data = res['result']['data']
         data = pd.DataFrame(data)
         data = data.rename(columns=dict(zip(data.columns, data.columns.map(lambda x: x.lower()))))
@@ -76,7 +77,7 @@ class Em:
             headers = {
                 "Referer": "https://data.eastmoney.com/"
             }
-            res = ql.Request(cls.__data_center, headers=headers, params=params).get().json
+            res = Request(cls.__data_center, headers=headers, params=params).get().json
             data = res['result']['data']
             data = pd.DataFrame(data)
             datas.append(data)
@@ -89,7 +90,7 @@ class Em:
         
     @classmethod
     def institution_trade(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
-        date = ql.time2str(date)
+        date = time2str(date)
         params = {
             'sortColumns' : 'NET_BUY_AMT,TRADE_DATE,SECURITY_CODE',
             'sortTypes' : '-1,-1,1',
@@ -105,7 +106,7 @@ class Em:
         headers = {
             "Referer": "https://data.eastmoney.com/"
         }
-        res = ql.Request(cls.__data_center, headers=headers, params=params).get().json
+        res = Request(cls.__data_center, headers=headers, params=params).get().json
         data = res['result']['data']
         data = pd.DataFrame(data)
         data = data.rename(columns=dict(zip(data.columns, data.columns.map(lambda x: x.lower()))))
@@ -117,7 +118,7 @@ class Em:
         import requests
         import numpy as np
         import re
-        date = ql.time2str(date)
+        date = time2str(date)
         main_page = 'https://data.eastmoney.com/hsgtcg/InstitutionQueryMore.html'
         res = requests.get(main_page)
         res.raise_for_status()
@@ -144,7 +145,7 @@ class Em:
                 headers = {
                     "Referer": "https://data.eastmoney.com/"
                 }
-                res = ql.Request(url=cls.__data_center, headers=headers, params=params).get().response
+                res = Request(url=cls.__data_center, headers=headers, params=params).get().response
                 data = eval(res.text.replace('true', 'True').replace('false', 'False').\
                     replace('null', 'np.nan').replace(callbackfunc, '')[1:-2])
                 if data['result'] is not np.nan:
@@ -160,7 +161,7 @@ class Em:
     
     @classmethod
     def stock_buyback(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
-        date = ql.time2str(date)
+        date = time2str(date)
         datas = []
         for i in range(50):
             params = {
@@ -175,7 +176,7 @@ class Em:
             headers = {
                 "Referer": "https://data.eastmoney.com/"
             }
-            res = ql.Request(cls.__data_center, headers=headers, params=params).get().json
+            res = Request(cls.__data_center, headers=headers, params=params).get().json
             if res['result'] is None:
                 break
             data = res['result']['data']

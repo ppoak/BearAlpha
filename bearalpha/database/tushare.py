@@ -1,5 +1,5 @@
-import quool as ql
-from ..tools import Loader
+from ..tools import *
+from ..core import *
 
 class TuShare(Loader):
     
@@ -9,7 +9,7 @@ class TuShare(Loader):
         self.args = config.get('args', {})
 
     def write(self):
-        for arg in ql.Track(list(self.args)):
+        for arg in Track(list(self.args)):
             data = None
             while data is None:
                 try:

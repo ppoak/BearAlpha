@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import backtrader as bt
 import matplotlib.pyplot as plt
+from ..core import *
 from ..tools import *
 
 class BackTesterError(FrameWorkError):
