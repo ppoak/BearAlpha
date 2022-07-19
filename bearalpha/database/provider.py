@@ -1,5 +1,4 @@
 import pandas as pd
-import tushare as ts
 from ..tools import *
 from ..core import *
 
@@ -149,6 +148,7 @@ class Stock(DataBase):
 class TuShare:
 
     def __init__(self, token: str) -> None:
+        import tushare as ts
         self.datasource = ts.pro_api(token)
     
     def market_daily(self, 
