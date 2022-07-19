@@ -1,5 +1,5 @@
-import quool as ql
 import pandas as pd
+from ..core import *
 
 
 class StockUS:
@@ -16,7 +16,7 @@ class StockUS:
     @classmethod
     def index_price(cls, index: str, start: str, end: str):
         url = cls.root + f"index-price?security_code={index}&start={start}&stop={end}"
-        res = ql.Request(url, headers=cls.headers).get().json
+        res = Request(url, headers=cls.headers).get().json
         price = pd.DataFrame(res['price'])
         price['date'] = price['date'].astype('datetime64[ns]')
         price = price.set_index('date')
@@ -25,7 +25,7 @@ class StockUS:
     @classmethod
     def cn_price(cls, code: str, start: str, end: str):
         url = cls.root + f"cn-price?security_code={code}&start={start}&stop={end}"
-        res = ql.Request(url, headers=cls.headers).get().json
+        res = Request(url, headers=cls.headers).get().json
         price = pd.DataFrame(res['price'])
         price['date'] = price['date'].astype('datetime64[ns]')
         price = price.set_index('date')
@@ -54,7 +54,7 @@ class StockUS:
                   f'&author={author}&xcf_years={xcf_years}&search_fields={search_fields}'
                   f'&page={page}&page_size={page_size}')
         url += params
-        res = ql.Request(url, headers=cls.headers).get().json
+        res = Request(url, headers=cls.headers).get().json
         data = pd.DataFrame(res['data'])
         data[['pub_date', 'pub_week']] = data[['pub_date', 'pub_week']].astype('datetime64[ns]')
         data.authors = data.authors.map(
@@ -84,7 +84,7 @@ class StockUS:
                   f'&xcf_years={xcf_years}&search_fields={search_fields}&page={page}'
                   f'&page_size={page_size}')
         url += params
-        res = ql.Request(url, headers=cls.headers).get().json
+        res = Request(url, headers=cls.headers).get().json
         data = pd.DataFrame(res['data'])
         data['pub_date'] = data['pub_date'].astype('datetime64[ns]')
         data.authors = data.authors.map(

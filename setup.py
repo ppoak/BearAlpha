@@ -1,5 +1,8 @@
 from setuptools import setup, find_packages
+from bearalpha import __version__
 
+with open('README.md', 'r') as f:
+    ldes = f.read()
 
 setup(
     name='bearalpha',
@@ -7,9 +10,11 @@ setup(
     author='ppoak',
     author_email='ppoak@foxmail.com',
     description='A Quantum Finance Analyze Toolkit',
+    long_description=ldes,
+    long_description_content_type='text/markdown',
     keywords=['Quantum', 'Finance'],
     url="https://github.com/ppoak/BearAlpha",
-    version='0.1.0',
+    version=__version__,
     install_requires=[
         'pandas',
         'numpy',
@@ -27,8 +32,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            'bach=bearalpha.quool.__main__:main',
-            'badb=bearalpha.database.__main__:main',
+            'ba=bearalpha.__main__:main',
         ]
     }
 )
