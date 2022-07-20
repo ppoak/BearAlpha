@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-import bearalpha as ba
 from ..core import *
+from ..tools import *
 
 
 class AnalystError(FrameWorkError):
@@ -258,7 +258,7 @@ class Describer(Worker):
         
         groupers = [pd.Grouper(level=0)]
         if grouper is not None:
-            groupers += ba.item2list(grouper)
+            groupers += item2list(grouper)
         groupers_num = len(groupers)
             
         if self.type_ == Worker.PN:
