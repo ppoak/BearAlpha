@@ -11,7 +11,8 @@ from .analyst import (
 
 from .fetcher import (
     Filer,
-    Databaser,
+    Sqliter,
+    Mysqler,
 )
 
 from .calculator import (

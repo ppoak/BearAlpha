@@ -197,12 +197,11 @@ class Filer(Worker):
                 writer.write_table(table=data)
         else:
             self.data.to_parquet(path, compression=compression, index=index, **kwargs)
-  
-@pd.api.extensions.register_dataframe_accessor("databaser")
-@pd.api.extensions.register_series_accessor("databaser")
+
+
 class Databaser(Worker):
 
-    def __sql_cols(self, data, usage="sql"):
+    def _sql_cols(self, data, usage="sql"):
         '''internal usage: get sql columns from dataframe df'''
         cols = tuple(data.columns)
         if usage == "sql":
@@ -225,6 +224,258 @@ class Databaser(Worker):
             for col in cols[1:]:
                 base += ', `%s`=excluded.`%s`' % (col, col)
             return base
+
+
+@pd.api.extensions.register_dataframe_accessor("sqliter")
+@pd.api.extensions.register_series_accessor("sqliter")
+class Sqliter(Databaser):
+
+    def _create(self, 
+        data: pd.DataFrame, 
+        database: 'sql.engine.Engine | str',
+        table: str,
+        index: bool = True,
+        index_col: str = None,
+        ):
+        """Create a table and set primary key, adjust format after that"""
+        data.to_sql(table, database, index=False)
+        if index:
+            # unluckily sqlite3 donesn't support alter table, 
+            # so we have to drop and recreate
+            # https://www.yiibai.com/sqlite/primary-key.html
+            with database.connect() as conn:
+                sql_create = conn.execute("SELECT sql FROM sqlite_master WHERE tbl_name = '%s'"
+                        % table).fetchall()[0][0]
+                conn.execute("ALTER TABLE %s RENAME TO %s_temp" % (table, table))
+                sql_create_index = sql_create.replace(")", ", PRIMARY KEY %s)" % index_col)
+                conn.execute(sql_create_index)
+                conn.execute("INSERT INTO %s SELECT * FROM %s_temp" % (table, table))
+                conn.execute("DROP TABLE %s_temp" % table)
+            # after dealing with the problem of primary key,
+            # we should continue to change the format of time
+            self.formattime(database, table)
+
+    def _checkcol(self, 
+        data: pd.DataFrame, 
+        database: 'sql.engine.Engine | str',
+        table: str,
+        ):
+        dbcol = pd.read_sql(f'select * from {table} limit 1', con=database).columns
+        dacol = data.columns
+        to_create = dacol.difference(dbcol)
+        with database.connect() as conn:
+            for tc in to_create:
+                conn.execute(f'ALTER TABLE {table} ADD COLUMN {tc}')
+    
+    def _to_sql(self, 
+        data: pd.DataFrame,
+        table: str,
+        database: 'str | sql.engine.Engine',
+        on_duplicate: str = 'update',
+        chunksize: int = 2000,
+        ):
+        # now just make the data enter the database
+        table = ".".join(["`" + x + "`" for x in table.split(".")])
+
+        data = data.fillna("None")
+        data = data.applymap(lambda x: re.sub(r'([\'\"\\])', '\\\g<1>', str(x)))
+        cols_str = self._sql_cols(data)
+        for i in range(0, len(data), chunksize):
+            # print("chunk-{no}, size-{size}".format(no=str(i/chunksize), size=chunksize))
+            tmp = data.iloc[i: i + chunksize]
+
+            if on_duplicate == "replace":
+                sql_base = f"INSERT OR REPLACE INTO {table} {cols_str}"
+
+            elif on_duplicate == "update":
+                sql_base = f"INSERT INTO {table} {cols_str}"
+                sql_update = f" ON CONFLICT DO UPDATE SET {self._sql_cols(tmp, 'excluded')}"
+
+            elif on_duplicate == "ignore":
+                sql_base = f"INSERT OR IGNORE INTO {table} {cols_str}"
+
+            sql_val = self._sql_cols(tmp, "format")
+            vals = tuple([sql_val % x for x in tmp.to_dict("records")])
+            sql_vals = " VALUES ({x})".format(x=vals[0])
+            for i in range(1, len(vals)):
+                sql_vals += ", ({x})".format(x=vals[i])
+            sql_vals = sql_vals.replace("'None'", "NULL")
+
+            sql_main = sql_base + sql_vals
+            if on_duplicate == "update":
+                sql_main += sql_update
+
+            if sys.version_info.major == 2:
+                sql_main = sql_main.replace("u`", "`")
+            if sys.version_info.major == 3:
+                sql_main = sql_main.replace("%", "%%")
+            with database.connect() as conn:
+                conn.execute(sql_main)
+
+    def to_sql(self, table: str, database: 'sql.engine.base.Engine | str', index: bool = True,
+        on_duplicate: str = "update", chunksize: int = 2000):
+        """Save current dataframe to database, only support for mysql and sqlite
+        ------------------------------------------------------------------------
+
+        table: str, table to insert data;
+        database: Sqlalchemy Engine object
+        kind: str, optional {"update", "replace", "ignore"}, default "update" specified the way to update
+            "update": "INSERT ... ON DUPLICATE UPDATE ...", 
+            "replace": "REPLACE ...",
+            "ignore": "INSERT IGNORE ..."
+        chunksize: int, size of records to be inserted each time;
+        """
+        # if database is a str connection, just transform it
+        if isinstance(database, str):
+            database = sql.engine.create_engine(database)
+        
+        # we should ensure data is in a frame form and no index can be assigned      
+        data = self.data.copy()
+        if not self.is_frame:
+            data = data.to_frame()
+        if index:
+            if isinstance(self.data.index, pd.MultiIndex):
+                index_col = '(`' + '`, `'.join(self.data.index.names) + '`)'
+            else:
+                index_col = f'(`{self.data.index.name}`)'
+            if data.index.has_duplicates:
+                CONSOLE.print('[yellow][!][/yellow] Warning: index has duplicates, will be ignored except the first one')
+                data = data[~data.index.duplicated(keep='first')]
+            data = data.reset_index()
+
+        # check whether table exists
+        with database.connect() as conn:
+            check = database.execute("SELECT name FROM sqlite_master"
+                " WHERE type='table' AND name='%s'" % table).fetchall()
+                
+        # if table does not exist, create table
+        if not check:
+            self._create(data, database, table, index, index_col)
+
+        else:
+            # else check the whether the columns are consistent
+            self._checkcol(data, database, table)
+            self._to_sql(data, table, database, on_duplicate, chunksize)
+    
+    @staticmethod
+    def add_index(table: str, database: 'sql.engine.base.Engine | str', **indexargs):
+        # if database is a str connection, just transform it
+        if isinstance(database, str):
+            database = sql.engine.create_engine(database)
+
+        # to see whether the index already exists
+        with database.connect() as connect:
+            idxnames = connect.execute(f'SELECT name FROM sqlite_master WHERE type ' 
+                f'= "index" and tbl_name = "{table}"').fetchall()
+            idxnames = list(map(lambda x: x[0], idxnames))
+
+        for idxname, arg in indexargs.items():
+            if idxname not in idxnames:
+                if isinstance(arg, str):
+                    sqlcol = str(arg).replace("'", "`")
+                    indextype = ''
+                elif isinstance(arg, dict):
+                    sqlcol = arg['col']
+                    indextype = arg.get('type', '')
+                with database.connect() as connect:
+                    connect.execute(f'CREATE {indextype} INDEX `{idxname}` on {table} ({sqlcol})')
+        
+    @staticmethod
+    def formattime(database: 'sql.engine.Engine | str', table: str):
+        with database.connect() as conn:
+            types = pd.DataFrame(conn.execute(f'PRAGMA table_info({table})').fetchall())
+            datetime_cols = types[types['type'] == 'DATETIME']['name'].to_list()
+            for dtcol in datetime_cols:
+                conn.execute(f'UPDATE {table} set `{dtcol}` = datetime(`{dtcol}`)')
+    
+
+@pd.api.extensions.register_dataframe_accessor("mysqler")
+@pd.api.extensions.register_series_accessor("mysqler")
+class Mysqler(Databaser):
+
+    def _create(self, 
+        data: pd.DataFrame, 
+        database: 'sql.engine.Engine | str',
+        table: str,
+        index: bool = True,
+        index_col: str = None,
+        ):
+        """Create a table and set primary key, adjust format after that"""
+        data.to_sql(table, database, index=False)
+        if index:
+            # This code block is not maintained by ppoak,
+            # so I cannot promise its validity
+            with database.connect() as conn:
+                print(20*'*', index_col, 20*'*')
+                index_col_cp = index_col
+                index_col_cp = index_col_cp[1:-1] # remove ()
+                col_ls = index_col_cp.split(',')
+                skips = ['date', 'period']
+                for col in col_ls:
+                    col = col.strip()
+                    for substring in skips:
+                        if col[1:-1].lower().find(substring) != -1:
+                            break
+                    else:
+                        conn.execute(f"ALTER TABLE `{table}` MODIFY `{col[1:-1]}` {sql.types.CHAR(length=20)}")
+                conn.execute("ALTER TABLE %s ADD INDEX %s" % (table, index_col))
+
+    def _checkcol(self, 
+        data: pd.DataFrame, 
+        database: 'sql.engine.Engine | str',
+        table: str,
+        ):
+        dbcol = pd.read_sql(f'select * from {table} limit 1', con=database).columns
+        dacol = data.columns
+        to_create = dacol.difference(dbcol)
+        with database.connect() as conn:
+            for tc in to_create:
+                # TODO: MYSQL create new column waiting to be finished
+                pass
+    
+    def _to_sql(self,
+        data: pd.DataFrame,
+        table: str,
+        database: 'str | sql.engine.Engine',
+        on_duplicate: str = 'update',
+        chunksize: int = 2000,
+        ):
+        table = ".".join(["`" + x + "`" for x in table.split(".")])
+
+        data = data.fillna("None")
+        data = data.applymap(lambda x: re.sub(r'([\'\"\\])', '\\\g<1>', str(x)))
+        cols_str = self._sql_cols(data)
+        for i in range(0, len(data), chunksize):
+            # print("chunk-{no}, size-{size}".format(no=str(i/chunksize), size=chunksize))
+            tmp = data.iloc[i: i + chunksize]
+
+            if on_duplicate == "replace":
+                sql_base = f"REPLACE INTO {table} {cols_str}"
+
+            elif on_duplicate == "update":
+                sql_base = f"INSERT INTO {table} {cols_str}"
+                sql_update = f" ON DUPLICATE KEY UPDATE {self._sql_cols(tmp, 'values')}"
+
+            elif on_duplicate == "ignore":
+                sql_base = f"INSERT IGNORE INTO {table} {cols_str}"
+
+            sql_val = self._sql_cols(tmp, "format")
+            vals = tuple([sql_val % x for x in tmp.to_dict("records")])
+            sql_vals = " VALUES ({x})".format(x=vals[0])
+            for i in range(1, len(vals)):
+                sql_vals += ", ({x})".format(x=vals[i])
+            sql_vals = sql_vals.replace("'None'", "NULL")
+
+            sql_main = sql_base + sql_vals
+            if on_duplicate == "update":
+                sql_main += sql_update
+
+            if sys.version_info.major == 2:
+                sql_main = sql_main.replace("u`", "`")
+            if sys.version_info.major == 3:
+                sql_main = sql_main.replace("%", "%%")
+            with database.connect() as conn:
+                conn.execute(sql_main)
 
     def to_sql(self, table: str, database: 'sql.engine.base.Engine | str', index: bool = True,
         on_duplicate: str = "update", chunksize: int = 2000):
@@ -259,93 +510,19 @@ class Databaser(Worker):
 
         engine_type = database.name
         # check whether table exists
-        if engine_type == "sqlite":
-            with database.connect() as conn:
-                check = database.execute("SELECT name FROM sqlite_master"
-                    " WHERE type='table' AND name='%s'" % table).fetchall()
-        elif engine_type == "mysql": 
-            with database.connect() as conn:
-                check = database.execute("SHOW TABLES LIKE '%s'" % table).fetchall()       
+        with database.connect() as conn:
+            check = database.execute("SHOW TABLES LIKE '%s'" % table).fetchall()       
         
         # if table does not exist, create table
         if not check:
-            data.to_sql(table, database, index=False)
-            if engine_type == "mysql" and index:
-                with database.connect() as conn:
-                    print(20*'*', index_col, 20*'*')
-                    index_col_cp = index_col
-                    index_col_cp = index_col_cp[1:-1] # remove ()
-                    col_ls = index_col_cp.split(',')
-                    skips = ['date', 'period']
-                    for col in col_ls:
-                        col = col.strip()
-                        for substring in skips:
-                            if col[1:-1].lower().find(substring) != -1:
-                                break
-                        else:
-                            conn.execute(f"ALTER TABLE `{table}` MODIFY `{col[1:-1]}` {sql.types.CHAR(length=20)}")
-                                
-                    conn.execute("ALTER TABLE %s ADD INDEX %s" % (table, index_col))
-            elif engine_type == "sqlite" and index:
-                # unluckily sqlite3 donesn't support alter table, 
-                # so we have to drop and recreate
-                # https://www.yiibai.com/sqlite/primary-key.html
-                with database.connect() as conn:
-                    sql_create = conn.execute("SELECT sql FROM sqlite_master WHERE tbl_name = '%s'"
-                         % table).fetchall()[0][0]
-                    conn.execute("ALTER TABLE %s RENAME TO %s_temp" % (table, table))
-                    sql_create_index = sql_create.replace(")", ", PRIMARY KEY %s)" % index_col)
-                    conn.execute(sql_create_index)
-                    conn.execute("INSERT INTO %s SELECT * FROM %s_temp" % (table, table))
-                    conn.execute("DROP TABLE %s_temp" % table)
-            return
-        
-        table = ".".join(["`" + x + "`" for x in table.split(".")])
+            self._create(data, database, table, engine_type, index, index_col)
 
-        data = data.fillna("None")
-        data = data.applymap(lambda x: re.sub(r'([\'\"\\])', '\\\g<1>', str(x)))
-        cols_str = self.__sql_cols(data)
-        for i in range(0, len(data), chunksize):
-            # print("chunk-{no}, size-{size}".format(no=str(i/chunksize), size=chunksize))
-            tmp = data.iloc[i: i + chunksize]
-
-            if on_duplicate == "replace":
-                if engine_type == 'mysql':
-                    sql_base = f"REPLACE INTO {table} {cols_str}"
-                elif engine_type == 'sqlite':
-                    sql_base = f"INSERT OR REPLACE INTO {table} {cols_str}"
-
-            elif on_duplicate == "update":
-                sql_base = f"INSERT INTO {table} {cols_str}"
-                if engine_type == "mysql":
-                    sql_update = f" ON DUPLICATE KEY UPDATE {self.__sql_cols(tmp, 'values')}"
-                elif engine_type == "sqlite":
-                    sql_update = f" ON CONFLICT DO UPDATE SET {self.__sql_cols(tmp, 'excluded')}"
-
-            elif on_duplicate == "ignore":
-                if engine_type == "mysql":
-                    sql_base = f"INSERT IGNORE INTO {table} {cols_str}"
-                elif engine_type == "sqlite":
-                    sql_base = f"INSERT OR IGNORE INTO {table} {cols_str}"
-
-            sql_val = self.__sql_cols(tmp, "format")
-            vals = tuple([sql_val % x for x in tmp.to_dict("records")])
-            sql_vals = " VALUES ({x})".format(x=vals[0])
-            for i in range(1, len(vals)):
-                sql_vals += ", ({x})".format(x=vals[i])
-            sql_vals = sql_vals.replace("'None'", "NULL")
-
-            sql_main = sql_base + sql_vals
-            if on_duplicate == "update":
-                sql_main += sql_update
-
-            if sys.version_info.major == 2:
-                sql_main = sql_main.replace("u`", "`")
-            if sys.version_info.major == 3:
-                sql_main = sql_main.replace("%", "%%")
-            with database.connect() as conn:
-                conn.execute(sql_main)
-    
+        else:
+            # else check the whether the columns are consistent
+            self._checkcol(data, database, table, engine_type)
+            # now just make the data enter the database
+            self._to_sql(data, table, database, on_duplicate, chunksize)
+            
     @staticmethod
     def add_index(table: str, database: 'sql.engine.base.Engine | str', **indexargs):
         # if database is a str connection, just transform it
@@ -354,11 +531,7 @@ class Databaser(Worker):
 
         # to see whether the index already exists
         with database.connect() as connect:
-            if database.name == 'sqlite':
-                idxnames = connect.execute(f'SELECT name FROM sqlite_master WHERE type ' 
-                    f'= "index" and tbl_name = "{table}"').fetchall()
-            elif database.name == 'mysql':
-                idxnames = connect.execute(f'SHOW INDEX FROM {table}').fetchall()
+            idxnames = connect.execute(f'SHOW INDEX FROM {table}').fetchall()
             idxnames = list(map(lambda x: x[0], idxnames))
 
         for idxname, arg in indexargs.items():
