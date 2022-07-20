@@ -5,7 +5,6 @@ from ..core import *
 
 class Stock(DataBase):
 
-    @Cache(prefix='stock_market_daily', expire_time=259200)
     def market_daily(self, 
         start: str = None, 
         end: str = None,
@@ -33,8 +32,7 @@ class Stock(DataBase):
             and_ = and_,
             or_ = or_,
         )
-  
-    @Cache(prefix='stock_plate_info', expire_time=259200)
+
     def plate_info(self, 
         start: str = None, 
         end: str = None, 
@@ -64,7 +62,6 @@ class Stock(DataBase):
             or_ = or_,
         )
 
-    @Cache(prefix='stock_index_weights', expire_time=259200)
     def index_weights(self, 
         start: str = None, 
         end: str = None,
@@ -86,7 +83,6 @@ class Stock(DataBase):
             or_ = or_,
         )
 
-    @Cache(prefix='stock_instruments', expire_time=259200)
     def instruments(self, 
         code: 'str | list' = None, 
         fields: list = None,
@@ -106,7 +102,6 @@ class Stock(DataBase):
             or_ = or_,
         )
 
-    @Cache(prefix='stock_index_market_daily', expire_time=259200)
     def index_market_daily(self, 
         start: str = None, 
         end: str = None,
@@ -128,7 +123,6 @@ class Stock(DataBase):
             or_ = or_,
         )
 
-    @Cache(prefix='stock_derivative_indicator', expire_time=259200)
     def derivative_indicator(self, 
         start: str = None, 
         end: str = None,

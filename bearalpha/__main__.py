@@ -1,3 +1,4 @@
+import re
 import argparse
 import sqlalchemy
 from .core import *
@@ -11,29 +12,26 @@ def set(args):
 
 def delete(args):
     cache = Cache()
-    cache.delete(key=args.key)
+    for k in cache.iterkeys():
+        if re.match(args.key, k):
+            cache.delete(key=k)
 
 def show(args):
     cache = Cache()
-    keys = list(cache.iterkeys())
     if args.key is not None:
-        if args.value:
-            CONSOLE.print(f'[red]When assigned key, -v will be ignored')
-        if not args.precise:
-            available_keys = filter(lambda x: args.key in x, keys)
-            for akey in available_keys:
+        for akey in cache.iterkeys():
+            if re.match(args.key, akey):
                 CONSOLE.rule(f'{akey}')
-                CONSOLE.print(f'{cache.get(akey)}')
-        else:
-            CONSOLE.rule(f'{args.key}')
-            CONSOLE.print(f'{cache.get(args.key)}')
-    
+                if args.value:
+                    CONSOLE.print(f'{cache.get(akey)}')
+
     elif args.value:
-        for key in keys:
-            CONSOLE.rule(f'{key}')
-            CONSOLE.print(f'{cache.get(key)}')
+        for akey in cache.iterkeys():
+            CONSOLE.rule(f'{akey}')
+            CONSOLE.print(f'{cache.get(akey)}')
+    
     else:
-        CONSOLE.print(f'{keys}')
+        CONSOLE.print(f'{list(cache.iterkeys())}')
 
 def clear(args):
     cache = Cache()
@@ -137,7 +135,6 @@ def main():
     shower = subparser.add_parser('show', help='Show cahce keys')
     shower.add_argument('-k', '--key', default=None, help='Whether to show the value')
     shower.add_argument('-v', '--value', default=False, action='store_true', help='Whether to show the value')
-    shower.add_argument('-p', '--precise', default=False, action='store_true', help='Precisely search for the key')
     shower.set_defaults(func=show)
 
     clearer = subparser.add_parser('clear', help='Clear expired keys')

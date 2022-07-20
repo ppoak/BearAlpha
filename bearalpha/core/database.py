@@ -48,7 +48,6 @@ class DataBase:
         
         return query
 
-
     def get(self, 
         table: str,
         start: str, 
