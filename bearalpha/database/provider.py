@@ -4,7 +4,8 @@ from ..core import *
 
 
 class Stock(DataBase):
-    
+
+    @Cache(prefix='stock_market_daily', expire_time=259200)
     def market_daily(self, 
         start: str = None, 
         end: str = None,
@@ -33,6 +34,7 @@ class Stock(DataBase):
             or_ = or_,
         )
   
+    @Cache(prefix='stock_plate_info', expire_time=259200)
     def plate_info(self, 
         start: str = None, 
         end: str = None, 
@@ -62,6 +64,7 @@ class Stock(DataBase):
             or_ = or_,
         )
 
+    @Cache(prefix='stock_index_weights', expire_time=259200)
     def index_weights(self, 
         start: str = None, 
         end: str = None,
@@ -83,6 +86,7 @@ class Stock(DataBase):
             or_ = or_,
         )
 
+    @Cache(prefix='stock_instruments', expire_time=259200)
     def instruments(self, 
         code: 'str | list' = None, 
         fields: list = None,
@@ -102,6 +106,7 @@ class Stock(DataBase):
             or_ = or_,
         )
 
+    @Cache(prefix='stock_index_market_daily', expire_time=259200)
     def index_market_daily(self, 
         start: str = None, 
         end: str = None,
@@ -123,6 +128,7 @@ class Stock(DataBase):
             or_ = or_,
         )
 
+    @Cache(prefix='stock_derivative_indicator', expire_time=259200)
     def derivative_indicator(self, 
         start: str = None, 
         end: str = None,
@@ -143,27 +149,6 @@ class Stock(DataBase):
             and_ = and_,
             or_ = or_,
         )
-
-
-class TuShare:
-
-    def __init__(self, token: str) -> None:
-        import tushare as ts
-        self.datasource = ts.pro_api(token)
-    
-    def market_daily(self, 
-        start: str = None, 
-        end: str = None, 
-        code: str = None,
-    ):
-        start = time2str(start).replace('-', '') if start is not None else None
-        end = time2str(end).replace('-', '') if end is not None else None
-        data = self.datasource.daily(start_date=start, end_date=end, code=code)
-        if data.empty:
-            return None
-        data.trade_date = pd.to_datetime(data.trade_date)
-        data = data.set_index(['trade_date', 'ts_code'])
-        return data
 
 
 if __name__ == '__main__':

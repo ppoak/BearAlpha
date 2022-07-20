@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import bearalpha as ba
 from ..core import *
 
 
@@ -11,15 +12,27 @@ class AnalystError(FrameWorkError):
 @pd.api.extensions.register_series_accessor("regressor")
 class Regressor(Worker):
     '''Regressor is a staff worker in quool, used for a dataframe
-    to perform regression analysis in multiple ways, like ols, logic,
-    and so on.
+    to perform regression analysis in multiple ways
+    
+    now it supports:
+    OLS, linear logistic, WLS
     '''
+
+    def __init__(self, data: 'pd.DataFrame | pd.Series'):
+        super().__init__(data)
+        self.make_available()
+
+    def make_available(self, data: 'pd.DataFrame | pd.Series' = None):
+        if data is None:
+            self.data = self.data.dropna()
+        else:
+            return data.dropna()
     
     def ols(self, 
         y: pd.Series, 
         intercept: bool = True,
         backend: str = 'statsmodels',
-        **kwargs
+        **kwargs,
         ):
         '''OLS Regression Function
         ---------------------------
@@ -28,13 +41,19 @@ class Regressor(Worker):
         intercept: bool, whether to add a intercept value
         kwargs: some other kwargs passed to backend
         '''
+        y = self.make_available(y)
+
         def _statsmodels_reg(x, y):
+            common_index = x.index.intersection(y.index)
+            x, y = x.loc[common_index], y.loc[common_index]
             if intercept:
                 x = add_constant(x)
             model = OLS(y, x).fit(**kwargs)
             return model
         
         def _sklearn_reg(x, y):
+            common_index = x.index.intersection(y.index)
+            x, y = x.loc[common_index], y.loc[common_index]
             model = LinearRegression(fit_intercept=intercept, **kwargs)
             model.fit(x, y)
             return model
@@ -43,14 +62,14 @@ class Regressor(Worker):
             from statsmodels.api import OLS, add_constant
             if self.type_ == Worker.PN:
                 return self.data.copy().groupby(level=0).apply(
-                    lambda x: _statsmodels_reg(x, y.loc[x.index]))
+                    lambda x: _statsmodels_reg(x, y))
             else:
                 return _statsmodels_reg(self.data, y)
         elif backend == 'sklearn':
             from sklearn.linear_model import LinearRegression
             if self.type_ == Worker.PN:
                 return self.data.copy().groupby(level=0).apply(
-                    lambda x: _sklearn_reg(x, y.loc[x.index]))
+                    lambda x: _sklearn_reg(x, y))
             else:
                 return _sklearn_reg(self.data, y)
         
@@ -68,13 +87,19 @@ class Regressor(Worker):
         backend: str, choose between statsmodels and sklearn
         kwargs: some other kwargs passed to backend
         '''
+        y = self.make_available(y)
+        
         def _statsmodels_reg(x, y):
+            common_index = x.index.intersection(y.index)
+            x, y = x.loc[common_index], y.loc[common_index]
             if intercept:
                 x = add_constant(x)
             model = Logit(y, x).fit(**kwargs)
             return model
         
         def _sklearn_reg(x, y):
+            common_index = x.index.intersection(y.index)
+            x, y = x.loc[common_index], y.loc[common_index]
             model = LogisticRegression(fit_intercept=intercept, **kwargs)
             model.fit(x, y)
             return model
@@ -83,7 +108,7 @@ class Regressor(Worker):
             from statsmodels.api import Logit, add_constant
             if self.type_ == Worker.PN:
                 return self.data.copy().groupby(level=0).apply(
-                    lambda x: _statsmodels_reg(x, y.loc[x.index]))
+                    lambda x: _statsmodels_reg(x, y))
             else:
                 return _statsmodels_reg(self.data.copy(), y)
         
@@ -91,10 +116,57 @@ class Regressor(Worker):
             from sklearn.linear_model import LogisticRegression
             if self.type_ == Worker.PN:
                 return self.data.copy().groupby(level=0).apply(
-                    lambda x: _sklearn_reg(x, y.loc[x.index]))
+                    lambda x: _sklearn_reg(x, y))
             else:
                 return _sklearn_reg(self.data.copy(), y)
 
+    def wls(self, 
+        y: pd.Series,
+        weights: pd.Series,
+        intercept: bool = True,
+        backend: str = 'statsmodels',
+        **kwargs
+        ):
+        '''WLS(weighted least squares) Regression Function
+        ---------------------------
+
+        y: Series, assigned y value in a series form
+        weights: Series, higher the weight, higher the proportion of
+        intercept: bool, whether to add a intercept value
+        kwargs: some other kwargs passed to backend
+        '''
+        y = self.make_available(y)
+        weights = self.make_available(weights)
+
+        def _statsmodels_reg(x, y, weights):
+            common_index = x.index.intersection(y.index).intersection(weights.index)
+            x, y, weights = x.loc[common_index], y.loc[common_index], weights.loc[common_index]
+            if intercept:
+                x = add_constant(x)
+            model = WLS(y, x, weights=weights).fit(**kwargs)
+            return model
+        
+        def _sklearn_reg(x, y, weights):
+            common_index = x.index.intersection(y.index).intersection(weights.index)
+            x, y, weights = x.loc[common_index], y.loc[common_index], weights.loc[common_index]
+            model = LinearRegression(fit_intercept=intercept, **kwargs)
+            model.fit(x, y, sample_weight=weights)
+            return model
+
+        if backend == 'statsmodels':
+            from statsmodels.api import WLS, add_constant
+            if self.type_ == Worker.PN:
+                return self.data.copy().groupby(level=0).apply(
+                    lambda x: _statsmodels_reg(x, y, weights))
+            else:
+                return _statsmodels_reg(self.data, y, weights)
+        elif backend == 'sklearn':
+            from sklearn.linear_model import LinearRegression
+            if self.type_ == Worker.PN:
+                return self.data.copy().groupby(level=0).apply(
+                    lambda x: _sklearn_reg(x, y, weights))
+            else:
+                return _sklearn_reg(self.data, y, weights)
 
 @pd.api.extensions.register_dataframe_accessor("decompositer")
 @pd.api.extensions.register_series_accessor("decompositer")
@@ -186,7 +258,7 @@ class Describer(Worker):
         
         groupers = [pd.Grouper(level=0)]
         if grouper is not None:
-            groupers += item2list(grouper)
+            groupers += ba.item2list(grouper)
         groupers_num = len(groupers)
             
         if self.type_ == Worker.PN:
