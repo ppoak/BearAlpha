@@ -26,12 +26,11 @@ setup(
         'requests',
         'rich',
         'scipy',
-        'tushare',
         'bs4',
-        'akshare',
     ],
     extra_requires={
-        "stats": ["statsmodules", "sklearn"]
+        "stats": ["statsmodules", "sklearn"],
+        "crawl": ["akshare", "baostock",]
     },
     entry_points={
         "console_scripts": [

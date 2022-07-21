@@ -176,3 +176,6 @@ bearalpha/cache
 
 # Data from ricequant
 bearalpha/database/DataFetcher.ipynb
+
+# My BearAlpha configuration
+mybaconfig.py

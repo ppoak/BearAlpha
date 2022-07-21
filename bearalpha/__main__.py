@@ -1,6 +1,6 @@
 import re
+import importlib
 import argparse
-import sqlalchemy
 from .core import *
 from .tools import *
 from .database import *
@@ -37,86 +37,17 @@ def clear(args):
     cache = Cache()
     cache.expire()
     
+def store(args):
+    path = args.path
+    mod = importlib.import_module(path)
+    for name, config in mod.__dict__.items():
+        if 'baconfig' in name:
+            Cache().set(name, config)
+
 def load(args):
-    local_market_daily_config = dict(
-        loader = Local,
-        path = Cache().get('local_market_daily_path'),
-        table = "market_daily",
-        database = sqlalchemy.engine.create_engine(Cache().get('local')),
-        addindex = {
-            "idx_market_daily_date": "date",
-            "idx_market_daily_order_book_id": "order_book_id",
-        },
-    )
-
-    local_plate_info_config = dict(
-        loader = Local,
-        path = Cache().get('local_plate_info_path'),
-        table = "plate_info",
-        database = sqlalchemy.engine.create_engine(Cache().get('local')),
-        addindex = {
-            "idx_plate_info_date": "date",
-            "idx_plate_info_order_book_id": "order_book_id",
-        },
-    )
-
-    local_index_market_daily_config = dict(
-        loader = Local,
-        path = Cache().get('local_index_market_daily_path'),
-        table = "index_market_daily",
-        database = sqlalchemy.engine.create_engine(Cache().get('local')),
-        addindex = {
-            "idx_index_market_daily_date": "date",
-            "idx_index_market_daily_order_book_id": "order_book_id",
-        },
-    )
-
-    local_derivative_indicator_config = dict(
-        loader = Local,
-        path = Cache().get('local_derivative_indicator_path'),
-        table = "derivative_indicator",
-        database = Cache().get('local'),
-        addindex = {
-            "idx_derivative_indicator_date": "date",
-            "idx_derivative_indicator_order_book_id": "order_book_id",
-        },
-    )
-
-    local_instruments_config = dict(
-        loader = Local,
-        path = Cache().get('local_instruments_path'),
-        table = "instruments",
-        database = Cache().get('local'),
-        addindex = {
-            "idx_instruments_order_book_id": "order_book_id",
-        },
-    )
-
-    local_index_weights_config = dict(
-        loader = Local,
-        path = Cache().get('local_index_weights_path'),
-        table = "index_weights",
-        database = Cache().get('local'),
-        addindex = {
-            "idx_index_weights_date": "date",
-            "idx_index_weights_index_id": "index_id",
-            "idx_index_weights_order_book_id": "order_book_id",
-        },
-    )
-
-    configs = dict(
-        local_market_daily_config = local_market_daily_config,
-        local_index_market_daily_config = local_index_market_daily_config,
-        local_derivative_indicator_config = local_derivative_indicator_config,
-        local_index_weights_config = local_index_weights_config,
-        local_instruments_config = local_instruments_config,
-        local_plate_info_config = local_plate_info_config,
-    )
-
-    config = configs[args.config]
+    config = Cache().get(args.config)
     loader = config['loader'](config)
     loader()
-
 
 def main():
     parser = argparse.ArgumentParser(description='BearAlpha Cli API')
@@ -140,6 +71,10 @@ def main():
     clearer = subparser.add_parser('clear', help='Clear expired keys')
     clearer.set_defaults(func=clear)
 
+    storer = subparser.add_parser('store', help='Store config data into bearalpha cache')
+    storer.add_argument('-p', '--path', required=True, help='Path to the configuration .py file')
+    storer.set_defaults(func=store)
+    
     loader = subparser.add_parser('load', help='Load data into local database according to configurations')
     loader.add_argument('-c', '--config', required=True, help='Configurations to use in loading data')
     loader.set_defaults(func=load)

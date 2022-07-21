@@ -225,7 +225,13 @@ class Databaser(Worker):
                 base += ', `%s`=excluded.`%s`' % (col, col)
             return base
 
+    @staticmethod
+    def make_engine(engine: 'str | sql.engine.Engine'):
+        if isinstance(engine, str):
+            engine = sql.engine.create_engine(engine)
+        return engine
 
+    
 @pd.api.extensions.register_dataframe_accessor("sqliter")
 @pd.api.extensions.register_series_accessor("sqliter")
 class Sqliter(Databaser):
@@ -312,22 +318,25 @@ class Sqliter(Databaser):
             with database.connect() as conn:
                 conn.execute(sql_main)
 
-    def to_sql(self, table: str, database: 'sql.engine.base.Engine | str', index: bool = True,
-        on_duplicate: str = "update", chunksize: int = 2000):
-        """Save current dataframe to database, only support for mysql and sqlite
-        ------------------------------------------------------------------------
+    def to_sql(self, 
+        table: str, database: 'sql.engine.base.Engine | str', 
+        index: bool = True,
+        on_duplicate: str = "update", 
+        chunksize: int = 2000
+        ):
+        """Save current dataframe to database
 
         table: str, table to insert data;
         database: Sqlalchemy Engine object
-        kind: str, optional {"update", "replace", "ignore"}, default "update" specified the way to update
+        index: bool, whether to include index in the database
+        on_duplicate: str, optional {"update", "replace", "ignore"}, default "update" specified the way to update
             "update": "INSERT ... ON DUPLICATE UPDATE ...", 
             "replace": "REPLACE ...",
             "ignore": "INSERT IGNORE ..."
         chunksize: int, size of records to be inserted each time;
         """
         # if database is a str connection, just transform it
-        if isinstance(database, str):
-            database = sql.engine.create_engine(database)
+        database = self.make_engine(database)
         
         # we should ensure data is in a frame form and no index can be assigned      
         data = self.data.copy()
@@ -358,10 +367,13 @@ class Sqliter(Databaser):
             self._to_sql(data, table, database, on_duplicate, chunksize)
     
     @staticmethod
-    def add_index(table: str, database: 'sql.engine.base.Engine | str', **indexargs):
+    def add_index(
+        table: str, 
+        database: 'sql.engine.base.Engine | str', 
+        **indexargs
+        ):
         # if database is a str connection, just transform it
-        if isinstance(database, str):
-            database = sql.engine.create_engine(database)
+        database = Databaser.make_engine(database)
 
         # to see whether the index already exists
         with database.connect() as connect:
@@ -382,12 +394,13 @@ class Sqliter(Databaser):
         
     @staticmethod
     def formattime(database: 'sql.engine.Engine | str', table: str):
+        database = Databaser.make_engine(database)
         with database.connect() as conn:
             types = pd.DataFrame(conn.execute(f'PRAGMA table_info({table})').fetchall())
             datetime_cols = types[types['type'] == 'DATETIME']['name'].to_list()
             for dtcol in datetime_cols:
                 conn.execute(f'UPDATE {table} set `{dtcol}` = datetime(`{dtcol}`)')
-    
+
 
 @pd.api.extensions.register_dataframe_accessor("mysqler")
 @pd.api.extensions.register_series_accessor("mysqler")
@@ -477,22 +490,26 @@ class Mysqler(Databaser):
             with database.connect() as conn:
                 conn.execute(sql_main)
 
-    def to_sql(self, table: str, database: 'sql.engine.base.Engine | str', index: bool = True,
-        on_duplicate: str = "update", chunksize: int = 2000):
-        """Save current dataframe to database, only support for mysql and sqlite
-        ------------------------------------------------------------------------
+    def to_sql(self,
+        table: str, 
+        database: 'sql.engine.base.Engine | str', 
+        index: bool = True,
+        on_duplicate: str = "update", 
+        chunksize: int = 2000
+        ):
+        """Save current dataframe to database
 
         table: str, table to insert data;
         database: Sqlalchemy Engine object
-        kind: str, optional {"update", "replace", "ignore"}, default "update" specified the way to update
+        index: bool, whether to include index in the database
+        on_duplicate: str, optional {"update", "replace", "ignore"}, default "update" specified the way to update
             "update": "INSERT ... ON DUPLICATE UPDATE ...", 
             "replace": "REPLACE ...",
             "ignore": "INSERT IGNORE ..."
         chunksize: int, size of records to be inserted each time;
         """
         # if database is a str connection, just transform it
-        if isinstance(database, str):
-            database = sql.engine.create_engine(database)
+        database = self.make_engine(database)
         
         # we should ensure data is in a frame form and no index can be assigned      
         data = self.data.copy()
@@ -526,8 +543,7 @@ class Mysqler(Databaser):
     @staticmethod
     def add_index(table: str, database: 'sql.engine.base.Engine | str', **indexargs):
         # if database is a str connection, just transform it
-        if isinstance(database, str):
-            database = sql.engine.create_engine(database)
+        database = Databaser.make_engine(database)
 
         # to see whether the index already exists
         with database.connect() as connect:

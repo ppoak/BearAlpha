@@ -191,5 +191,3 @@ class Em:
         datas.dim_tradedate = pd.to_datetime(datas.dim_tradedate)
         datas = datas.loc[datas['dim_date'] == date]
         return datas
-
-

@@ -21,12 +21,12 @@ WEEK = datetime.timedelta(days=7)
 MONTH = datetime.timedelta(days=30)
 YEAR = datetime.timedelta(days=365)
 
-def time2str(date: 'str | datetime.datetime | int | datetime.date') -> str:
+def time2str(date: 'str | datetime.datetime | int | datetime.date', formatstr: str = r'%Y-%m-%d') -> str:
     """convert a datetime class to time-like string"""
     if isinstance(date, int):
         date = str(date)
     date = pd.to_datetime(date)
-    date = date.strftime(r'%Y-%m-%d')
+    date = date.strftime(formatstr)
     return date
 
 def str2time(date: 'str | datetime.datetime') -> datetime.datetime:
