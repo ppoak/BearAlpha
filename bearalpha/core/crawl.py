@@ -48,55 +48,7 @@ class Cache(diskcache.Cache):
         return wrapper
 
 
-@Cache(directory=None, prefix='proxy', expire_time=2592000)
-def get_proxy(page_size: int = 20):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36"
-    }
-    url_list = [f'https://free.kuaidaili.com/free/inha/{i}/' for i in range(1, page_size + 1)]
-    proxies = []
-    for url in url_list:
-        data = pd.read_html(url)[0][['IP', 'PORT', '类型']].drop_duplicates()
-        print(f'[+] {url} Get Success!')
-        data['类型'] = data['类型'].str.lower()
-        proxy = (data['类型'] + '://' + data['IP'] + ':' + data['PORT'].astype('str')).to_list()
-        proxies += list(map(lambda x: {x.split('://')[0]: x}, proxy))
-        time.sleep(0.8)
-    available_proxies = []
-    
-    for proxy in proxies:
-        try:
-            res = Request('https://www.baidu.com', 
-                headers=headers, proxies=proxy, timeout=1).get().response
-            res.raise_for_status()
-            available_proxies.append(proxy)
-        except Exception as e:
-            print(str(e))
-    
-    print(f'[=] Get {len(proxies)} proxies, while {len(available_proxies)} are available. '
-        f'Current available rate is {len(available_proxies) / len(proxies) * 100:.2f}%')
-    return proxies
-
-@Cache(directory=None, prefix='holidays', expire_time=2592000)
-def chinese_holidays():
-    root = 'https://api.apihubs.cn/holiday/get'
-    complete = False
-    page = 1
-    holidays = []
-    while not complete:
-        params = f'?field=date&holiday_recess=1&cn=1&page={page}&size=366'
-        url = root + params
-        data = Request(url).get().json['data']
-        if data['page'] * data['size'] >= data['total']:
-            complete = True
-        days = pd.DataFrame(data['list']).date.astype('str')\
-            .astype('datetime64[ns]').to_list()
-        holidays += days
-        page += 1
-    return holidays
-
-
-class Request(object):
+class Request:
 
     def __init__(self, url, headers: dict = None, **kwargs):
         self.url = url
@@ -216,6 +168,53 @@ class ProxyRequest(Request):
     def process(self):
         raise NotImplementedError
 
+
+@Cache(directory=None, prefix='proxy', expire_time=2592000)
+def get_proxy(page_size: int = 20):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36"
+    }
+    url_list = [f'https://free.kuaidaili.com/free/inha/{i}/' for i in range(1, page_size + 1)]
+    proxies = []
+    for url in url_list:
+        data = pd.read_html(url)[0][['IP', 'PORT', '类型']].drop_duplicates()
+        print(f'[+] {url} Get Success!')
+        data['类型'] = data['类型'].str.lower()
+        proxy = (data['类型'] + '://' + data['IP'] + ':' + data['PORT'].astype('str')).to_list()
+        proxies += list(map(lambda x: {x.split('://')[0]: x}, proxy))
+        time.sleep(0.8)
+    available_proxies = []
+    
+    for proxy in proxies:
+        try:
+            res = Request('https://www.baidu.com', 
+                headers=headers, proxies=proxy, timeout=1).get().response
+            res.raise_for_status()
+            available_proxies.append(proxy)
+        except Exception as e:
+            print(str(e))
+    
+    print(f'[=] Get {len(proxies)} proxies, while {len(available_proxies)} are available. '
+        f'Current available rate is {len(available_proxies) / len(proxies) * 100:.2f}%')
+    return proxies
+
+@Cache(directory=None, prefix='holidays', expire_time=2592000)
+def chinese_holidays():
+    root = 'https://api.apihubs.cn/holiday/get'
+    complete = False
+    page = 1
+    holidays = []
+    while not complete:
+        params = f'?field=date&holiday_recess=1&cn=1&page={page}&size=366'
+        url = root + params
+        data = Request(url).get().json['data']
+        if data['page'] * data['size'] >= data['total']:
+            complete = True
+        days = pd.DataFrame(data['list']).date.astype('str')\
+            .astype('datetime64[ns]').to_list()
+        holidays += days
+        page += 1
+    return holidays
 
 try:
     CHD = chinese_holidays()

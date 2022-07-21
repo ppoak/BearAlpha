@@ -1,4 +1,6 @@
 import datetime
+import os
+import sys
 import pandas as pd
 from ..core import *
 from ..tools import *
@@ -201,8 +203,12 @@ class Em:
 class Guba:
     __root = "http://guba.eastmoney.com"
     
+    @staticmethod
+    def clean_html_text(text: str):
+        return text.strip().replace('\r\n', '').replace(' ', '')
+
     @classmethod
-    @Cache(prefix='Guba_overview_info', expire_time=2592000)
+    @Cache(prefix='Guba_overview_info', expire_time=18000)
     def overview_info(cls, code: str, page: int):
         page = str(page)
         url = f"{cls.__root}/list,{code},f_{page}.html"
@@ -215,3 +221,55 @@ class Guba:
         datetime = html.xpath('//*[@id="articlelistnew"]/div[not(@class="dheader")]/span[5]/text()')
         data = pd.DataFrame({"read": read, "comments": comments, "title": title, "href": href, "author": author, "datetime": datetime})
         return data
+
+    @classmethod
+    @Cache(prefix='Guba_detail_info_orig', expire_time=18000)
+    def _detail_info_orig(cls, url: str):
+        html = ProxyRequest(url).get().etree
+        content = ''.join(html.xpath('//*[@id="zwconbody"]//text()'))
+        datetime_source = ''.join(html.xpath('//*[@id="zwconttb"]/div[@class="zwfbtime"]/text()'))
+        data = [cls.clean_html_text(content), cls.clean_html_text(datetime_source)]
+        return data
+    
+    @classmethod
+    @Cache(prefix='Guba_detail_info_cfh', expire_time=18000)
+    def _detail_info_cfh(cls, url: str):
+        html = ProxyRequest(url).get().etree
+        content = ''.join(html.xpath('//*[@class="article-body"]//text()'))
+        datetime_source = ''.join(html.xpath('//*[@class="article-meta"]//text()'))
+        data = [cls.clean_html_text(content), cls.clean_html_text(datetime_source)]
+        return data
+    
+    @classmethod
+    @Cache(prefix='Guba_detail_info', expire_time=18000)
+    def detail_info(cls, code: str, page: int):
+        brief_data = cls.overview_info(code, page).set_index('href')
+        detail_data = []
+        for url in brief_data.index:
+            data = cls._detail_info(url)
+            detail_data.append(data)
+        detail_data = pd.DataFrame(detail_data, columns=['content', 'datetime_source'], index=brief_data.index)
+        result_data = pd.concat([brief_data, detail_data], axis=1).reset_index()
+        return result_data
+    
+    @classmethod
+    def _detail_info(cls, url: str):
+        if url.startswith('//caifuhao'):
+            return cls._detail_info_cfh('http:' + url)
+        else:
+            return cls._detail_info_orig(cls.__root + url)
+    
+    @classmethod
+    @Cache(prefix='Guba_detail_info_', expire_time=18000)
+    def detail_info_(cls, code: str, page: int):
+        # On MacOS, if you want to successfully run this function,
+        # you may need to set a environment variable
+        # export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+        # see https://blog.csdn.net/hanshuobest/article/details/104220412
+        brief_data = cls.overview_info(code, page).set_index('href')
+        result = async_job(brief_data.index, cls._detail_info)
+        result_data = pd.DataFrame(result.values(), index=result.keys(), 
+            columns=['content', 'datetime_source'])
+        result = pd.concat([brief_data, result_data], axis=1).reset_index()
+        return result
+        

@@ -136,6 +136,26 @@ class Worker(object):
                     return data.loc[(asset, indicator)]
 
 
+def async_job(
+    jobs: list, 
+    func: ..., 
+    args: tuple = (), 
+    processors: int = 4, 
+    callback: ... = None, 
+    kwargs: dict = {}
+):
+    import multiprocessing
+    context = multiprocessing.get_context('fork')
+    pool = context.Pool(processes=processors)
+    result = {}
+    for job in jobs:
+        result[job] = pool.apply_async(func, args=(job,) + args, kwds=kwargs, callback=callback)
+    pool.close()
+    pool.join()
+    for k, v in result.items():
+        result[k] = v.get()
+    return result
+
 
 if __name__ == "__main__":
     pass
