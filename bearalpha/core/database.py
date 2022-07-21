@@ -1,7 +1,6 @@
 import datetime
 import pandas as pd
 import sqlalchemy as sql
-from .crawl import Cache
 from ..tools import *
 
 class DataBase:

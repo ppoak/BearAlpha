@@ -15,11 +15,14 @@ class ArtistError(FrameWorkError):
 class Drawer(Worker):
     '''Drawer is a staff of quool for visulaizing data'''
 
-    def draw(self, kind: str, 
-             datetime: str = slice(None), 
-             asset: str = slice(None), 
-             indicator: str = slice(None), 
-             **kwargs):
+    def draw(
+        self, 
+        kind: str, 
+        datetime: str = slice(None), 
+        asset: str = slice(None), 
+        indicator: str = slice(None), 
+        **kwargs
+    ):
         '''Draw a image of the given slice of data
         ------------------------------------------
 
@@ -65,9 +68,15 @@ class Drawer(Worker):
 @pd.api.extensions.register_series_accessor("printer")
 class Printer(Worker):
     
-    def display(self, datetime: str = slice(None), asset: str = slice(None),
-        indicator: str = slice(None), maxdisplay_length: int = 20, 
-        maxdisplay_width: int = 12, title: str = "Table"):
+    def display(
+        self, 
+        datetime: str = slice(None), 
+        asset: str = slice(None),
+        indicator: str = slice(None), 
+        maxdisplay_length: int = 20, 
+        maxdisplay_width: int = 12, 
+        title: str = "Table"
+    ):
         """Print the dataframe or series in a terminal
         ------------------------------------------
 

@@ -86,8 +86,16 @@ class Calculator(Worker):
             results[idx] = res.get()
         return results
 
-    def rolling(self, window: int, func, *args, processes: int = 1,
-        offset: int = 0, interval: int = 1, **kwargs):
+    def rolling(
+        self, 
+        window: int, 
+        func, 
+        *args, 
+        processes: int = 1,
+        offset: int = 0, 
+        interval: int = 1, 
+        **kwargs
+    ):
         '''Provide rolling window func apply for pandas dataframe
         ----------------------------------------------------------
 
@@ -137,8 +145,14 @@ class Calculator(Worker):
         result = pd.concat(result_data)
         return result
 
-    def group_apply(self, grouper: ..., func: ..., *args, 
-        processes: int = 4, **kwargs) -> 'pd.Series | pd.DataFrame':
+    def group_apply(
+        self, 
+        grouper: ..., 
+        func: ..., 
+        *args, 
+        processes: int = 4, 
+        **kwargs
+    ) -> 'pd.Series | pd.DataFrame':
         '''multi-process apply a function to each group
         ----------------------------------------------
 

@@ -32,10 +32,11 @@ class Relocator(Worker):
         else:
             return False
     
-    def profit(self, 
+    def profit(
+        self, 
         ret: pd.Series, 
         portfolio: pd.Series = None,
-        ):
+    ):
         '''calculate profit from weight and forward
         ---------------------------------------------
 
@@ -63,7 +64,10 @@ class Relocator(Worker):
         return weight.groupby(grouper).apply(lambda x: 
             (ret.loc[x.index] * x).sum() / x.sum())
     
-    def networth(self, price: 'pd.Series | pd.DataFrame'):
+    def networth(
+        self, 
+        price: 'pd.Series | pd.DataFrame'
+    ):
         """Calculate the networth curve using normal price data
         --------------------------------------------------------
 
@@ -112,12 +116,13 @@ class Relocator(Worker):
             return delta.groupby(level=0).apply(lambda x: x[x < 0].abs().sum())
 
 
-@pd.api.extensions.register_dataframe_accessor("backtester")
-@pd.api.extensions.register_series_accessor("backtester")
-class BackTester(Worker):
+@pd.api.extensions.register_dataframe_accessor("backtrader")
+@pd.api.extensions.register_series_accessor("backtrader")
+class BackTrader(Worker):
     """Backtester is a staff dedicated for run backtest on a dataset"""
 
-    def run(self, 
+    def run(
+        self, 
         strategy: bt.Strategy = None, 
         cash: float = 1000000,
         indicators: 'bt.Indicator | list' = None,
@@ -127,7 +132,7 @@ class BackTester(Worker):
         image_path: str = None,
         data_path: str = None,
         show: bool = True,
-        ):
+    ):
         """Run a strategy using backtrader backend
         
         cash: int, initial cash
@@ -263,7 +268,58 @@ class Strategy(bt.Strategy):
         self.log(f'Gross Profit: {trade.pnl:.2f}, Net Profit {trade.pnlcomm:.2f}')
 
 
-class OrderTable(bt.Analyzer):
+class Indicator(bt.Indicator):
+    
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
+        '''Logging function'''
+        datetime = datetime or self.data.datetime.date(0)
+        datetime = time2str(datetime)
+        if hint == "INFO":
+            color = "color"
+        elif hint == "WARN":
+            color = "yellow"
+        elif hint == "ERROR":
+            color = "red"
+        else:
+            color = "blue"
+        CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
+    
+
+class Analyzer(bt.Analyzer):
+
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
+        '''Logging function'''
+        datetime = datetime or self.data.datetime.date(0)
+        datetime = time2str(datetime)
+        if hint == "INFO":
+            color = "color"
+        elif hint == "WARN":
+            color = "yellow"
+        elif hint == "ERROR":
+            color = "red"
+        else:
+            color = "blue"
+        CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
+
+
+class Observer(bt.Observer):
+
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
+        '''Logging function'''
+        datetime = datetime or self.data.datetime.date(0)
+        datetime = time2str(datetime)
+        if hint == "INFO":
+            color = "color"
+        elif hint == "WARN":
+            color = "yellow"
+        elif hint == "ERROR":
+            color = "red"
+        else:
+            color = "blue"
+        CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
+
+
+class OrderTable(Analyzer):
 
     def __init__(self):
         self.orders = pd.DataFrame(columns=['asset', 'size', 'price', 'direction'])

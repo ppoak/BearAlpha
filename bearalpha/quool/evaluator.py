@@ -26,10 +26,11 @@ class Evaluator(Worker):
         else:
             return False
 
-    def sharpe(self, 
+    def sharpe(
+        self, 
         rf: 'int | float | pd.Series' = 0.04, 
         period: 'int | str' = 'a'
-        ):
+    ):
         """To Calculate sharpe ratio for the net value curve
         
         rf: int, float or pd.Series, risk free rate, default to 4%,

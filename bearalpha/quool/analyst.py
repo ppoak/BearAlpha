@@ -28,12 +28,13 @@ class Regressor(Worker):
         else:
             return data.dropna()
     
-    def ols(self, 
+    def ols(
+        self, 
         y: pd.Series, 
         intercept: bool = True,
         backend: str = 'statsmodels',
         **kwargs,
-        ):
+    ):
         '''OLS Regression Function
         ---------------------------
 
@@ -73,12 +74,13 @@ class Regressor(Worker):
             else:
                 return _sklearn_reg(self.data, y)
         
-    def logistic(self, 
+    def logistic(
+        self, 
         y: pd.Series = None, 
         intercept: bool = True,
         backend: str = 'statsmodels',
         **kwargs
-        ):
+    ):
         '''Logistics Regression Function
         ---------------------------
 
@@ -120,13 +122,14 @@ class Regressor(Worker):
             else:
                 return _sklearn_reg(self.data.copy(), y)
 
-    def wls(self, 
+    def wls(
+        self, 
         y: pd.Series,
         weights: pd.Series,
         intercept: bool = True,
         backend: str = 'statsmodels',
         **kwargs
-        ):
+    ):
         '''WLS(weighted least squares) Regression Function
         ---------------------------
 
@@ -172,7 +175,11 @@ class Regressor(Worker):
 @pd.api.extensions.register_series_accessor("decompositer")
 class Decompositer(Worker):
 
-    def pca(self, ncomp: int, backend: str = 'statsmodels', **kwargs):
+    def pca(
+        self, 
+        ncomp: int, 
+        backend: str = 'statsmodels', **kwargs
+    ):
         if backend == 'statsmodels':
             from statsmodels.multivariate.pca import PCA
             if self.type_ == Worker.PN:
@@ -198,7 +205,12 @@ class Describer(Worker):
     correlation analysis, and so on.
     '''
 
-    def corr(self, other: pd.Series = None, method: str = 'spearman', tvalue = False):
+    def corr(
+        self, 
+        other: pd.Series = None, 
+        method: str = 'spearman', 
+        tvalue = False
+    ):
         '''Calculation for correlation matrix
         -------------------------------------
 
@@ -234,7 +246,12 @@ class Describer(Worker):
         else:
             return data.corr(method=method)
 
-    def ic(self, forward: pd.Series = None, grouper = None, method: str = 'spearman'):
+    def ic(
+        self, 
+        forward: pd.Series = None, 
+        grouper = None, 
+        method: str = 'spearman'
+    ):
         '''To calculate ic value
         ------------------------
 
@@ -287,7 +304,10 @@ class Describer(Worker):
 @pd.api.extensions.register_series_accessor("tester")
 class Tester(Worker):
 
-    def sigtest(self, h0: 'float | pd.Series' = 0):
+    def sigtest(
+        self, 
+        h0: 'float | pd.Series' = 0
+    ):
         '''To apply significant test (t-test, p-value) to see if the data is significant
         -------------------------------------------------------------------------
 

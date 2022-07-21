@@ -11,7 +11,12 @@ from ..tools import *
 @pd.api.extensions.register_series_accessor("filer")
 class Filer(Worker):
     
-    def to_multisheet_excel(self, path, perspective: str = 'indicator', **kwargs):
+    def to_multisheet_excel(
+        self, 
+        path, 
+        perspective: str = 'indicator', 
+        **kwargs
+    ) -> None:
         if self.type_ == Worker.PN:
             if isinstance(path, str):
                 writer = pd.ExcelWriter(path)
@@ -75,7 +80,12 @@ class Filer(Worker):
         return datas
 
     @staticmethod
-    def read_csv_directory(path, perspective: str, name_pattern: str = None, **kwargs):
+    def read_csv_directory(
+        path, 
+        perspective: str, 
+        name_pattern: str = None, 
+        **kwargs
+    ):
         '''A enhanced function for reading files in a directory to a panel DataFrame
         ----------------------------------------------------------------------------
 
@@ -127,7 +137,12 @@ class Filer(Worker):
         return datas
 
     @staticmethod
-    def read_excel_directory(path, perspective: str, name_pattern: str = None, **kwargs):
+    def read_excel_directory(
+        path, 
+        perspective: str, 
+        name_pattern: str = None, 
+        **kwargs
+    ):
         '''A enhanced function for reading files in a directory to a panel DataFrame
         ----------------------------------------------------------------------------
 
@@ -177,8 +192,14 @@ class Filer(Worker):
         
         return datas
 
-    def to_parquet(self, path, append: bool = True, 
-        compression: str = 'snappy', index: bool = None, **kwargs):
+    def to_parquet(
+        self, 
+        path, 
+        append: bool = True, 
+        compression: str = 'snappy', 
+        index: bool = None, 
+        **kwargs
+    ):
         '''A enhanced function enables parquet file appending to existing file
         -----------------------------------------------------------------------
         
@@ -318,12 +339,14 @@ class Sqliter(Databaser):
             with database.connect() as conn:
                 conn.execute(sql_main)
 
-    def to_sql(self, 
-        table: str, database: 'sql.engine.base.Engine | str', 
+    def to_sql(
+        self, 
+        table: str, 
+        database: 'sql.engine.base.Engine | str', 
         index: bool = True,
         on_duplicate: str = "update", 
         chunksize: int = 2000
-        ):
+    ):
         """Save current dataframe to database
 
         table: str, table to insert data;
@@ -371,7 +394,7 @@ class Sqliter(Databaser):
         table: str, 
         database: 'sql.engine.base.Engine | str', 
         **indexargs
-        ):
+    ):
         # if database is a str connection, just transform it
         database = Databaser.make_engine(database)
 
@@ -393,7 +416,10 @@ class Sqliter(Databaser):
                     connect.execute(f'CREATE {indextype} INDEX `{idxname}` on {table} ({sqlcol})')
         
     @staticmethod
-    def formattime(database: 'sql.engine.Engine | str', table: str):
+    def formattime(
+        database: 'sql.engine.Engine | str', 
+        table: str
+    ):
         database = Databaser.make_engine(database)
         with database.connect() as conn:
             types = pd.DataFrame(conn.execute(f'PRAGMA table_info({table})').fetchall())
@@ -490,13 +516,14 @@ class Mysqler(Databaser):
             with database.connect() as conn:
                 conn.execute(sql_main)
 
-    def to_sql(self,
+    def to_sql(
+        self,
         table: str, 
         database: 'sql.engine.base.Engine | str', 
         index: bool = True,
         on_duplicate: str = "update", 
         chunksize: int = 2000
-        ):
+    ):
         """Save current dataframe to database
 
         table: str, table to insert data;
@@ -541,7 +568,11 @@ class Mysqler(Databaser):
             self._to_sql(data, table, database, on_duplicate, chunksize)
             
     @staticmethod
-    def add_index(table: str, database: 'sql.engine.base.Engine | str', **indexargs):
+    def add_index(
+        table: str, 
+        database: 'sql.engine.base.Engine | str', 
+        **indexargs
+    ):
         # if database is a str connection, just transform it
         database = Databaser.make_engine(database)
 
