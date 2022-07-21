@@ -179,3 +179,9 @@ bearalpha/database/DataFetcher.ipynb
 
 # My BearAlpha configuration
 mybaconfig.py
+
+# test file
+test/
+test.py
+tests/
+tests.py
