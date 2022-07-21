@@ -16,6 +16,9 @@ from pandas import (
 from numpy import (
     random,
     nan,
+    intersect1d,
+    log,
+    log10,
 )
 
 
