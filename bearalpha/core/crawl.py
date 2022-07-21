@@ -48,7 +48,7 @@ class Cache(diskcache.Cache):
         return wrapper
 
 
-@Cache(directory=None, prefix='proxy', expire_time=172800)
+@Cache(directory=None, prefix='proxy', expire_time=2592000)
 def get_proxy(page_size: int = 20):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36"
@@ -77,7 +77,7 @@ def get_proxy(page_size: int = 20):
         f'Current available rate is {len(available_proxies) / len(proxies) * 100:.2f}%')
     return proxies
 
-@Cache(directory=None, prefix='holidays', expire_time=31556926)
+@Cache(directory=None, prefix='holidays', expire_time=2592000)
 def chinese_holidays():
     root = 'https://api.apihubs.cn/holiday/get'
     complete = False
@@ -101,12 +101,13 @@ class Request(object):
     def __init__(self, url, headers: dict = None, **kwargs):
         self.url = url
         if headers:
-            headers.update(self.header())
+            headers.update(self.header)
             self.headers = headers
         else:
-            self.headers = self.header()
+            self.headers = self.header
         self.kwargs = kwargs
         
+    @property
     def header(self):
         ua_list = [
             'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.101',
@@ -129,7 +130,7 @@ class Request(object):
     def get(self):
         try:
             response = requests.get(self.url, headers=self.headers, **self.kwargs)
-            response.raise_for_status()        
+            response.raise_for_status()
             self.response = response
             print(f'[+] {self.url} Get Success!')
             return self
@@ -161,13 +162,20 @@ class Request(object):
 
 class ProxyRequest(Request):
     
-    def __init__(self, url, headers: dict = None, 
-        proxies: list = None, timeout: int = None, 
-        retry: int = None, retry_delay: float = None,**kwargs):
+    def __init__(
+        self, 
+        url,
+        headers: dict = None, 
+        proxies: list = None, 
+        timeout: int = None, 
+        retry: int = None, 
+        retry_delay: float = None,
+        **kwargs
+    ):
         super().__init__(url, headers, **kwargs)
-        self.proxies = [] if proxies is None else proxies
+        self.proxies = get_proxy(page_size=20) if proxies is None else proxies
         self.timeout = 2 if timeout is None else timeout
-        self.retry = -1 if retry is None else retry
+        self.retry = len(self.proxies) if retry is None else retry
         self.retry_delay = 0 if retry_delay is None else retry_delay
         self.kwargs = kwargs
     
@@ -175,12 +183,10 @@ class ProxyRequest(Request):
         if isinstance(self.proxies, dict):
             self.proxies = [self.proxies]
         random.shuffle(self.proxies) 
-        if self.retry == -1:
-            self.retry = len(self.proxies)
         for try_times, proxy in enumerate(self.proxies):
             if try_times + 1 <= self.retry:
                 try:
-                    response = requests.get(self.url, headers=self.headers, proxies=proxy, **self.kwargs)
+                    response = requests.get(self.url, headers=self.headers, proxies=proxy, timeout=self.timeout, **self.kwargs)
                     response.raise_for_status()
                     self.response = response
                     print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
@@ -203,44 +209,6 @@ class ProxyRequest(Request):
                     self.response = response
                     print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
                     return self
-                except Exception as e:
-                    print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
-                    time.sleep(self.retry_delay)
-
-    def get_async(self, container: dict):
-        if isinstance(self.proxies, dict):
-            self.proxies = [self.proxies]
-        random.shuffle(self.proxies) 
-        if self.retry == -1:
-            self.retry = len(self.proxies)
-        for try_times, proxy in enumerate(self.proxies):
-            if try_times + 1 <= self.retry:
-                try:
-                    response = requests.get(self.url, headers=self.headers, proxies=proxy, **self.kwargs)
-                    response.raise_for_status()
-                    self.response = response
-                    container[self.url] = self.process()
-                    print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
-                    break
-                except Exception as e:
-                    print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
-                    time.sleep(self.retry_delay)
-
-    def post_async(self, container: dict):
-        if isinstance(self.proxies, dict):
-            self.proxies = [self.proxies]
-        random.shuffle(self.proxies) 
-        if self.retry == -1:
-            self.retry = len(self.proxies)
-        for try_times, proxy in enumerate(self.proxies):
-            if try_times + 1 <= self.retry:
-                try:
-                    response = requests.post(self.url, headers=self.headers, proxies=proxy, **self.kwargs)
-                    response.raise_for_status()
-                    self.response = response
-                    container[self.url] = self.process()
-                    print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
-                    break
                 except Exception as e:
                     print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
                     time.sleep(self.retry_delay)

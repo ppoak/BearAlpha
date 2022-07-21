@@ -8,6 +8,7 @@ class Em:
     __data_center = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 
     @classmethod
+    @Cache(prefix='Em_active_opdep', expire_time=2592000)
     def active_opdep(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         '''Update data for active oprate department
         --------------------------------------------
@@ -38,6 +39,7 @@ class Em:
         return data
     
     @classmethod
+    @Cache(prefix='Em_active_opdep_details', expire_time=2592000)
     def active_opdep_details(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         date = time2str(date)
         params = {
@@ -89,6 +91,7 @@ class Em:
         return datas
         
     @classmethod
+    @Cache(prefix='Em_institution_trade', expire_time=2592000)
     def institution_trade(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         date = time2str(date)
         params = {
@@ -114,6 +117,7 @@ class Em:
         return data
         
     @classmethod
+    @Cache(prefix='Em_oversea_institution_holding', expire_time=2592000)
     def oversea_institution_holding(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         import requests
         import numpy as np
@@ -160,6 +164,7 @@ class Em:
         return datas
     
     @classmethod
+    @Cache(prefix='Em_stock_buyback', expire_time=2592000)
     def stock_buyback(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         date = time2str(date)
         datas = []
@@ -191,3 +196,22 @@ class Em:
         datas.dim_tradedate = pd.to_datetime(datas.dim_tradedate)
         datas = datas.loc[datas['dim_date'] == date]
         return datas
+
+
+class Guba:
+    __root = "http://guba.eastmoney.com"
+    
+    @classmethod
+    @Cache(prefix='Guba_overview_info', expire_time=2592000)
+    def overview_info(cls, code: str, page: int):
+        page = str(page)
+        url = f"{cls.__root}/list,{code},f_{page}.html"
+        html = ProxyRequest(url).get().etree
+        read = html.xpath('//*[@id="articlelistnew"]/div[not(@class="dheader")]/span[1]/text()')
+        comments = html.xpath('//*[@id="articlelistnew"]/div[not(@class="dheader")]/span[2]/text()')
+        title = html.xpath('//*[@id="articlelistnew"]/div[not(@class="dheader")]/span[3]/a/text()')
+        href = html.xpath('//*[@id="articlelistnew"]/div[not(@class="dheader")]/span[3]/a/@href')
+        author = html.xpath('//*[@id="articlelistnew"]/div[not(@class="dheader")]/span[4]/a/font/text()')
+        datetime = html.xpath('//*[@id="articlelistnew"]/div[not(@class="dheader")]/span[5]/text()')
+        data = pd.DataFrame({"read": read, "comments": comments, "title": title, "href": href, "author": author, "datetime": datetime})
+        return data
