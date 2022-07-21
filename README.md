@@ -1,30 +1,42 @@
-# Bearalpha
+# BearAlpha
 
-![tensorflow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white) ![python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue) ![Scipy](https://img.shields.io/badge/SciPy-654FF0?style=for-the-badge&logo=SciPy&logoColor=white) ![Mysql](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white) ![Mariadb](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white) ![Sqlite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
 
 ## Introduction
 
-Bearalpha is a portal gate to get access to our work collection. The individual project is saved as submodules and can be downloaded respectively.
+Bearalpha is a portal gate to get access to our work collection and at the same time, it is a Quantum toolkit. The individual project is saved as submodules and can be downloaded respectively.
 
 ## Installation
 
 ```shell
-git clone https://github.com/ppoak/bearalpha
+pip install bearalpha
 ```
 
-install any submodule by
+If you need to use bearalpha to do statistical work or crawl informations from the web, please use the following command
 
 ```shell
-cd bearalpha
-git submodule update SUBMODULE
+pip install bearalpha[stats]
+pip install bearalpha[crawl]
 ```
+
+Also, you can clone this project and the submodule at a time, which provide you the easiest way to use bearalpha and explore the project collections.
+
+```shell
+git clone https://github.com/pppoak/BearAlpha --recursive
+```
+
+Then, to ensure there is no path problems when using bearalpha, please run:
+
+```shell
+pip install -e .
+```
+
+In this way, you can also help develop bearalpha, any changes will be sync to your own bearalpha package. And you can create some pull requests to help us improve bearalpha.
 
 ## Submodules
 
-- [Database](https://github.com/ppoak/database/tree/main)
 - [Factor](https://github.com/ppoak/factor/tree/main)
 - [Backtest](https://github.com/ppoak/backtest/tree/main)
-- [Quool](https://github.com/ppoak/quool/tree/main)
 - [Research](https://github.com/ppoak/research/tree/main)
 
 ## Plans

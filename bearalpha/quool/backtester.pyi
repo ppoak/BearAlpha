@@ -34,6 +34,12 @@ class BackTrader(Worker):
         show: bool = True,
     ) -> None: ...
 
+
+class Strategy(bt.Strategy):
+
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
+
+
 class Analyzer(bt.Analyzer):
 
     def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...

@@ -17,7 +17,9 @@ class AkShare:
 
     @staticmethod
     def strip_code(code: str):
-        return re.sub(f'\.?[Ss][Zz]\.?|\.?[Ss][Hh]\.?|\.?[Bb][Jj]\.?', '', code)
+        code_pattern = r'\.?[Ss][Zz]\.?|\.?[Ss][Hh]\.?|\.?[Bb][Jj]\.?'\
+            '|\.?[Oo][Ff]\.?'
+        return re.sub(code_pattern, '', code)
     
     @classmethod
     @Cache(prefix='akshare_market_daily', expire_time=2592000)
@@ -36,6 +38,7 @@ class AkShare:
         adjprice = ak.stock_zh_a_hist(symbol=code, start_date=start, end_date=end, adjust='hfq').set_index('日期')
         adjprice = adjprice.drop(["成交量", "成交额", "换手率"], axis=1).rename(columns=lambda x: f"复权{x}")
         price = pd.concat([price, adjprice], axis=1)
+        price.index = pd.to_datetime(price.index)
 
         return price
 
@@ -50,3 +53,14 @@ class AkShare:
         if code_only:
             return price.index.to_list()
         return price
+
+
+    @classmethod
+    def etf_market_daily(cls, code: str, start: str = None, end: str = None):
+        code = cls.strip_code(code)
+        start = start or cls.dbstart
+        end = end or time2str(cls.today, formatstr=r'%Y%m%d')
+        price = ak.fund_etf_fund_info_em(code, start, end).set_index('净值日期')
+        price.index = pd.to_datetime(price.index)
+        return price
+        
