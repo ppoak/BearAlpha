@@ -1,5 +1,7 @@
+import datetime
 import pandas as pd
 from ..core import *
+from ..tools import *
 
 
 class StockUS:
@@ -12,6 +14,7 @@ class StockUS:
             "Host": "api.stock.us",
             "Origin": "https://stock.us"
         }
+    todaystr = datetime.datetime.today().strftime(r'%Y%m%d')
             
     @classmethod
     @Cache(prefix='StockUS_index_price', expire_time=2592000)
@@ -21,6 +24,8 @@ class StockUS:
         start: str, 
         end: str
     ):
+        start = time2str(start, formatstr=r'%Y%m%d') or '19900101'
+        end = time2str(end, formatstr=r'%Y%m%d') or cls.todaystr
         url = cls.root + f"index-price?security_code={index}&start={start}&stop={end}"
         res = Request(url, headers=cls.headers).get().json
         price = pd.DataFrame(res['price'])
@@ -33,9 +38,11 @@ class StockUS:
     def cn_price(
         cls, 
         code: str, 
-        start: str, 
-        end: str
+        start: str = None,
+        end: str = None,
     ):
+        start = time2str(start, formatstr=r'%Y%m%d') or '19900101'
+        end = time2str(end, formatstr=r'%Y%m%d') or cls.todaystr
         url = cls.root + f"cn-price?security_code={code}&start={start}&stop={end}"
         res = Request(url, headers=cls.headers).get().json
         price = pd.DataFrame(res['price'])

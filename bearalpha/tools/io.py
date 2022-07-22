@@ -1,3 +1,17 @@
+"""Input and output functions and prettifers in this module
+============================================================
+
+You can get access to this module to prettify your output backend
+by rich, or you can just register some fonts just by matplotlib
+
+Examples:
+----------
+
+>>> import bearalpha as ba
+>>> ba.reg_font('/some/path/to/your/font', 'the_name_you_give')
+"""
+
+
 import rich
 import numpy
 import pandas

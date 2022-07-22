@@ -1,3 +1,20 @@
+"""BearAlpha tool classes, functions and constants
+==================================================
+
+All variables here are useful to the higher level of the package,
+including time processing function, output function and so on.
+
+Also, if you are outside of the package, you can still get access
+to these functions.
+
+Examples:
+----------------
+
+>>> import bearalpha as ba
+>>> ba.str2time('2020-01-01')
+"""
+
+
 from .common import (
     time2str,
     str2time,

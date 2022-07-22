@@ -11,18 +11,22 @@ class AnalystError(FrameWorkError):
 @pd.api.extensions.register_dataframe_accessor("regressor")
 @pd.api.extensions.register_series_accessor("regressor")
 class Regressor(Worker):
-    '''Regressor is a staff worker in quool, used for a dataframe
+    """Regressor
+    ============
+
+    Regressor is a staff worker in quool, used for a dataframe
     to perform regression analysis in multiple ways
     
     now it supports:
     OLS, linear logistic, WLS
-    '''
+    """
 
     def __init__(self, data: 'pd.DataFrame | pd.Series'):
         super().__init__(data)
         self.make_available()
 
     def make_available(self, data: 'pd.DataFrame | pd.Series' = None):
+        """To make data available for regress"""
         if data is None:
             self.data = self.data.dropna()
         else:
@@ -35,13 +39,13 @@ class Regressor(Worker):
         backend: str = 'statsmodels',
         **kwargs,
     ):
-        '''OLS Regression Function
+        """OLS Regression Function
         ---------------------------
 
         y: Series, assigned y value in a series form
         intercept: bool, whether to add a intercept value
         kwargs: some other kwargs passed to backend
-        '''
+        """
         y = self.make_available(y)
 
         def _statsmodels_reg(x, y):
@@ -81,14 +85,14 @@ class Regressor(Worker):
         backend: str = 'statsmodels',
         **kwargs
     ):
-        '''Logistics Regression Function
+        """Logistics Regression Function
         ---------------------------
 
         y: Series, assigned y value in a series form
         intercept: bool, whether to add a intercept value
         backend: str, choose between statsmodels and sklearn
         kwargs: some other kwargs passed to backend
-        '''
+        """
         y = self.make_available(y)
         
         def _statsmodels_reg(x, y):
@@ -130,14 +134,14 @@ class Regressor(Worker):
         backend: str = 'statsmodels',
         **kwargs
     ):
-        '''WLS(weighted least squares) Regression Function
+        """WLS(weighted least squares) Regression Function
         ---------------------------
 
         y: Series, assigned y value in a series form
         weights: Series, higher the weight, higher the proportion of
         intercept: bool, whether to add a intercept value
         kwargs: some other kwargs passed to backend
-        '''
+        """
         y = self.make_available(y)
         weights = self.make_available(weights)
 
@@ -180,6 +184,12 @@ class Decompositer(Worker):
         ncomp: int, 
         backend: str = 'statsmodels', **kwargs
     ):
+        """PCA decomposite
+        --------------------
+        
+        ncomp: int, number of components after decomposition
+        backend: str, choice between 'sklearn' and 'statsmodels'
+        """
         if backend == 'statsmodels':
             from statsmodels.multivariate.pca import PCA
             if self.type_ == Worker.PN:
@@ -200,10 +210,10 @@ class Decompositer(Worker):
 @pd.api.extensions.register_dataframe_accessor("describer")
 @pd.api.extensions.register_series_accessor("describer")
 class Describer(Worker):
-    '''Describer is a staff worker in quool, used for a dataframe
+    """Describer is a staff worker in quool, used for a dataframe
     or a series to perform a series of descriptive analysis, like
     correlation analysis, and so on.
-    '''
+    """
 
     def corr(
         self, 
@@ -211,12 +221,12 @@ class Describer(Worker):
         method: str = 'spearman', 
         tvalue = False
     ):
-        '''Calculation for correlation matrix
+        """Calculation for correlation matrix
         -------------------------------------
 
         method: str, the method for calculating correlation function
         tvalue: bool, whether to return t-value of a time-seriesed correlation coefficient
-        '''
+        """
         if other is not None:
             other = other.copy()
             if self.type_ == Worker.PN:
@@ -252,12 +262,12 @@ class Describer(Worker):
         grouper = None, 
         method: str = 'spearman'
     ):
-        '''To calculate ic value
+        """To calculate ic value
         ------------------------
 
         other: series, the forward column
         method: str, 'spearman' means rank ic
-        '''
+        """
         if forward is not None:
             forward = forward.copy()
             if self.type_ == Worker.PN:
@@ -308,11 +318,11 @@ class Tester(Worker):
         self, 
         h0: 'float | pd.Series' = 0
     ):
-        '''To apply significant test (t-test, p-value) to see if the data is significant
+        """To apply significant test (t-test, p-value) to see if the data is significant
         -------------------------------------------------------------------------
 
         h0: float or Series, the hypothesized value
-        '''
+        """
         from scipy.stats import ttest_1samp, ttest_ind
         def _t(data):            
             if isinstance(h0, (int, float)):

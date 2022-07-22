@@ -1,10 +1,14 @@
-"""Some common functions to be used in quool,
-like convert some type of data into another type of data,
+"""Some common functions to be used in quool
+============================================
+
+Like convert some type of data into another type of data,
 or some common tools to get basic trading date infomation
 
-@author: ppoak
-@date: 2022-04-27
-@email: oakery@qq.com
+Examples:
+-----------
+
+>>> import bearalpha as ba
+>>> ba.last_report_period('2015-01-01')
 """
 
 import re
@@ -26,7 +30,8 @@ def time2str(date: 'str | datetime.datetime | int | datetime.date', formatstr: s
     if isinstance(date, int):
         date = str(date)
     date = pd.to_datetime(date)
-    date = date.strftime(formatstr)
+    if isinstance(date, datetime.datetime):
+        date = date.strftime(formatstr)
     return date
 
 def str2time(date: 'str | datetime.datetime') -> datetime.datetime:
