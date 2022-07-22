@@ -86,6 +86,9 @@ class AkShare:
             datas.append(ak.stock_individual_fund_flow_rank(indicator=indi
                 ).drop('序号', axis=1).set_index('代码').rename(columns={'最新价': f'{indi}最新价'}))
         datas = pd.concat(datas, axis=1)
+        datas['简称'] = datas.iloc[:, 0]
+        datas = datas.drop('名称', axis=1)
+        datas = datas.replace('-', None).apply(pd.to_numeric, errors='ignore')
         datas.index = pd.MultiIndex.from_product([[cls.today], datas.index], names=['日期', '代码'])
         return datas
         
