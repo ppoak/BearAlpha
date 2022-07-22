@@ -10,3 +10,9 @@ class AkShare:
 
     @classmethod
     def etf_market_daily(cls, code: str, start: str = None, end: str = None) -> DataFrame: ...
+
+    @classmethod
+    def stock_fund_flow(cls, code: str) -> DataFrame: ...
+
+    @classmethod
+    def stock_fund_rank(cls) -> DataFrame: ...

@@ -1,3 +1,4 @@
+from curses.ascii import isdigit
 import re
 import datetime
 import pandas as pd
@@ -12,7 +13,7 @@ except:
 
 class AkShare:
     
-    today = datetime.datetime.today()
+    today = pd.to_datetime(datetime.datetime.today()).normalize()
     dbstart = '20050101'
 
     @staticmethod
@@ -54,8 +55,8 @@ class AkShare:
             return price.index.to_list()
         return price
 
-
     @classmethod
+    @Cache(prefix='akshare_etf_market_daily', expire_time=2592000)
     def etf_market_daily(cls, code: str, start: str = None, end: str = None):
         code = cls.strip_code(code)
         start = start or cls.dbstart
@@ -63,4 +64,28 @@ class AkShare:
         price = ak.fund_etf_fund_info_em(code, start, end).set_index('净值日期')
         price.index = pd.to_datetime(price.index)
         return price
+    
+    @classmethod
+    @Cache(prefix='akshare_stock_fund_flow', expire_time=18000)
+    def stock_fund_flow(cls, code: str):
+        code, market = code.split('.')
+        if market.isdigit():
+            code, market = market, code
+        market = market.lower()
+        funds = ak.stock_individual_fund_flow(stock=code, market=market)
+        funds = funds.set_index('日期')
+        funds.index = pd.MultiIndex.from_product([[code], 
+            pd.to_datetime(funds.index)], names=['日期', '代码'])
+        return funds
+    
+    @classmethod
+    @Cache(prefix='akshare_stock_fund_rank', expire_time=18000)
+    def stock_fund_rank(cls):
+        datas = []
+        for indi in ['今日', '3日', '5日', '10日']:
+            datas.append(ak.stock_individual_fund_flow_rank(indicator=indi
+                ).drop('序号', axis=1).set_index('代码').rename(columns={'最新价': f'{indi}最新价'}))
+        datas = pd.concat(datas, axis=1)
+        datas.index = pd.MultiIndex.from_product([[cls.today], datas.index], names=['日期', '代码'])
+        return datas
         
