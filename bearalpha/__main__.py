@@ -41,13 +41,13 @@ def store(args):
     path = args.path
     mod = importlib.import_module(path)
     for name, config in mod.__dict__.items():
-        if 'baconfig' in name:
+        if ('baconfig' in name) or ('Loader' in name)\
+            or ('loader' in name and name != '__loader__'):
             Cache().set(name, config)
 
 def load(args):
     config = Cache().get(args.config)
-    loader = config['loader'](config)
-    loader()
+    config['loader'](config)()
 
 def main():
     parser = argparse.ArgumentParser(description='BearAlpha Cli API')
@@ -81,3 +81,6 @@ def main():
 
     args = parser.parse_args()
     args.func(args)
+
+if __name__ == "__main__":
+    main()

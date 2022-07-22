@@ -166,6 +166,7 @@ trash/
 trash.nosync/
 trashbin/
 trashbin.nosync/
+script/
 scripts/
 scripts.nosync/
 script.py

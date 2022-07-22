@@ -91,16 +91,16 @@ class Loader:
         self.writeargs = config.get('writeargs', {})
         self.postprocessargs = config.get('postprocessargs', {})
 
-    def preprocess(self, **kwargs):
+    def preprocess(self):
         pass
     
-    def read(self, **kwargs):
+    def read(self):
         raise NotImplementedError
     
-    def write(self, table: str, database: str, **kwargs):
+    def write(self):
         raise NotImplementedError
     
-    def postprocess(self, table: str, database: str):
+    def postprocess(self):
         pass
 
     def __call__(self):
