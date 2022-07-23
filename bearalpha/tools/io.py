@@ -18,7 +18,7 @@ import pandas
 import matplotlib
 import backtrader
 from rich.console import Console as RichConsole
-from rich.progress import track as Track
+from rich.progress import track
 from rich.progress import Progress as RichProgress
 from rich.traceback import install
 from rich.table import Table

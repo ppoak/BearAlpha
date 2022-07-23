@@ -104,7 +104,7 @@ class Loader:
         pass
 
     def __call__(self):
-        self.preprocess(**self.preprocessargs)
-        self.read(**self.readargs)
-        self.write(**self.writeargs)
-        self.postprocess(**self.postprocessargs)
+        self.preprocess()
+        self.read()
+        self.write()
+        self.postprocess()

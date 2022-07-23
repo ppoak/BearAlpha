@@ -35,6 +35,6 @@ from .io import (
     CONSOLE,
     PROGRESS,
     Table,
-    Track,
+    track,
     reg_font,
 )

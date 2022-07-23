@@ -1,4 +1,3 @@
-from curses.ascii import isdigit
 import re
 import datetime
 import pandas as pd
@@ -35,8 +34,16 @@ class AkShare:
         start = start or cls.dbstart
         end = end or time2str(cls.today, formatstr=r'%Y%m%d')
 
-        price = ak.stock_zh_a_hist(symbol=code, start_date=start, end_date=end, adjust='').set_index('日期')
-        adjprice = ak.stock_zh_a_hist(symbol=code, start_date=start, end_date=end, adjust='hfq').set_index('日期')
+        price = ak.stock_zh_a_hist(symbol=code, start_date=start, end_date=end, adjust='')
+        if not price.empty:
+            price = price.set_index('日期')
+        else:
+            return price
+        adjprice = ak.stock_zh_a_hist(symbol=code, start_date=start, end_date=end, adjust='hfq')
+        if not adjprice.empty:
+            adjprice = adjprice.set_index('日期')
+        else:
+            return adjprice
         adjprice = adjprice.drop(["成交量", "成交额", "换手率"], axis=1).rename(columns=lambda x: f"复权{x}")
         price = pd.concat([price, adjprice], axis=1)
         price.index = pd.to_datetime(price.index)
