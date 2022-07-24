@@ -149,7 +149,7 @@ class BackTrader(Worker):
         indicators = item2list(indicators)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
-        observers = [bt.observers.Broker, bt.observers.BuySell, bt.observers.DrawDown]\
+        observers = [bt.observers.DrawDown]\
             if observers is None else item2list(observers)
         
         if self.is_frame and not 'close' in data.columns:
@@ -205,16 +205,12 @@ class BackTrader(Worker):
         timereturn = pd.Series(result[0].analyzers.timereturn.rets)
         CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
         CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
-        if len(datanames) >= 5:
-            CONSOLE.print('[yellow][!] Your stock pool is larger than 4, displaying it seems unnecessary')
-        else:
-            cerebro.plot(width=18, height=9, style='candel')
-            if image_path is not None:
-                plt.savefig(image_path)
-            if show:
-                plt.show()
+        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
+        if image_path is not None:
+            plt.savefig(image_path)
 
         if show:
+            plt.show()
             if not timereturn.empty:
                 timereturn.printer.display(title='time return')
                 (timereturn + 1).cumprod().drawer.draw(kind='line')

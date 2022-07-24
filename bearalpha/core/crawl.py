@@ -109,7 +109,11 @@ class Request:
     
     @property
     def soup(self):
-        return BeautifulSoup(self.response.text, 'lxml')
+        return BeautifulSoup(self.response.text, 'html.parser')
+    
+    @property
+    def text(self):
+        return self.response.text
 
 
 class ProxyRequest(Request):

@@ -158,4 +158,6 @@ class AkShare:
             data_json = r.json
             temp_df = pd.DataFrame(data_json["data"])
             big_df = pd.concat([big_df, temp_df], ignore_index=True)
+        big_df.REPORT_DATE = pd.to_datetime(big_df.REPORT_DATE)
+        big_df = big_df.set_index('REPORT_DATE')
         return big_df
