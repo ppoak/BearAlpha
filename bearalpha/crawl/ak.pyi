@@ -16,3 +16,6 @@ class AkShare:
 
     @classmethod
     def stock_fund_rank(cls) -> DataFrame: ...
+
+    @classmethod
+    def balance_sheet(cls, code: str) -> DataFrame: ...

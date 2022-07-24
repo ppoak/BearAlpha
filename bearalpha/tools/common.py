@@ -63,6 +63,26 @@ def hump2snake(hump: str) -> str:
     snake = re.sub(r'([a-z]|\d)([A-Z])', r'\1_\2', hump).lower()
     return snake
 
+def strip_stock_code(code: str):
+    code_pattern = r'\.?[Ss][Zz]\.?|\.?[Ss][Hh]\.?|\.?[Bb][Jj]\.?'\
+        '|\.?[Oo][Ff]\.?'
+    return re.sub(code_pattern, '', code)
+    
+def wrap_stock_code(code: str, formatstr: str = '{code}.{market}', to_lower: bool = False):
+    if len(code.split('.')) != 1:
+        raise ValueError('It seems your code is already wrapped')
+    sh_code_pat = r'6\d{5}|9\d{5}'
+    sz_code_pat = r'0\d{5}|2\d{5}|3\d{5}'
+    bj_code_pat = r'4\d{5}|8\d{5}'
+    if re.match(sh_code_pat, code):
+        return formatstr.format(code=code, market='sh' if to_lower else 'SH')
+    elif re.match(sz_code_pat, code):
+        return formatstr.format(code=code, market='sz' if to_lower else 'SZ')
+    elif re.match(bj_code_pat, code):
+        return formatstr.format(code=code, market='bj' if to_lower else 'BJ')
+    else:
+        raise ValueError('No pattern can match your code, please check it')
+
 def latest_report_period(date: 'str | datetime.datetime | datetime.date',
     n: int = 1) -> 'str | list[str]':
     """Get the nearest n report period
