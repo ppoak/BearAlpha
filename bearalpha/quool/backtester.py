@@ -173,11 +173,12 @@ class BackTrader(Worker):
             data['volume'] = 0
                 
         more = set(data.columns.to_list()) - set(required_col + ['volume', 'close'])
+
         class _PandasData(bt.feeds.PandasData):
             lines = tuple(more)
             params = tuple(zip(more, [-1] * len(more)))
         
-        cerebro = bt.Cerebro(stdstats=False)
+        cerebro = bt.Cerebro()
         cerebro.broker.setcash(cash)
         if coc:
             cerebro.broker.set_coc(True)
@@ -204,12 +205,16 @@ class BackTrader(Worker):
         timereturn = pd.Series(result[0].analyzers.timereturn.rets)
         CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
         CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
-        cerebro.plot(width=18, height=9, style='candel')
-        if image_path is not None:
-            plt.savefig(image_path)
-        
+        if len(datanames) >= 5:
+            CONSOLE.print('[yellow][!] Your stock pool is larger than 4, displaying it seems unnecessary')
+        else:
+            cerebro.plot(width=18, height=9, style='candel')
+            if image_path is not None:
+                plt.savefig(image_path)
+            if show:
+                plt.show()
+
         if show:
-            plt.show()
             if not timereturn.empty:
                 timereturn.printer.display(title='time return')
                 (timereturn + 1).cumprod().drawer.draw(kind='line')
@@ -248,7 +253,7 @@ class Strategy(bt.Strategy):
 
         # broker completed order, just hint
         elif order.status in [order.Completed]:
-            self.log(f'Trade <{order.executed.size}> at <{order.executed.price:.2f}>')
+            self.log(f'Trade <{order.executed.size}> <{order.info.get("name", "data")}> at <{order.executed.price:.2f}>')
             # record current bar number
             self.bar_executed = len(self)
 
@@ -329,11 +334,11 @@ class OrderTable(Analyzer):
         if order.status == order.Completed:
             if order.isbuy():
                 self.orders.loc[self.data.datetime.date(0)] = [
-                    self.data._name, order.executed.size, 
+                    order.info.get('name', 'data'), order.executed.size, 
                     order.executed.price, 'BUY']
             elif order.issell():
                 self.orders.loc[self.data.datetime.date(0)] = [
-                    self.data._name, order.executed.size, 
+                    order.info.get('name', 'data'), order.executed.size, 
                     order.executed.price, 'SELL']
         
     def get_analysis(self):

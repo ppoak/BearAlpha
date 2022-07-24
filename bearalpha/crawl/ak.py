@@ -1,4 +1,3 @@
-import re
 import datetime
 import pandas as pd
 from ..core import *
@@ -117,7 +116,12 @@ class AkShare:
         security = cls.plate_info('证券').index.to_list()
         insurance = cls.plate_info('保险').index.to_list()
         security.pop(security.index('600061'))
+        security.pop(security.index('600095'))
+        security.pop(security.index('600155'))
+        security.pop(security.index('600864'))
+        security += ['001236', '000562', '600927', '000987', '002961', '601838', '603093']
         bank += ['600816']
+        insurance += ['600291']
         company_type = 3 if code[:2] == "SZ" else 4
         if code[2:] in security:
             company_type = 1
