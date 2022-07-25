@@ -6,10 +6,7 @@ from ..tools import *
 
 class StockUS:
     
-    root = "https://api.stock.us/api/v1/"
-    category = {
-        "金工量化": 8,
-    }
+    __root = "https://api.stock.us/api/v1/"
     headers = {
             "Host": "api.stock.us",
             "Origin": "https://stock.us"
@@ -51,12 +48,11 @@ class StockUS:
         return price
     
     @classmethod
-    @Cache(prefix='StockUS_report_list', expire_time=2592000)
-    def report_list(
+    @Cache(prefix='stockus_report_list', expire_time=2592000)
+    def quant_report(
         cls, 
-        category: str = '金工量化', 
-        period: str = '1m', 
-        q: str = '', 
+        keyword: str = '', 
+        period: str = 'all', 
         org_name: str = '', 
         author: str = '',
         xcf_years: str = '', 
@@ -64,10 +60,10 @@ class StockUS:
         page: int = 1, 
         page_size: int = 100
     ):
-        '''Get report data within one category
+        '''Get report data in quant block
         ---------------------------------------
 
-        category: str, category to search
+        keyword: str, key word to search, default empty string to list recent 100 entries
         period: str, report during this time period
         q: str, search keyword
         org_name: str, search by org_name
@@ -77,8 +73,8 @@ class StockUS:
         page: int, page number
         page_size: int, page size
         '''
-        url = cls.root + 'research/report-list'
-        params = (f'?category={cls.category[category]}&dates={period}&q={q}&org_name={org_name}'
+        url = cls.__root + 'research/report-list'
+        params = (f'?category=8&dates={period}&q={keyword}&org_name={org_name}'
                   f'&author={author}&xcf_years={xcf_years}&search_fields={search_fields}'
                   f'&page={page}&page_size={page_size}')
         url += params
@@ -91,10 +87,11 @@ class StockUS:
         return data
     
     @classmethod
-    @Cache(prefix='StockUS_report_search', expire_time=2592000)
-    def report_search(
-        cls, period: str = '3m', 
-        q: str = '', 
+    @Cache(prefix='stockus_report_search', expire_time=2592000)
+    def search(
+        cls, 
+        keyword: str = '', 
+        period: str = '3m', 
         org_name: str = '', 
         author_name: str = '',
         xcf_years: str = '', 
@@ -105,8 +102,8 @@ class StockUS:
         '''Search report in stockus database
         ---------------------------------------
 
+        keyword: str, key word to search, default empty string to list recent 100 entries
         period: str, report during this time period
-        q: str, search keyword
         org_name: str, search by org_name
         author: str, search by author
         xcf_years: str, search by xcf_years
@@ -114,8 +111,8 @@ class StockUS:
         page: int, page number
         page_size: int, page size
         '''
-        url = cls.root + 'research/report-search'
-        params = (f'?dates={period}&q={q}&org_name={org_name}&author_name={author_name}'
+        url = cls.__root + 'research/report-search'
+        params = (f'?dates={period}&q={keyword}&org_name={org_name}&author_name={author_name}'
                   f'&xcf_years={xcf_years}&search_fields={search_fields}&page={page}'
                   f'&page_size={page_size}')
         url += params
