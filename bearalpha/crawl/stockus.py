@@ -11,6 +11,15 @@ class StockUS:
             "Host": "api.stock.us",
             "Origin": "https://stock.us"
         }
+    category = {
+        1: "宏观经济",
+        2: "投资策略",
+        3: "行业研究",
+        4: "晨会早报",
+        8: "金工量化",
+        9: "债券研究",
+        10: "期货研究",
+    }
     todaystr = datetime.datetime.today().strftime(r'%Y%m%d')
             
     @classmethod
@@ -49,8 +58,10 @@ class StockUS:
     
     @classmethod
     @Cache(prefix='stockus_report_list', expire_time=2592000)
-    def quant_report(
+    def report_list(
         cls, 
+        category: str = 8,
+        sub_category: str = 0,
         keyword: str = '', 
         period: str = 'all', 
         org_name: str = '', 
@@ -63,6 +74,7 @@ class StockUS:
         '''Get report data in quant block
         ---------------------------------------
 
+        category: str, category to the field, use StockUS.category to see possible choices
         keyword: str, key word to search, default empty string to list recent 100 entries
         period: str, report during this time period
         q: str, search keyword
@@ -74,9 +86,11 @@ class StockUS:
         page_size: int, page size
         '''
         url = cls.__root + 'research/report-list'
-        params = (f'?category=8&dates={period}&q={keyword}&org_name={org_name}'
+        params = (f'?category={category}&dates={period}&q={keyword}&org_name={org_name}'
                   f'&author={author}&xcf_years={xcf_years}&search_fields={search_fields}'
                   f'&page={page}&page_size={page_size}')
+        if category != 8:
+            params += f'&sub_category={sub_category}'
         url += params
         res = Request(url, headers=cls.headers).get().json
         data = pd.DataFrame(res['data'])
@@ -88,7 +102,7 @@ class StockUS:
     
     @classmethod
     @Cache(prefix='stockus_report_search', expire_time=2592000)
-    def search(
+    def report_search(
         cls, 
         keyword: str = '', 
         period: str = '3m', 
