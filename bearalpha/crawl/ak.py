@@ -113,6 +113,9 @@ class AkShare:
         # https://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=sz000001#lrb-0
         code = wrap_stock_code(code, formatstr='{market}{code}')
         data = ak.stock_balance_sheet_by_report_em(symbol=code)
-        data.REPORT_DATE = pd.to_datetime(data.REPORT_DATE)
-        data = data.set_index('REPORT_DATE')
-        return data
+        if data.empty:
+            return data
+        else:
+            data.REPORT_DATE = pd.to_datetime(data.REPORT_DATE)
+            data = data.set_index('REPORT_DATE')
+            return data
