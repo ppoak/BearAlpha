@@ -24,8 +24,8 @@ class AkShare:
         end: str, end date in string format
         """
         code = strip_stock_code(code)
-        start = start or cls.dbstart
-        end = end or time2str(cls.today, formatstr=r'%Y%m%d')
+        start = time2str(start, formatstr=r'%Y%m%d') or cls.dbstart
+        end = time2str(end, formatstr=r'%Y%m%d') or time2str(cls.today, formatstr=r'%Y%m%d')
 
         price = ak.stock_zh_a_hist(symbol=code, start_date=start, end_date=end, adjust='')
         if not price.empty:
@@ -111,53 +111,8 @@ class AkShare:
     def balance_sheet(cls, code: str):
         # more infomation, please refer to this website:
         # https://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=sz000001#lrb-0
-        code = wrap_stock_code(code, formatstr='{market}{code}', to_lower=True)
-        bank = cls.plate_info('银行').index.to_list()
-        security = cls.plate_info('证券').index.to_list()
-        insurance = cls.plate_info('保险').index.to_list()
-        security.pop(security.index('600061'))
-        security.pop(security.index('600095'))
-        security.pop(security.index('600155'))
-        security.pop(security.index('600864'))
-        security += ['001236', '000562', '600927', '000987', '002961', '601838', '603093']
-        bank += ['600816']
-        insurance += ['600291']
-        company_type = 3 if code[:2] == "SZ" else 4
-        if code[2:] in security:
-            company_type = 1
-        elif code[2:] in bank:
-            company_type = 3
-        elif code[2:] in insurance:
-            company_type = 2
-        url = "https://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/zcfzbDateAjaxNew"
-        params = {
-            "companyType": company_type,
-            "reportDateType": "0",
-            "code": code,
-        }
-        r = Request(url, params=params).get()
-        data_json = r.json
-        temp_df = pd.DataFrame(data_json["data"])
-        temp_df["REPORT_DATE"] = pd.to_datetime(temp_df["REPORT_DATE"]).dt.date
-        temp_df["REPORT_DATE"] = temp_df["REPORT_DATE"].astype(str)
-        need_date = temp_df["REPORT_DATE"].tolist()
-        sep_list = [
-            ",".join(need_date[i : i + 5]) for i in range(0, len(need_date), 5)
-        ]
-        big_df = pd.DataFrame()
-        for item in sep_list:
-            url = "https://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/zcfzbAjaxNew"
-            params = {
-                "companyType": company_type,
-                "reportDateType": "0",
-                "reportType": "1",
-                "dates": item,
-                "code": code,
-            }
-            r = Request(url, params=params).get()
-            data_json = r.json
-            temp_df = pd.DataFrame(data_json["data"])
-            big_df = pd.concat([big_df, temp_df], ignore_index=True)
-        big_df.REPORT_DATE = pd.to_datetime(big_df.REPORT_DATE)
-        big_df = big_df.set_index('REPORT_DATE')
-        return big_df
+        code = wrap_stock_code(code, formatstr='{market}{code}')
+        data = ak.stock_balance_sheet_by_report_em(symbol=code)
+        data.REPORT_DATE = pd.to_datetime(data.REPORT_DATE)
+        data = data.set_index('REPORT_DATE')
+        return data
