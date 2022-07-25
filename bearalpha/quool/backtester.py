@@ -225,6 +225,100 @@ class BackTrader(Worker):
                 timereturn.to_excel(writer, sheet_name='TimeReturn')
                 result[0].analyzers.ordertable.rets.to_excel(writer, sheet_name='OrderTable')
 
+    def relocate(self,
+        strategy: bt.strategies = None,
+        cash: float = 1000000,
+        indicators: 'bt.Indicator | list' = None,
+        analyzers: 'bt.Analyzer | list' = None,
+        observers: 'bt.Observer | list' = None,
+        coc: bool = False,
+        image_path: str = None,
+        data_path: str = None,
+        show: bool = True,
+    ):
+        data = self.data.copy()
+
+        indicators = item2list(indicators)
+        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
+            if analyzers is None else item2list(analyzers)
+        observers = [bt.observers.DrawDown]\
+            if observers is None else item2list(observers)
+
+        if self.is_frame:
+            if 'close' not in data.columns or 'position' not in data.columns:
+                raise BackTesterError('run', 'Your data should at least have columns named close and position')
+            if self.type_ == Worker.CS:
+                raise BackTesterError('run', 'Cross section data cannot be used to run backtest')
+
+        required_col = ['open', 'high', 'low']
+        if self.is_frame:
+            # you should at least have a column named close
+            for col in required_col:
+                if not col in data.columns and col != 'volume':
+                    data[col] = data['close']
+            if not 'volume' in data.columns:
+                data['volume'] = 0
+        else:
+            # just a series, all ohlc data will be the same, volume set to 0
+            data = data.to_frame(name='close')
+            for col in required_col:
+                data[col] = col
+            data['volume'] = 0
+
+        more = set(data.columns.to_list()) - set(required_col + ['volume', 'close'])
+
+        class _PandasData(bt.feeds.PandasData):
+            lines = tuple(more)
+            params = tuple(zip(more, [-1] * len(more)))
+
+        cerebro = bt.Cerebro()
+        cerebro.broker.setcash(cash)
+        if coc:
+            cerebro.broker.set_coc(True)
+
+        # add data
+        if self.type_ == Worker.PN:
+            datanames = data.index.levels[1].to_list()
+        else:
+            datanames = ['data']
+        for dn in datanames:
+            d = data.loc(axis=0)[:, dn].droplevel(1) if self.type_ == Worker.PN else data
+            feed = _PandasData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
+            cerebro.adddata(feed, name=dn)
+        
+        if indicators is not None:
+            for indicator in indicators:
+                cerebro.addindicator(indicator)
+        if strategy is not None:
+            cerebro.addstrategy(strategy)
+        for analyzer in analyzers:
+            cerebro.addanalyzer(analyzer)
+        for observer in observers:
+            cerebro.addobserver(observer)
+        
+        result = cerebro.run()
+
+        timereturn = pd.Series(result[0].analyzers.timereturn.rets)
+        CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
+        CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
+        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
+        if image_path is not None:
+            plt.savefig(image_path)
+
+        if show:
+            plt.show()
+            if not timereturn.empty:
+                timereturn.printer.display(title='time return')
+                (timereturn + 1).cumprod().drawer.draw(kind='line')
+                plt.show()
+            if not result[0].analyzers.ordertable.rets.empty:
+                result[0].analyzers.ordertable.rets.printer.display(title='order table')
+        if data_path is not None:
+            with pd.ExcelWriter(data_path) as writer:
+                timereturn.to_excel(writer, sheet_name='TimeReturn')
+                result[0].analyzers.ordertable.rets.to_excel(writer, sheet_name='OrderTable')
+        
+
 class Strategy(bt.Strategy):
 
     def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
