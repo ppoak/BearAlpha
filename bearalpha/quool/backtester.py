@@ -241,7 +241,7 @@ class OrderTable(Analyzer):
 class BackTrader(Worker):
     """Backtester is a staff dedicated for run backtest on a dataset"""
 
-    def _make_available(self):
+    def _make_available(self, spt: int):
         if self.is_frame and not 'close' in self.data.columns:
             raise BackTesterError('run', 'Your data should at least have a column named close')
         if self.type_ == Worker.CS:
@@ -261,11 +261,15 @@ class BackTrader(Worker):
             for col in required_col:
                 self.data[col] = col
             self.data['volume'] = 0
+        
+        self.data = self.data.apply(lambda x: x * spt if x.name != 'volume' and x.name != 'openinterest' 
+            else x / spt)
 
     def run(
         self, 
         strategy: bt.Strategy = None, 
         cash: float = 1000000,
+        spt: int = 1,
         indicators: 'bt.Indicator | list' = None,
         analyzers: 'bt.Analyzer | list' = None,
         observers: 'bt.Observer | list' = None,
@@ -288,7 +292,7 @@ class BackTrader(Worker):
         show: bool, whether to show the result
         """
         
-        self._make_available()
+        self._make_available(spt)
         data = self.data.copy()
         indicators = item2list(indicators)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
@@ -303,7 +307,7 @@ class BackTrader(Worker):
             params = tuple(zip(more, [-1] * len(more)))
         
         cerebro = bt.Cerebro()
-        cerebro.broker.setcash(cash)
+        cerebro.broker.setcash(cash * spt)
         if coc:
             cerebro.broker.set_coc(True)
         
@@ -332,12 +336,13 @@ class BackTrader(Worker):
         timereturn = pd.Series(result[0].analyzers.timereturn.rets)
         CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
         CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
-        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
+        figs = cerebro.plot(style='candel')
         if image_path is not None:
-            plt.savefig(image_path)
+            fig = figs[0][0]
+            fig.set_size_inches(18, 3 + 6 * len(datanames))
+            fig.savefig(image_path, dpi=300)
 
         if show:
-            plt.show()
             if not timereturn.empty:
                 timereturn.printer.display(title='time return')
                 (timereturn + 1).cumprod().drawer.draw(kind='line')
@@ -352,6 +357,7 @@ class BackTrader(Worker):
     def relocate(
         self,
         portfolio: 'pd.DataFrame | pd.Series' = None,
+        spt: int = 100,
         cash: float = 1000000,
         analyzers: 'bt.Analyzer | list' = None,
         observers: 'bt.Observer | list' = None,
@@ -373,7 +379,7 @@ class BackTrader(Worker):
         data_path: str, path to save backtest data
         show: bool, whether to show the result
         """
-        self._make_available()
+        self._make_available(spt)
         data = self.data.copy()
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
@@ -393,27 +399,24 @@ class BackTrader(Worker):
         class _RelocateStra(Strategy):
 
             def __init__(self) -> None:
-                self.holdings = {}
+                self.holdings = pd.Series(np.zeros(len(datanames)), index=datanames, name='holdings')
 
             def next(self):
-                # TODO: this is definitely not the best way to relocate
-                # Please figure out one other way to relocate!
-                for d in self.datas:
-                    if self.holdings.get(d._name, 0) != 0:
-                        self.close(d)
-                    self.holdings[d._name] = 0
-                for d in self.datas:
-                    if d.portfolio[0] != self.holdings.get(d._name, 0):
-                        self.order_target_percent(d, target=d.portfolio[0], name=d._name)
-                    self.holdings[d._name] = d.portfolio[0]
-
+                target = pd.Series(dict([(d._name, d.portfolio[0]) for d in self.datas]), name='target')
+                dec = target[target < self.holdings]
+                inc = target[target > self.holdings]
+                for d in dec.index:
+                    self.order_target_percent(data=d, target=target.loc[d], name=d)
+                for i in inc.index:
+                    self.order_target_percent(data=i, target=target.loc[i], name=i)
+                self.holdings = target
 
         class _RelocateData(bt.feeds.PandasData):
             lines = ('portfolio', )
             params = (('portfolio', -1), )
 
         cerebro = bt.Cerebro()
-        cerebro.broker.setcash(cash)
+        cerebro.broker.setcash(cash * spt)
         if coc:
             cerebro.broker.set_coc(True)
 
@@ -432,19 +435,19 @@ class BackTrader(Worker):
             cerebro.addanalyzer(analyzer)
         for observer in observers:
             cerebro.addobserver(observer)
-        cerebro.addsizer(bt.sizers.FixedSize, stake=100)
         
         result = cerebro.run()
 
         timereturn = pd.Series(result[0].analyzers.timereturn.rets)
         CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
         CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
-        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
+        figs = cerebro.plot(style='candel')
         if image_path is not None:
-            plt.savefig(image_path)
+            fig = figs[0][0]
+            fig.set_size_inches(18, 3 + 6 * len(datanames))
+            fig.savefig(image_path, dpi=300)
 
         if show:
-            plt.show()
             if not timereturn.empty:
                 timereturn.printer.display(title='time return')
                 (timereturn + 1).cumprod().drawer.draw(kind='line')
