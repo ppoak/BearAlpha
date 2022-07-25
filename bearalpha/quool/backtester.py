@@ -116,209 +116,6 @@ class Relocator(Worker):
             return delta.groupby(level=0).apply(lambda x: x[x < 0].abs().sum())
 
 
-@pd.api.extensions.register_dataframe_accessor("backtrader")
-@pd.api.extensions.register_series_accessor("backtrader")
-class BackTrader(Worker):
-    """Backtester is a staff dedicated for run backtest on a dataset"""
-
-    def run(
-        self, 
-        strategy: bt.Strategy = None, 
-        cash: float = 1000000,
-        indicators: 'bt.Indicator | list' = None,
-        analyzers: 'bt.Analyzer | list' = None,
-        observers: 'bt.Observer | list' = None,
-        coc: bool = False,
-        image_path: str = None,
-        data_path: str = None,
-        show: bool = True,
-    ):
-        """Run a strategy using backtrader backend
-        
-        cash: int, initial cash
-        strategy: bt.Strategy
-        indicators: bt.Indicator or list, a indicator or a list of them
-        analyzers: bt.Analyzer or list, an analyzer or a list of them
-        observers: bt.Observer or list, a observer or a list of them
-        coc: bool, to set whether cheat on close
-        image_path: str, path to save backtest image
-        data_path: str, path to save backtest data
-        show: bool, whether to show the result
-        """
-        data = self.data.copy()
-        indicators = item2list(indicators)
-        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
-            if analyzers is None else item2list(analyzers)
-        observers = [bt.observers.DrawDown]\
-            if observers is None else item2list(observers)
-        
-        if self.is_frame and not 'close' in data.columns:
-            raise BackTesterError('run', 'Your data should at least have a column named close')
-        if self.type_ == Worker.CS:
-            raise BackTesterError('run', 'Cross section data cannot be used to run backtest')
-        
-        required_col = ['open', 'high', 'low']
-        if self.is_frame:
-            # you should at least have a column named close
-            for col in required_col:
-                if not col in data.columns and col != 'volume':
-                    data[col] = data['close']
-            if not 'volume' in data.columns:
-                data['volume'] = 0
-        else:
-            # just a series, all ohlc data will be the same, volume set to 0
-            data = data.to_frame(name='close')
-            for col in required_col:
-                data[col] = col
-            data['volume'] = 0
-                
-        more = set(data.columns.to_list()) - set(required_col + ['volume', 'close'])
-
-        class _PandasData(bt.feeds.PandasData):
-            lines = tuple(more)
-            params = tuple(zip(more, [-1] * len(more)))
-        
-        cerebro = bt.Cerebro()
-        cerebro.broker.setcash(cash)
-        if coc:
-            cerebro.broker.set_coc(True)
-        
-        # add data
-        if self.type_ == Worker.PN:
-            datanames = data.index.levels[1].to_list()
-        else:
-            datanames = ['data']
-        for dn in datanames:
-            d = data.loc(axis=0)[:, dn].droplevel(1) if self.type_ == Worker.PN else data
-            feed = _PandasData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
-            cerebro.adddata(feed, name=dn)
-        
-        if indicators is not None:
-            for indicator in indicators:
-                cerebro.addindicator(indicator)
-        if strategy is not None:
-            cerebro.addstrategy(strategy)
-        for analyzer in analyzers:
-            cerebro.addanalyzer(analyzer)
-        for observer in observers:
-            cerebro.addobserver(observer)
-        
-        result = cerebro.run()
-
-        timereturn = pd.Series(result[0].analyzers.timereturn.rets)
-        CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
-        CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
-        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
-        if image_path is not None:
-            plt.savefig(image_path)
-
-        if show:
-            plt.show()
-            if not timereturn.empty:
-                timereturn.printer.display(title='time return')
-                (timereturn + 1).cumprod().drawer.draw(kind='line')
-                plt.show()
-            if not result[0].analyzers.ordertable.rets.empty:
-                result[0].analyzers.ordertable.rets.printer.display(title='order table')
-        if data_path is not None:
-            with pd.ExcelWriter(data_path) as writer:
-                timereturn.to_excel(writer, sheet_name='TimeReturn')
-                result[0].analyzers.ordertable.rets.to_excel(writer, sheet_name='OrderTable')
-
-    def relocate(self,
-        strategy: bt.strategies = None,
-        cash: float = 1000000,
-        indicators: 'bt.Indicator | list' = None,
-        analyzers: 'bt.Analyzer | list' = None,
-        observers: 'bt.Observer | list' = None,
-        coc: bool = False,
-        image_path: str = None,
-        data_path: str = None,
-        show: bool = True,
-    ):
-        data = self.data.copy()
-
-        indicators = item2list(indicators)
-        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
-            if analyzers is None else item2list(analyzers)
-        observers = [bt.observers.DrawDown]\
-            if observers is None else item2list(observers)
-
-        if self.is_frame:
-            if 'close' not in data.columns or 'position' not in data.columns:
-                raise BackTesterError('run', 'Your data should at least have columns named close and position')
-            if self.type_ == Worker.CS:
-                raise BackTesterError('run', 'Cross section data cannot be used to run backtest')
-
-        required_col = ['open', 'high', 'low']
-        if self.is_frame:
-            # you should at least have a column named close
-            for col in required_col:
-                if not col in data.columns and col != 'volume':
-                    data[col] = data['close']
-            if not 'volume' in data.columns:
-                data['volume'] = 0
-        else:
-            # just a series, all ohlc data will be the same, volume set to 0
-            data = data.to_frame(name='close')
-            for col in required_col:
-                data[col] = col
-            data['volume'] = 0
-
-        more = set(data.columns.to_list()) - set(required_col + ['volume', 'close'])
-
-        class _PandasData(bt.feeds.PandasData):
-            lines = tuple(more)
-            params = tuple(zip(more, [-1] * len(more)))
-
-        cerebro = bt.Cerebro()
-        cerebro.broker.setcash(cash)
-        if coc:
-            cerebro.broker.set_coc(True)
-
-        # add data
-        if self.type_ == Worker.PN:
-            datanames = data.index.levels[1].to_list()
-        else:
-            datanames = ['data']
-        for dn in datanames:
-            d = data.loc(axis=0)[:, dn].droplevel(1) if self.type_ == Worker.PN else data
-            feed = _PandasData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
-            cerebro.adddata(feed, name=dn)
-        
-        if indicators is not None:
-            for indicator in indicators:
-                cerebro.addindicator(indicator)
-        if strategy is not None:
-            cerebro.addstrategy(strategy)
-        for analyzer in analyzers:
-            cerebro.addanalyzer(analyzer)
-        for observer in observers:
-            cerebro.addobserver(observer)
-        
-        result = cerebro.run()
-
-        timereturn = pd.Series(result[0].analyzers.timereturn.rets)
-        CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
-        CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
-        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
-        if image_path is not None:
-            plt.savefig(image_path)
-
-        if show:
-            plt.show()
-            if not timereturn.empty:
-                timereturn.printer.display(title='time return')
-                (timereturn + 1).cumprod().drawer.draw(kind='line')
-                plt.show()
-            if not result[0].analyzers.ordertable.rets.empty:
-                result[0].analyzers.ordertable.rets.printer.display(title='order table')
-        if data_path is not None:
-            with pd.ExcelWriter(data_path) as writer:
-                timereturn.to_excel(writer, sheet_name='TimeReturn')
-                result[0].analyzers.ordertable.rets.to_excel(writer, sheet_name='OrderTable')
-        
-
 class Strategy(bt.Strategy):
 
     def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
@@ -437,6 +234,227 @@ class OrderTable(Analyzer):
     def get_analysis(self):
         self.rets = self.orders
         return self.orders
+
+
+@pd.api.extensions.register_dataframe_accessor("backtrader")
+@pd.api.extensions.register_series_accessor("backtrader")
+class BackTrader(Worker):
+    """Backtester is a staff dedicated for run backtest on a dataset"""
+
+    def _make_available(self):
+        if self.is_frame and not 'close' in self.data.columns:
+            raise BackTesterError('run', 'Your data should at least have a column named close')
+        if self.type_ == Worker.CS:
+            raise BackTesterError('run', 'Cross section data cannot be used to run backtest')
+        
+        required_col = ['open', 'high', 'low']
+        if self.is_frame:
+            # you should at least have a column named close
+            for col in required_col:
+                if not col in self.data.columns and col != 'volume':
+                    self.data[col] = data['close']
+            if not 'volume' in self.data.columns:
+                self.data['volume'] = 0
+        else:
+            # just a series, all ohlc data will be the same, volume set to 0
+            self.data = data.to_frame(name='close')
+            for col in required_col:
+                self.data[col] = col
+            self.data['volume'] = 0
+
+    def run(
+        self, 
+        strategy: bt.Strategy = None, 
+        cash: float = 1000000,
+        indicators: 'bt.Indicator | list' = None,
+        analyzers: 'bt.Analyzer | list' = None,
+        observers: 'bt.Observer | list' = None,
+        coc: bool = False,
+        image_path: str = None,
+        data_path: str = None,
+        show: bool = True,
+    ):
+        """Run a strategy using backtrader backend
+        -----------------------------------------
+        
+        strategy: bt.Strategy
+        cash: int, initial cash
+        indicators: bt.Indicator or list, a indicator or a list of them
+        analyzers: bt.Analyzer or list, an analyzer or a list of them
+        observers: bt.Observer or list, a observer or a list of them
+        coc: bool, to set whether cheat on close
+        image_path: str, path to save backtest image
+        data_path: str, path to save backtest data
+        show: bool, whether to show the result
+        """
+        
+        self._make_available()
+        data = self.data.copy()
+        indicators = item2list(indicators)
+        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
+            if analyzers is None else item2list(analyzers)
+        observers = [bt.observers.DrawDown]\
+            if observers is None else item2list(observers)
+                
+        more = set(data.columns.to_list()) - set(['open', 'high', 'low', 'close', 'volume'])
+
+        class _PandasData(bt.feeds.PandasData):
+            lines = tuple(more)
+            params = tuple(zip(more, [-1] * len(more)))
+        
+        cerebro = bt.Cerebro()
+        cerebro.broker.setcash(cash)
+        if coc:
+            cerebro.broker.set_coc(True)
+        
+        # add data
+        if self.type_ == Worker.PN:
+            datanames = data.index.levels[1].to_list()
+        else:
+            datanames = ['data']
+        for dn in datanames:
+            d = data.loc(axis=0)[:, dn].droplevel(1) if self.type_ == Worker.PN else data
+            feed = _PandasData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
+            cerebro.adddata(feed, name=dn)
+        
+        if indicators is not None:
+            for indicator in indicators:
+                cerebro.addindicator(indicator)
+        if strategy is not None:
+            cerebro.addstrategy(strategy)
+        for analyzer in analyzers:
+            cerebro.addanalyzer(analyzer)
+        for observer in observers:
+            cerebro.addobserver(observer)
+        
+        result = cerebro.run()
+
+        timereturn = pd.Series(result[0].analyzers.timereturn.rets)
+        CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
+        CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
+        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
+        if image_path is not None:
+            plt.savefig(image_path)
+
+        if show:
+            plt.show()
+            if not timereturn.empty:
+                timereturn.printer.display(title='time return')
+                (timereturn + 1).cumprod().drawer.draw(kind='line')
+                plt.show()
+            if not result[0].analyzers.ordertable.rets.empty:
+                result[0].analyzers.ordertable.rets.printer.display(title='order table')
+        if data_path is not None:
+            with pd.ExcelWriter(data_path) as writer:
+                timereturn.to_excel(writer, sheet_name='TimeReturn')
+                result[0].analyzers.ordertable.rets.to_excel(writer, sheet_name='OrderTable')
+
+    def relocate(
+        self,
+        portfolio: 'pd.DataFrame | pd.Series' = None,
+        cash: float = 1000000,
+        analyzers: 'bt.Analyzer | list' = None,
+        observers: 'bt.Observer | list' = None,
+        coc: bool = False,
+        image_path: str = None,
+        data_path: str = None,
+        show: bool = True,
+    ):
+        """Test directly from dataframe position information
+        -----------------------------------------
+        
+        portfolio: pd.DataFrame or pd.Series, position information
+        cash: int, initial cash
+        indicators: bt.Indicator or list, a indicator or a list of them
+        analyzers: bt.Analyzer or list, an analyzer or a list of them
+        observers: bt.Observer or list, a observer or a list of them
+        coc: bool, to set whether cheat on close
+        image_path: str, path to save backtest image
+        data_path: str, path to save backtest data
+        show: bool, whether to show the result
+        """
+        self._make_available()
+        data = self.data.copy()
+        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
+            if analyzers is None else item2list(analyzers)
+        observers = [bt.observers.DrawDown]\
+            if observers is None else item2list(observers)
+
+        if self.isframe(portfolio) and self.ists(portfolio):
+            portfolio = portfolio.stack()
+        elif self.isseries(portfolio) and self.ispanel(portfolio):
+            portfolio = portfolio.copy()
+        portfolio.name = 'portfolio'
+        
+        data = pd.concat([data, portfolio], axis=1, join='outer')
+        data['portfolio'] = data['portfolio'].groupby(level=1).ffill()
+        data['portfolio'] = data['portfolio'].groupby(level=0).apply(lambda x: x / x.sum())
+
+        class _RelocateStra(Strategy):
+
+            def __init__(self) -> None:
+                self.holdings = {}
+
+            def next(self):
+                # TODO: this is definitely not the best way to relocate
+                # Please figure out one other way to relocate!
+                for d in self.datas:
+                    if self.holdings.get(d._name, 0) != 0:
+                        self.close(d)
+                    self.holdings[d._name] = 0
+                for d in self.datas:
+                    if d.portfolio[0] != self.holdings.get(d._name, 0):
+                        self.order_target_percent(d, target=d.portfolio[0], name=d._name)
+                    self.holdings[d._name] = d.portfolio[0]
+
+
+        class _RelocateData(bt.feeds.PandasData):
+            lines = ('portfolio', )
+            params = (('portfolio', -1), )
+
+        cerebro = bt.Cerebro()
+        cerebro.broker.setcash(cash)
+        if coc:
+            cerebro.broker.set_coc(True)
+
+        # add data
+        if self.type_ == Worker.PN:
+            datanames = data.index.levels[1].to_list()
+        else:
+            datanames = ['data']
+        for dn in datanames:
+            d = data.loc(axis=0)[:, dn].droplevel(1) if self.type_ == Worker.PN else data
+            feed = _RelocateData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
+            cerebro.adddata(feed, name=dn)
+        
+        cerebro.addstrategy(_RelocateStra)
+        for analyzer in analyzers:
+            cerebro.addanalyzer(analyzer)
+        for observer in observers:
+            cerebro.addobserver(observer)
+        cerebro.addsizer(bt.sizers.FixedSize, stake=100)
+        
+        result = cerebro.run()
+
+        timereturn = pd.Series(result[0].analyzers.timereturn.rets)
+        CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
+        CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
+        cerebro.plot(width=18, height=3 + (6 * len(datanames)), style='candel')
+        if image_path is not None:
+            plt.savefig(image_path)
+
+        if show:
+            plt.show()
+            if not timereturn.empty:
+                timereturn.printer.display(title='time return')
+                (timereturn + 1).cumprod().drawer.draw(kind='line')
+                plt.show()
+            if not result[0].analyzers.ordertable.rets.empty:
+                result[0].analyzers.ordertable.rets.printer.display(title='order table')
+        if data_path is not None:
+            with pd.ExcelWriter(data_path) as writer:
+                timereturn.to_excel(writer, sheet_name='TimeReturn')
+                result[0].analyzers.ordertable.rets.to_excel(writer, sheet_name='OrderTable')
 
 
 if __name__ == "__main__":

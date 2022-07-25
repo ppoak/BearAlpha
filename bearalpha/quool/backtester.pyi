@@ -32,8 +32,46 @@ class BackTrader(Worker):
         image_path: str = None,
         data_path: str = None,
         show: bool = True,
-    ) -> None: ...
+    ) -> None: 
+        """Run a strategy using backtrader backend
+        -----------------------------------------
+        
+        strategy: bt.Strategy
+        cash: int, initial cash
+        indicators: bt.Indicator or list, a indicator or a list of them
+        analyzers: bt.Analyzer or list, an analyzer or a list of them
+        observers: bt.Observer or list, a observer or a list of them
+        coc: bool, to set whether cheat on close
+        image_path: str, path to save backtest image
+        data_path: str, path to save backtest data
+        show: bool, whether to show the result
+        """
 
+
+    def relocate(
+        self,
+        portfolio: 'DataFrame | Series' = None,
+        cash: float = 1000000,
+        analyzers: 'bt.Analyzer | list' = None,
+        observers: 'bt.Observer | list' = None,
+        coc: bool = False,
+        image_path: str = None,
+        data_path: str = None,
+        show: bool = True,
+    ):
+        """Test directly from dataframe position information
+        -----------------------------------------
+        
+        portfolio: pd.DataFrame or pd.Series, position information
+        cash: int, initial cash
+        indicators: bt.Indicator or list, a indicator or a list of them
+        analyzers: bt.Analyzer or list, an analyzer or a list of them
+        observers: bt.Observer or list, a observer or a list of them
+        coc: bool, to set whether cheat on close
+        image_path: str, path to save backtest image
+        data_path: str, path to save backtest data
+        show: bool, whether to show the result
+        """
 
 class Strategy(bt.Strategy):
 
