@@ -54,6 +54,7 @@ Examples:
 from pandas import (
     DataFrame as PdDataFrame,
     Series as PdSeries,
+    DateOffset,
     Timestamp,
     MultiIndex,
     Index,
@@ -68,15 +69,19 @@ from pandas import (
 
 from numpy import (
     random,
-    intersect1d,
     log, log10, exp,
     nan, inf,
+    intersect1d,
 )
 
 from matplotlib.pyplot import (
     subplots, 
     show, imsave, imshow,
     savefig, 
+)
+
+from pandas.tseries.offsets import (
+    MonthEnd
 )
 
 from backtrader import (
