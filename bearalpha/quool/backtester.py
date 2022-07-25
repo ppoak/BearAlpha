@@ -193,6 +193,9 @@ class BackTrader(Worker):
             feed = _PandasData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
             cerebro.adddata(feed, name=dn)
         
+        if indicators is not None:
+            for indicator in indicators:
+                cerebro.addindicator(indicator)
         if strategy is not None:
             cerebro.addstrategy(strategy)
         for analyzer in analyzers:
