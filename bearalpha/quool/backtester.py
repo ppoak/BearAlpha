@@ -240,7 +240,7 @@ class OrderTable(Analyzer):
 class BackTrader(Worker):
     """Backtester is a staff dedicated for run backtest on a dataset"""
 
-    def _make_available(self, spt: int):
+    def _make_available(self, spt: int, data: pd.DataFrame) -> pd.DataFrame:
         if self.is_frame and not 'close' in data.columns:
             raise BackTesterError('run', 'Your data should at least have a column named close')
         if self.type_ == Worker.CS:
@@ -263,6 +263,8 @@ class BackTrader(Worker):
         
         data = data.apply(lambda x: x * spt if x.name != 'volume' and x.name != 'openinterest' 
             else x / spt)
+
+        return data
 
     def run(
         self, 
@@ -293,7 +295,7 @@ class BackTrader(Worker):
         """
         
         data = self.data.copy()
-        self._make_available(spt)
+        data = self._make_available(spt, data)
         indicators = item2list(indicators)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
@@ -383,7 +385,7 @@ class BackTrader(Worker):
         show: bool, whether to show the result
         """
         data = self.data.copy()
-        self._make_available(spt)
+        data = self._make_available(spt, data)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
         observers = [bt.observers.DrawDown]\
