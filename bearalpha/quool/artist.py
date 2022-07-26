@@ -13,7 +13,7 @@ class ArtistError(FrameWorkError):
 @pd.api.extensions.register_dataframe_accessor("drawer")
 @pd.api.extensions.register_series_accessor("drawer")
 class Drawer(Worker):
-    '''Drawer is a staff of quool for visulaizing data'''
+    """Drawer is a staff of quool for visulaizing data"""
 
     def draw(
         self, 
@@ -23,7 +23,7 @@ class Drawer(Worker):
         indicator: str = slice(None), 
         **kwargs
     ):
-        '''Draw a image of the given slice of data
+        """Draw a image of the given slice of data
         ------------------------------------------
 
         kind: str, the kind of the plot
@@ -31,7 +31,7 @@ class Drawer(Worker):
         asset: str, the slice of asset, default to all assets
         indicator: str, the slice of indicator, default to all indicators
         kwargs: dict, the kwargs for the plot function
-        '''
+        """
         plotwised = self._flat(datetime, asset, indicator)
         
         if not isinstance(plotwised, (pd.Series, pd.DataFrame)):
@@ -80,7 +80,12 @@ class Printer(Worker):
         """Print the dataframe or series in a terminal
         ------------------------------------------
 
-        formatter: pd.DataFrame, the formatter for the dataframe
+        datetime: str, the slice on the datetime dimension
+        asset: str, the slice on the asset dimension
+        indicator: str, the slice on the indicator dimension
+        maxdisplay_length: int, the maximum display length of the table
+        maxdisplay_width: int, the maximum display width of the table
+        title: str, the title of the table
         """
         printwised = self._flat(datetime, asset, indicator)
 
