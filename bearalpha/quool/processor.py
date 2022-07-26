@@ -20,6 +20,7 @@ class Converter(Worker):
         lag: int = 1,
     ):
         """Convert the price information to return information
+        ------------------------------------------------------
         
         period: str or int or DateOffset, if in str and DateOffset format,
             return will be in like resample format, otherwise, you can get rolling
@@ -258,7 +259,7 @@ class PreProcessor(Worker):
             data[data < maddown] = maddown
             return data
             
-        def _std_correct(data):
+        def _std(data):
             mean = data.mean()
             mean = mean.values.reshape((1, -1)).repeat(len(data), axis=0).reshape(data.shape)
             mean = pd.DataFrame(mean, index=data.index, columns=data.columns)
@@ -308,11 +309,11 @@ class PreProcessor(Worker):
             if n is None:
                 n = 3
             if self.type_ == Worker.PN:
-                return data.groupby(grouper).apply(_std_correct)
+                return data.groupby(grouper).apply(_std)
             elif grouper is not None:
-                return data.groupby(grouper).apply(_std_correct)
+                return data.groupby(grouper).apply(_std)
             else:
-                return _std_correct(data)
+                return _std(data)
         
         elif 'drop' in method:
             if n is None:

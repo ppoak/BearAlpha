@@ -21,7 +21,6 @@ class Relocator(Worker):
             raise BackTesterError('profit', 'Your weight data should either be in PN series or TS frame form')
         self.weight = weight.groupby(level=0).apply(lambda x: x / x.sum())
 
-
     def make_available(self, data: 'pd.DataFrame | pd.Series'):
         if self.ists(data) and self.isframe(data):
             return data.stack()
@@ -37,13 +36,13 @@ class Relocator(Worker):
         ret: pd.Series, 
         portfolio: pd.Series = None,
     ):
-        '''calculate profit from weight and forward
+        """calculate profit from weight and forward
         ---------------------------------------------
 
         ret: pd.Series, the return data in either PN series or TS frame form
         portfolio: pd.Series, the portfolio tag marked by a series, 
             only available when passing a PN
-        '''
+        """
         
         weight = self.weight.copy()
         
@@ -96,11 +95,11 @@ class Relocator(Worker):
         return net
         
     def turnover(self, side: str = 'both'):
-        '''calculate turnover
+        """calculate turnover
         ---------------------
 
         side: str, choice between "buy", "short" or "both"
-        '''
+        """
         weight = self.weight.copy()
         weight = weight.reindex(pd.MultiIndex.from_product(
             [weight.index.levels[0], weight.index.levels[1]],
@@ -119,7 +118,7 @@ class Relocator(Worker):
 class Strategy(bt.Strategy):
 
     def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
-        '''Logging function'''
+        """Logging function"""
         datetime = datetime or self.data.datetime.date(0)
         datetime = time2str(datetime)
         if hint == "INFO":
@@ -133,7 +132,7 @@ class Strategy(bt.Strategy):
         CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
 
     def notify_order(self, order: bt.Order):
-        '''order notification'''
+        """order notification"""
         # order possible status:
         # 'Created'、'Submitted'、'Accepted'、'Partial'、'Completed'、
         # 'Canceled'、'Expired'、'Margin'、'Rejected'
@@ -155,7 +154,7 @@ class Strategy(bt.Strategy):
         self.order = None
 
     def notify_trade(self, trade):
-        '''trade notification'''
+        """trade notification"""
         if not trade.isclosed:
             # trade not closed, skip
             return
@@ -166,7 +165,7 @@ class Strategy(bt.Strategy):
 class Indicator(bt.Indicator):
     
     def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
-        '''Logging function'''
+        """Logging function"""
         datetime = datetime or self.data.datetime.date(0)
         datetime = time2str(datetime)
         if hint == "INFO":
@@ -183,7 +182,7 @@ class Indicator(bt.Indicator):
 class Analyzer(bt.Analyzer):
 
     def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
-        '''Logging function'''
+        """Logging function"""
         datetime = datetime or self.data.datetime.date(0)
         datetime = time2str(datetime)
         if hint == "INFO":
@@ -200,7 +199,7 @@ class Analyzer(bt.Analyzer):
 class Observer(bt.Observer):
 
     def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO'):
-        '''Logging function'''
+        """Logging function"""
         datetime = datetime or self.data.datetime.date(0)
         datetime = time2str(datetime)
         if hint == "INFO":
@@ -283,6 +282,7 @@ class BackTrader(Worker):
         
         strategy: bt.Strategy
         cash: int, initial cash
+        spt: int, stock per trade, defining the least stocks in on trade
         indicators: bt.Indicator or list, a indicator or a list of them
         analyzers: bt.Analyzer or list, an analyzer or a list of them
         observers: bt.Observer or list, a observer or a list of them
@@ -371,6 +371,8 @@ class BackTrader(Worker):
         -----------------------------------------
         
         portfolio: pd.DataFrame or pd.Series, position information
+        spt: int, stock per trade, defining the least stocks in on trade
+        ratio: float, retention ration for cash, incase of failure in order
         cash: int, initial cash
         indicators: bt.Indicator or list, a indicator or a list of them
         analyzers: bt.Analyzer or list, an analyzer or a list of them

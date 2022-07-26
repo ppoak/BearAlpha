@@ -10,7 +10,20 @@ class Converter(Worker):
         close_col: str = 'close', 
         method: str = 'algret',
         lag: int = 1,
-    ) -> 'DataFrame | Series': ...
+    ) -> 'DataFrame | Series':
+        """Convert the price information to return information
+        ------------------------------------------------------
+        
+        period: str or int or DateOffset, if in str and DateOffset format,
+            return will be in like resample format, otherwise, you can get rolling
+            return formatted data
+        open_col: str, if you pass a dataframe, you need to assign which column
+            represents open price
+        colse_col: str, the same as open_col, but to assign close price
+        method: str, choose between 'algret' and 'logret'
+        lag: int, define how many day as lagged after the day of calculation forward return
+        """
+
 
     def cum2diff(
         self,

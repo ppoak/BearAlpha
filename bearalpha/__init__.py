@@ -97,7 +97,7 @@ from .database import *
 from .quool import *
 from .crawl import *
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 
 class DataFrame(PdDataFrame):

@@ -32,6 +32,7 @@ class Evaluator(Worker):
         period: 'int | str' = 'a'
     ):
         """To Calculate sharpe ratio for the net value curve
+        -----------------------------------------------------
         
         rf: int, float or pd.Series, risk free rate, default to 4%,
         period: freqstr or dateoffset, the resample or rolling period

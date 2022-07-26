@@ -9,14 +9,54 @@ class Relocator(Worker):
         self, 
         ret: Series, 
         portfolio: Series = None,
-    ) -> Series: ...
+    ) -> Series:
+        """calculate profit from weight and forward
+        ---------------------------------------------
+
+        ret: pd.Series, the return data in either PN series or TS frame form
+        portfolio: pd.Series, the portfolio tag marked by a series, 
+            only available when passing a PN
+        """
 
     def networth(
         self, 
         price: 'Series | DataFrame',
-    ) -> Series: ...
+    ) -> Series:
+        """Calculate the networth curve using normal price data
+        --------------------------------------------------------
 
-    def turnover(self, side: str = 'both') -> Series: ...
+        price: pd.Series or pd.DataFrame, the price data either in
+            MultiIndex form or the TS Matrix form
+        return: pd.Series, the networth curve
+        """
+
+    def turnover(self, side: str = 'both') -> Series:
+        """calculate turnover
+        ---------------------
+
+        side: str, choice between "buy", "short" or "both"
+        """
+
+
+class Strategy(bt.Strategy):
+
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
+
+
+class Analyzer(bt.Analyzer):
+
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
+
+class Observer(bt.Observer):
+
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
+
+class Indicator(bt.Indicator):
+
+    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
+
+class OrderTable(Analyzer):
+    ...
 
 
 class BackTrader(Worker):
@@ -38,6 +78,7 @@ class BackTrader(Worker):
         
         strategy: bt.Strategy
         cash: int, initial cash
+        spt: int, stock per trade, defining the least stocks in on trade
         indicators: bt.Indicator or list, a indicator or a list of them
         analyzers: bt.Analyzer or list, an analyzer or a list of them
         observers: bt.Observer or list, a observer or a list of them
@@ -63,6 +104,8 @@ class BackTrader(Worker):
         -----------------------------------------
         
         portfolio: pd.DataFrame or pd.Series, position information
+        spt: int, stock per trade, defining the least stocks in on trade
+        ratio: float, retention ration for cash, incase of failure in order
         cash: int, initial cash
         indicators: bt.Indicator or list, a indicator or a list of them
         analyzers: bt.Analyzer or list, an analyzer or a list of them
@@ -72,23 +115,3 @@ class BackTrader(Worker):
         data_path: str, path to save backtest data
         show: bool, whether to show the result
         """
-
-class Strategy(bt.Strategy):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-
-class Analyzer(bt.Analyzer):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-class Observer(bt.Observer):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-class Indicator(bt.Indicator):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-class OrderTable(Analyzer):
-    ...
