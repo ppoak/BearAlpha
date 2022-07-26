@@ -189,9 +189,9 @@ class Converter(Worker):
         return np.log(self.data)
 
     def resample(self, rule: str, **kwargs):
-        if self.type_ == Worker.TS:
+        if self.type_ == Worker.TSSR or self.type_ == Worker.TSFR:
             return self.data.resample(rule, **kwargs)
-        elif self.type_ == Worker.PN:
+        elif self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
             return self.data.groupby([pd.Grouper(level=0, freq=rule, **kwargs), pd.Grouper(level=1)])
 
 @pd.api.extensions.register_dataframe_accessor("preprocessor")
