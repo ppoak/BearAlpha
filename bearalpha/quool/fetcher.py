@@ -11,17 +11,15 @@ from ..tools import *
 @pd.api.extensions.register_series_accessor("filer")
 class Filer(Worker):
     
-    def to_multisheet_excel(
+    def to_excel(
         self, 
         path, 
         perspective: str = 'indicator', 
         **kwargs
     ) -> None:
-        if self.type_ == Worker.PN:
-            if isinstance(path, str):
-                writer = pd.ExcelWriter(path)
-            else:
-                writer = path
+        if self.type_ == Worker.PNFR:
+            writer = pd.ExcelWriter(path) if isinstance(path, str) else path
+
             if perspective == 'indicator':
                 if self.is_frame:
                     for column in self.data.columns:
@@ -40,6 +38,10 @@ class Filer(Worker):
                 else:
                     for asset in self.data.index.get_level_values(1).unique():
                         self.data.loc[(slice(None), asset), :].to_excel(writer, sheet_name=str(asset), **kwargs)
+        
+        elif self.type_ == Worker.PNSR:
+            self.data.unstack().to_excel(path, **kwargs)
+        
         else:
             self.data.to_excel(path, **kwargs)
         
@@ -54,6 +56,7 @@ class Filer(Worker):
         
         sheets_dict = pd.read_excel(path, sheet_name=None, **kwargs)
         datas = []
+
         if perspective == "indicator":
             for indicator, data in sheets_dict.items():
                 data = data.stack()
@@ -107,8 +110,7 @@ class Filer(Worker):
             datas = pd.concat(datas, axis=0).sort_index()
         
         elif perspective == "indicator":
-            if name_pattern is None:
-                name_pattern = r'.*'
+            name_pattern = name_pattern or r'.*'
             for file in files:
                 basename = os.path.splitext(file)[0]
                 name = re.findall(name_pattern, basename)[0]
@@ -119,8 +121,7 @@ class Filer(Worker):
             datas = pd.concat(datas, axis=1).sort_index()
 
         elif perspective == "asset":
-            if name_pattern is None:
-                name_pattern = r'[a-zA-Z\d]{6}\.[a-zA-Z]{2}|[a-zA-Z]{0,2}\..{6}'
+            name_pattern = name_pattern or r'[a-zA-Z\d]{6}\.[a-zA-Z]{2}|[a-zA-Z]{0,2}\..{6}'
             for file in files:
                 basename = os.path.splitext(file)[0]
                 name = re.findall(name_pattern, basename)[0]
@@ -130,8 +131,7 @@ class Filer(Worker):
             datas = pd.concat(datas).sort_index()
             
         elif perspective == "datetime":
-            if name_pattern is None:
-                name_pattern = r'\d{4}[./-]\d{2}[./-]\d{2}|\d{4}[./-]\d{2}[./-]\d{2}\s?\d{2}[:.]\d{2}[:.]\d{2}'
+            name_pattern = name_pattern or r'\d{4}[./-]\d{2}[./-]\d{2}|\d{4}[./-]\d{2}[./-]\d{2}\s?\d{2}[:.]\d{2}[:.]\d{2}'
             for file in files:
                 basename = os.path.splitext(file)[0]
                 name = re.findall(name_pattern, basename)[0]
@@ -169,8 +169,7 @@ class Filer(Worker):
             datas = pd.concat(datas, axis=0).sort_index()
 
         elif perspective == "indicator":
-            if name_pattern is None:
-                name_pattern = r'.*'
+            name_pattern = name_pattern or r'.*'
             for file in files:
                 basename = os.path.splitext(file)[0]
                 name = re.findall(name_pattern, basename)[0]
@@ -181,8 +180,7 @@ class Filer(Worker):
             datas = pd.concat(datas, axis=1).sort_index()
 
         elif perspective == "asset":
-            if name_pattern is None:
-                name_pattern = r'[a-zA-Z\d]{6}\.[a-zA-Z]{2}|[a-zA-Z]{0,2}\..{6}'
+            name_pattern = name_pattern or r'[a-zA-Z\d]{6}\.[a-zA-Z]{2}|[a-zA-Z]{0,2}\..{6}'
             for file in files:
                 basename = os.path.splitext(file)[0]
                 name = re.search(name_pattern, basename).group()
@@ -192,8 +190,7 @@ class Filer(Worker):
             datas = pd.concat(datas).sort_index()
             
         elif perspective == "datetime":
-            if name_pattern is None:
-                name_pattern = r'\d{4}[./-]\d{2}[./-]\d{2}|\d{4}[./-]\d{2}[./-]\d{2}\s?\d{2}[:.]\d{2}[:.]\d{2}'
+            name_pattern = name_pattern or r'\d{4}[./-]\d{2}[./-]\d{2}|\d{4}[./-]\d{2}[./-]\d{2}\s?\d{2}[:.]\d{2}[:.]\d{2}'
             for file in files:
                 basename = os.path.splitext(file)[0]
                 name = re.search(name_pattern, basename).group()

@@ -9,7 +9,7 @@ from .analyst import (
     Regressor,
     Describer,
     Decompositer,
-    Tester,
+    SigTester,
 )
 
 from .fetcher import (
@@ -34,12 +34,4 @@ from .backtester import (
 
 from .evaluator import (
     Evaluator,
-)
-
-from .eventester import (
-    Strategy,
-    Indicator,
-    Analyzer,
-    Observer,
-    OrderTable,
 )

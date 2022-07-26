@@ -4,7 +4,7 @@ from bearalpha import *
 
 class Filer(Worker):
 
-    def to_multisheet_excel(
+    def to_excel(
         self, 
         path, 
         perspective: str = 'indicator', 

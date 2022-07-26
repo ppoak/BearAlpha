@@ -23,14 +23,11 @@ class Regressor(Worker):
 
     def __init__(self, data: 'pd.DataFrame | pd.Series'):
         super().__init__(data)
-        self.make_available()
 
-    def make_available(self, data: 'pd.DataFrame | pd.Series' = None):
+    @staticmethod
+    def _valid(data: 'pd.DataFrame | pd.Series'):
         """To make data available for regress"""
-        if data is None:
-            self.data = self.data.dropna()
-        else:
-            return data.dropna()
+        return data.dropna()
     
     def ols(
         self, 
@@ -46,7 +43,8 @@ class Regressor(Worker):
         intercept: bool, whether to add a intercept value
         kwargs: some other kwargs passed to backend
         """
-        y = self.make_available(y)
+        data = self._valid(self.data.copy())
+        y = self._valid(y)
 
         def _statsmodels_reg(x, y):
             common_index = x.index.intersection(y.index)
@@ -65,18 +63,18 @@ class Regressor(Worker):
 
         if backend == 'statsmodels':
             from statsmodels.api import OLS, add_constant
-            if self.type_ == Worker.PN:
-                return self.data.copy().groupby(level=0).apply(
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
+                return data.groupby(level=0).apply(
                     lambda x: _statsmodels_reg(x, y))
             else:
-                return _statsmodels_reg(self.data, y)
+                return _statsmodels_reg(data, y)
         elif backend == 'sklearn':
             from sklearn.linear_model import LinearRegression
-            if self.type_ == Worker.PN:
-                return self.data.copy().groupby(level=0).apply(
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
+                return data.groupby(level=0).apply(
                     lambda x: _sklearn_reg(x, y))
             else:
-                return _sklearn_reg(self.data, y)
+                return _sklearn_reg(data, y)
         
     def logistic(
         self, 
@@ -93,7 +91,8 @@ class Regressor(Worker):
         backend: str, choose between statsmodels and sklearn
         kwargs: some other kwargs passed to backend
         """
-        y = self.make_available(y)
+        data = self._valid(self.data)
+        y = self._valid(y)
         
         def _statsmodels_reg(x, y):
             common_index = x.index.intersection(y.index)
@@ -112,19 +111,19 @@ class Regressor(Worker):
 
         if backend == 'statsmodels':
             from statsmodels.api import Logit, add_constant
-            if self.type_ == Worker.PN:
-                return self.data.copy().groupby(level=0).apply(
+            if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
+                return data.groupby(level=0).apply(
                     lambda x: _statsmodels_reg(x, y))
             else:
-                return _statsmodels_reg(self.data.copy(), y)
+                return _statsmodels_reg(data, y)
         
         elif backend == 'sklearn':
             from sklearn.linear_model import LogisticRegression
-            if self.type_ == Worker.PN:
-                return self.data.copy().groupby(level=0).apply(
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
+                return data.groupby(level=0).apply(
                     lambda x: _sklearn_reg(x, y))
             else:
-                return _sklearn_reg(self.data.copy(), y)
+                return _sklearn_reg(data, y)
 
     def wls(
         self, 
@@ -142,8 +141,9 @@ class Regressor(Worker):
         intercept: bool, whether to add a intercept value
         kwargs: some other kwargs passed to backend
         """
-        y = self.make_available(y)
-        weights = self.make_available(weights)
+        data = self._valid(self.data)
+        y = self._valid(y)
+        weights = self._valid(weights)
 
         def _statsmodels_reg(x, y, weights):
             common_index = x.index.intersection(y.index).intersection(weights.index)
@@ -162,18 +162,18 @@ class Regressor(Worker):
 
         if backend == 'statsmodels':
             from statsmodels.api import WLS, add_constant
-            if self.type_ == Worker.PN:
-                return self.data.copy().groupby(level=0).apply(
+            if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
+                return data.groupby(level=0).apply(
                     lambda x: _statsmodels_reg(x, y, weights))
             else:
-                return _statsmodels_reg(self.data, y, weights)
+                return _statsmodels_reg(data, y, weights)
         elif backend == 'sklearn':
             from sklearn.linear_model import LinearRegression
-            if self.type_ == Worker.PN:
-                return self.data.copy().groupby(level=0).apply(
+            if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
+                return data.groupby(level=0).apply(
                     lambda x: _sklearn_reg(x, y, weights))
             else:
-                return _sklearn_reg(self.data, y, weights)
+                return _sklearn_reg(data, y, weights)
 
 @pd.api.extensions.register_dataframe_accessor("decompositer")
 @pd.api.extensions.register_series_accessor("decompositer")
@@ -192,7 +192,7 @@ class Decompositer(Worker):
         """
         if backend == 'statsmodels':
             from statsmodels.multivariate.pca import PCA
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
                 return self.data.copy().groupby(level=0).apply(
                     lambda x: PCA(x, ncomp=ncomp, **kwargs))
             else:
@@ -200,7 +200,7 @@ class Decompositer(Worker):
         
         elif backend == 'sklearn':
             from sklearn.decomposition import PCA
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
                 return self.data.copy().groupby(level=0).apply(
                     lambda x: PCA(n_components=ncomp, **kwargs).fit(x))
             else:
@@ -229,7 +229,7 @@ class Describer(Worker):
         """
         if other is not None:
             other = other.copy()
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
                 other.index.names = self.data.index.names
             else:
                 other.index.name = self.data.name
@@ -241,9 +241,9 @@ class Describer(Worker):
             
             data = pd.merge(self.data, other, left_index=True, right_index=True)
         else:
-            data = self.data
+            data = self.data.copy()
 
-        if self.type_ == Worker.PN:
+        if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
             corr = data.groupby(level=0).corr(method=method)
             if tvalue:
                 n = corr.index.levels[0].size
@@ -270,12 +270,12 @@ class Describer(Worker):
         """
         if forward is not None:
             forward = forward.copy()
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 forward.index.names = self.data.index.names
             else:
                 forward.index.name = self.data.index.name
             
-            if not self.is_frame and self.data.name is None:
+            if not self.isframe(self.data) and self.data.name is None:
                 self.data.name = 'factor'
             if isinstance(forward, pd.Series) and forward.name is None:
                 forward.name = 'forward'
@@ -288,13 +288,13 @@ class Describer(Worker):
             groupers += item2list(grouper)
         groupers_num = len(groupers)
             
-        if self.type_ == Worker.PN:
+        if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
             ic = data.groupby(groupers).corr(method=method)
             idx = (slice(None),) * groupers_num + (ic.columns[-1],)
             ic = ic.loc[idx, ic.columns[:-1]].droplevel(groupers_num)
             return ic
 
-        elif self.type_ == Worker.CS:
+        elif self.type_ == Worker.CSFR or self.type_ == Worker.CSSR:
             if groupers_num < 2:
                 ic = data.corr(method=method)
             else:
@@ -324,6 +324,7 @@ class SigTester(Worker):
         h0: float or Series, the hypothesized value
         """
         from scipy.stats import ttest_1samp, ttest_ind
+        data = self.data.copy()
         def _t(data):            
             if isinstance(h0, (int, float)):
                 if isinstance(data, pd.DataFrame):
@@ -347,11 +348,11 @@ class SigTester(Worker):
                 raise AnalystError('sigtest', 'only int/float/pd.Series avaiable for h0')
             return result
             
-        if self.type_ == Worker.PN:
-            return self.data.groupby(level=1).apply(_t)
+        if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
+            return data.groupby(level=1).apply(_t)
         
         else:
-            return _t(self.data)
+            return _t(data)
 
 
 if __name__ == "__main__":

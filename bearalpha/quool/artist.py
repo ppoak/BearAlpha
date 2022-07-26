@@ -1,3 +1,4 @@
+from inspect import isframe
 import pandas as pd
 import matplotlib.pyplot as plt
 import mplfinance as mpf
@@ -42,19 +43,16 @@ class Drawer(Worker):
             _, ax = plt.subplots(1, 1, figsize=(12, 8))
 
         # bar plot
-        if isinstance(plotwised, pd.Series) and isinstance(plotwised.index, 
-            pd.DatetimeIndex) and kind == "bar":
+        if Worker.ists(plotwised) and Worker.isseries(plotwised) and kind == "bar":
             ax.bar(plotwised.index, plotwised, **kwargs)
-        elif isinstance(plotwised, pd.DataFrame) and isinstance(plotwised.index,
-            pd.DatetimeIndex) and kind == "bar":
+        elif Worker.isframe(plotwised) and Worker.ists(plotwised) and kind == "bar":
             bot = 0
             for col in plotwised.columns:
                 ax.bar(plotwised.index, plotwised[col], label=col, bottom=bot, **kwargs)
                 bot += plotwised[col]
         
         # candle plot
-        elif isinstance(plotwised, pd.DataFrame) and isinstance(plotwised.index,
-            pd.DatetimeIndex) and kind == "candle" and \
+        elif Worker.isframe(plotwised) and Worker.ists(plotwised) and kind == "candle" and \
             pd.Index(['open', 'high', 'low', 'close']).isin(plotwised.columns).all():
             mpf.plot(plotwised, ax=ax, style='charles')
                     

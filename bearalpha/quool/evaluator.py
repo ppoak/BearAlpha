@@ -14,17 +14,13 @@ class Evaluator(Worker):
     """Evaluater is a evaluate staff to analyze the 
     performance of given portfolio net value curve."""
 
-    def __init__(self, data: 'pd.DataFrame | pd.Series'):
-        super().__init__(data)
-        self.netcurve = self.make_available(self.data)
-
-    def make_available(self, data: 'pd.Series | pd.DataFrame'):
-        if self.isframe(data) and self.ists(data):
+    def _valid(self, data: 'pd.Series | pd.DataFrame'):
+        if self.ists(data):
             return data.copy()
         if self.isseries(data) and self.ispanel(data):
             return data.unstack()
         else:
-            return False
+            raise EvaluaterError('Evaluator', 'Your have to pass a panel series or time series')
 
     def sharpe(
         self, 
@@ -37,7 +33,8 @@ class Evaluator(Worker):
         rf: int, float or pd.Series, risk free rate, default to 4%,
         period: freqstr or dateoffset, the resample or rolling period
         """
-        profit = self.netcurve.pct_change()
+        netcurve = self._valid(self.data)
+        profit = netcurve.pct_change()
         if isinstance(period, int):
             return (profit.apply(lambda x: x - rf)).rolling(
                 period).mean() / profit.rolling(period).std()

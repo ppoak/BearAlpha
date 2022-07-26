@@ -90,6 +90,8 @@ from backtrader import (
     Order,
 )
 
+from bearalpha.quool.backtester import Factester
+
 
 from .tools import *
 from .core import *
@@ -106,7 +108,7 @@ class DataFrame(PdDataFrame):
     regressor: Regressor
     describer: Describer
     decompositer: Decompositer
-    tester: Tester
+    tester: SigTester
     filer: Filer
     sqliter: Sqliter
     mysqler: Mysqler
@@ -115,6 +117,7 @@ class DataFrame(PdDataFrame):
     preprocessor: PreProcessor
     backtrader: BackTrader
     relocator: Relocator
+    factester: Factester
     evaluator: Evaluator
 
     def __init__(
@@ -140,7 +143,7 @@ class Series(PdSeries):
     regressor: Regressor
     describer: Describer
     decompositer: Decompositer
-    tester: Tester
+    tester: SigTester
     filer: Filer
     sqliter: Sqliter
     mysqler: Mysqler
@@ -149,6 +152,7 @@ class Series(PdSeries):
     preprocessor: PreProcessor
     backtrader: BackTrader
     relocator: Relocator
+    factester: Factester
     evaluator: Evaluator
 
     def __init__(

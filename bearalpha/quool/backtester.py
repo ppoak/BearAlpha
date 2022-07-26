@@ -14,22 +14,15 @@ class BackTesterError(FrameWorkError):
 @pd.api.extensions.register_series_accessor("relocator")
 class Relocator(Worker):
 
-    def __init__(self, data: 'pd.DataFrame | pd.Series'):
-        super().__init__(data)
-        weight = self.make_available(self.data)
-        if isinstance(weight, bool):
-            raise BackTesterError('profit', 'Your weight data should either be in PN series or TS frame form')
-        self.weight = weight.groupby(level=0).apply(lambda x: x / x.sum())
-
-    def make_available(self, data: 'pd.DataFrame | pd.Series'):
+    def _valid(self, data: 'pd.DataFrame | pd.Series'):
         if self.ists(data) and self.isframe(data):
             return data.stack()
         elif self.ispanel(data) and self.isseries(data):
-            return data
+            return data.copy()
         elif self.ispanel(data) and self.isframe(data) and data.columns.size == 1:
-            return data.iloc[:, 0]
+            return data.iloc[:, 0].copy()
         else:
-            return False
+            raise BackTesterError('profit', 'Your weight data should either be in PN series or TS frame form')
     
     def profit(
         self, 
@@ -44,16 +37,12 @@ class Relocator(Worker):
             only available when passing a PN
         """
         
-        weight = self.weight.copy()
-        
-        ret = self.make_available(ret)
-        if isinstance(ret, bool):
-            raise BackTesterError('profit', 'Your return data should either be in PN series or TS frame form')
-        
+        weight = self._valid(self.data)
+        weight = weight.groupby(level=0).apply(lambda x: x / x.sum())
+        ret = self._valid(ret)
+
         if portfolio is not None:
-            portfolio = self.make_available(portfolio)
-            if portfolio == False:
-                raise BackTesterError('profit', 'Your portofolio data should either be in PN series or TS frame form')
+            portfolio = self._valid(portfolio)
                 
         if portfolio is not None:
             grouper = [portfolio, pd.Grouper(level=0)]
@@ -74,10 +63,9 @@ class Relocator(Worker):
             MultiIndex form or the TS Matrix form
         return: pd.Series, the networth curve
         """
-        weight = self.weight.copy()
-        price = self.make_available(price)
-        if isinstance(price, bool):
-            raise BackTesterError('networth', 'Price data should be in PN series or TS frame form')
+        weight = self._valid(self.data)
+        weight = weight.groupby(level=0).apply(lambda x: x / x.sum())
+        price = self._valid(price)
             
         relocate_date = weight.index.levels[0]
         datetime_index = price.index.levels[0]
@@ -100,7 +88,8 @@ class Relocator(Worker):
 
         side: str, choice between "buy", "short" or "both"
         """
-        weight = self.weight.copy()
+        weight = self._valid(self.data)
+        weight = weight.groupby(level=0).apply(lambda x: x / x.sum())
         weight = weight.reindex(pd.MultiIndex.from_product(
             [weight.index.levels[0], weight.index.levels[1]],
             names = ['date', 'asset'],
@@ -120,14 +109,14 @@ class Relocator(Worker):
 class BackTrader(Worker):
     """Backtester is a staff dedicated for run backtest on a dataset"""
 
-    def _make_available(self, spt: int, data: pd.DataFrame) -> pd.DataFrame:
-        if self.is_frame and not 'close' in data.columns:
+    def _valid(self, spt: int, data: pd.DataFrame) -> pd.DataFrame:
+        if self.isframe(data) and not 'close' in data.columns:
             raise BackTesterError('run', 'Your data should at least have a column named close')
-        if self.type_ == Worker.CS:
+        if self.type_ == Worker.CSSR or self.type_ == Worker.CSFR:
             raise BackTesterError('run', 'Cross section data cannot be used to run backtest')
         
         required_col = ['open', 'high', 'low']
-        if self.is_frame:
+        if self.isframe(data):
             # you should at least have a column named close
             for col in required_col:
                 if not col in data.columns and col != 'volume':
@@ -175,9 +164,9 @@ class BackTrader(Worker):
         """
         
         data = self.data.copy()
-        data = self._make_available(spt, data)
+        data = self._valid(spt, data)
         indicators = item2list(indicators)
-        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn]\
+        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
         observers = [bt.observers.DrawDown]\
             if observers is None else item2list(observers)
@@ -194,12 +183,13 @@ class BackTrader(Worker):
             cerebro.broker.set_coc(True)
         
         # add data
-        if self.type_ == Worker.PN:
+        if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
             datanames = data.index.levels[1].to_list()
         else:
             datanames = ['data']
         for dn in datanames:
-            d = data.loc(axis=0)[:, dn].droplevel(1) if self.type_ == Worker.PN else data
+            d = data.loc(axis=0)[:, dn].droplevel(1) if (self.type_ 
+                == Worker.PNFR or self.type_ == Worker.PNSR) else data
             feed = _PandasData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
             cerebro.adddata(feed, name=dn)
         
@@ -265,8 +255,8 @@ class BackTrader(Worker):
         show: bool, whether to show the result
         """
         data = self.data.copy()
-        data = self._make_available(spt, data)
-        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn]\
+        data = self._valid(spt, data)
+        analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
         observers = [bt.observers.DrawDown]\
             if observers is None else item2list(observers)
@@ -281,7 +271,7 @@ class BackTrader(Worker):
         data['portfolio'] = data['portfolio'].groupby(level=1).ffill()
         data['portfolio'] = data['portfolio'].groupby(level=0).apply(lambda x: x / x.sum())
 
-        class _RelocateStra(bt.Strategy):
+        class _RelocateStra(Strategy):
 
             def __init__(self) -> None:
                 self.holdings = pd.Series(np.zeros(len(datanames)), index=datanames, name='holdings')
@@ -306,12 +296,13 @@ class BackTrader(Worker):
             cerebro.broker.set_coc(True)
 
         # add data
-        if self.type_ == Worker.PN:
+        if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
             datanames = data.index.levels[1].to_list()
         else:
             datanames = ['data']
         for dn in datanames:
-            d = data.loc(axis=0)[:, dn].droplevel(1) if self.type_ == Worker.PN else data
+            d = data.loc(axis=0)[:, dn].droplevel(1) if (self.type_ 
+                == Worker.PNFR or self.type_ == Worker.PNSR) else data
             feed = _RelocateData(dataname=d, fromdate=d.index.min(), todate=d.index.max())
             cerebro.adddata(feed, name=dn)
         
@@ -349,18 +340,16 @@ class BackTrader(Worker):
 @pd.api.extensions.register_series_accessor("factester")
 class Factester(Worker):
 
-    def _make_valid(self, data: 'pd.DataFrame | pd.Series', name: str):
+    def _valid(self, data: 'pd.DataFrame | pd.Series', name: str):
         if data is None:
-            data = self.data.copy()
-        if self.ists(data) and self.isframe(data):
+            return None
+        elif self.ists(data) and self.isframe(data):
             CONSOLE.print(f'[yellow][!][/yellow] {name} in wide form, transposing ... ')
             data = data.stack()
         elif self.ispanel(data) and self.isseries(data):
             data = data.copy()
         elif self.ispanel(data) and self.isframe(data) and data.columns.size == 1:
             data = data.iloc[:, 0]
-        elif data is None:
-            return None
         else:
             raise BackTesterError('Factester', 'Your data cannot be converted to a standarized factor data')
 
@@ -405,7 +394,7 @@ class Factester(Worker):
         self,
         factor: pd.Series, 
         forward: pd.Series,
-        market: pd.Series,
+        marketcap: pd.Series,
         grouper: pd.Series, 
         data_writer: pd.ExcelWriter = None,
         barra_ax: plt.Axes = None,
@@ -415,7 +404,7 @@ class Factester(Worker):
         grouper_dummies = pd.get_dummies(grouper).iloc[:, 1:]
         barra_x = pd.concat([grouper_dummies, factor], axis=1)
         barra_y = forward
-        weight = 1 / np.sqrt(market)
+        weight = 1 / np.sqrt(marketcap)
         barra_result = barra_x.regressor.wls(barra_y, weight)
         barra_result = barra_result.groupby(level=0).apply(lambda x: 
             pd.DataFrame({"coef": x.iloc[0].params, "t": x.iloc[0].tvalues, "p": x.iloc[0].pvalues}))
@@ -455,7 +444,7 @@ class Factester(Worker):
         else:
             ic = factor.describer.ic(forward)
 
-        evaluation = ic.tester.sigtest(0)
+        evaluation = ic.sigtester.ttest(0)
         sigportion = ic[ic.abs() >= 0.03].count() / ic.count()
         if isinstance(evaluation, pd.Series):
             evaluation['abs(ic) > 0.03'] = sigportion.iloc[0]
@@ -483,6 +472,7 @@ class Factester(Worker):
         return np.sign(ic.iloc[:, 0].mean())
 
     def _lranalyze(
+        self,
         factor: pd.Series, 
         forward: pd.Series, 
         q: int = 5, 
@@ -572,7 +562,7 @@ class Factester(Worker):
     def analyze(
         self,
         price: 'pd.Series | pd.DataFrame',
-        marketcap: 'pd.Series | pd.DataFrame',
+        marketcap: 'pd.Series | pd.DataFrame' = None,
         grouper: 'pd.Series | pd.DataFrame | dict' = None, 
         benchmark: pd.Series = None,
         periods: 'list | int' = [5, 10, 15], 
@@ -584,11 +574,11 @@ class Factester(Worker):
         image_path: str = None, 
         show: bool = True
     ):
-        factor = self.data.copy()
-        factor = self._make_valid(factor, 'factor')
-        price = self._make_valid(price, 'price')
-        grouper = self._make_valid(grouper, 'grouper')
-        marketcap = self._make_valid(marketcap, 'marketcap')
+        factor = self.data.dropna().copy()
+        factor = self._valid(factor, 'factor').dropna()
+        price = self._valid(price, 'price').dropna()
+        grouper = self._valid(grouper, 'grouper').dropna() if grouper is not None else None
+        marketcap = self._valid(marketcap, 'marketcap').dropna() if grouper is not None else None
 
         periods = item2list(periods)
         data_writer = pd.ExcelWriter(data_path) if data_path is not None else None
@@ -603,7 +593,7 @@ class Factester(Worker):
             plt.rcParams['axes.unicode_minus'] = False
 
         if data_writer is not None:
-            factor.unstack().to_excel(data_writer, sheet_name=f'factor_data')
+            factor.filer.to_excel(data_writer, sheet_name=f'factor_data')
         
         for i, period in enumerate(periods):
             forward_return = price.converter.price2ret(period=(-period - 1) * CBD)
@@ -619,9 +609,9 @@ class Factester(Worker):
             marketcap_period = marketcap.loc[common_index] if marketcap is not None else None
             
             self._csanalyze(
-                factor_data_period, 
-                forward_return_period, 
-                grouper_period, 
+                factor=factor_data_period, 
+                forward=forward_return_period, 
+                grouper=grouper_period, 
                 plot_period=plot_period, 
                 boxplot_ax=axes[0, i], 
                 scatter_ax=axes[1, i], 
@@ -631,10 +621,10 @@ class Factester(Worker):
             CONSOLE.rule(f'[PERIOD = {period}] Barra Test')
             if grouper_period is not None and marketcap_period is not None:
                 self._branalyze(
-                    factor_data_period, 
-                    forward_return_period, 
-                    marketcap_period, 
-                    grouper_period,
+                    factor=factor_data_period, 
+                    forward=forward_return_period, 
+                    marketcap=marketcap_period, 
+                    grouper=grouper_period,
                     data_writer=data_writer, 
                     barra_ax=axes[3, i], 
                     show=show
@@ -645,9 +635,9 @@ class Factester(Worker):
                         
             CONSOLE.rule(f'[PERIOD = {period}] IC Test')
             factor_direction = self._icanalyze(
-                factor_data_period, 
-                forward_return_period, 
-                grouper_period, 
+                factor=factor_data_period, 
+                forward=forward_return_period, 
+                grouper=grouper_period, 
                 data_writer=data_writer, 
                 ic_ax=axes[4, i], 
                 show=show
@@ -655,8 +645,8 @@ class Factester(Worker):
                     
             CONSOLE.rule(f'[PERIOD = {period}] Layering Test')
             self._lranalyze(
-                factor_data_period, 
-                forward_return_period, 
+                factor=factor_data_period,
+                forward=forward_return_period, 
                 direction=factor_direction,
                 q=q, 
                 commission=commission, 

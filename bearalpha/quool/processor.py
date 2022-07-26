@@ -1,3 +1,4 @@
+from inspect import isframe
 import numpy as np
 import pandas as pd
 from ..core import *
@@ -31,7 +32,7 @@ class Converter(Worker):
         method: str, choose between 'algret' and 'logret'
         lag: int, define how many day as lagged after the day of calculation forward return
         """
-        if self.type_ == Worker.PN and self.is_frame:
+        if self.type_ == Worker.PNFR:
             # https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html
             # https://stackoverflow.com/questions/15799162/
             if isinstance(period, int):
@@ -72,7 +73,7 @@ class Converter(Worker):
                         pd.Grouper(level=1)
                     ]).first().loc[:, open_col]
 
-        elif self.type_ == Worker.PN and not self.is_frame:
+        elif self.type_ == Worker.PNSR:
             # if passing a series in panel form, assuming that
             # it is the only way to figure out a return
             if isinstance(period, int):
@@ -110,7 +111,7 @@ class Converter(Worker):
                     ]).first()
 
         # if timeseries data is passed, we assume that the columns are asset names
-        elif self.type_ == Worker.TS:
+        elif self.type_ == Worker.TSFR or self.type_ == Worker.TSSR:
             if isinstance(period, int):
                 if period > 0:
                     close_price = self.data
@@ -164,7 +165,7 @@ class Converter(Worker):
         dummy_col: list = None, 
         name: str = 'group'
     ):
-        if not self.is_frame:
+        if not Worker.isframe(self.data):
             raise ProcessorError('dummy2category', 'Can only convert dataframe to category')
             
         if dummy_col is None:
@@ -214,19 +215,19 @@ class PreProcessor(Worker):
             minmax = (data - min_) / (max_ - min_)
             return minmax
 
-        if not self.is_frame:
+        if not self.isframe(self.data):
             data = self.data.to_frame().copy()
         else:
             data = self.data.copy()
 
-        if self.type_ == Worker.PN:
+        if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
             if grouper is not None:
                 grouper = [pd.Grouper(level=0)] + item2list(grouper)
             else:
                 grouper = pd.Grouper(level=0)
 
         if 'zscore' in method:
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_zscore)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_zscore)
@@ -234,7 +235,7 @@ class PreProcessor(Worker):
                 return _zscore(data)
 
         elif 'minmax' in method:
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_minmax)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_minmax)
@@ -283,12 +284,12 @@ class PreProcessor(Worker):
             data[data < down] = down
             return data
         
-        if not self.is_frame:
+        if not self.isframe(self.data):
             data = self.data.to_frame().copy()
         else:
             data = self.data.copy()
         
-        if self.type_ == Worker.PN:
+        if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
             if grouper is not None:
                 grouper = [pd.Grouper(level=0)] + item2list(grouper)
             else:
@@ -297,7 +298,7 @@ class PreProcessor(Worker):
         if 'mad' in method:
             if n is None:
                 n = 5
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_mad)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_mad)
@@ -308,7 +309,7 @@ class PreProcessor(Worker):
         elif 'std' in method:
             if n is None:
                 n = 3
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_std)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_std)
@@ -318,7 +319,7 @@ class PreProcessor(Worker):
         elif 'drop' in method:
             if n is None:
                 n = 0.1
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_drop_odd)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_drop_odd)
@@ -349,19 +350,19 @@ class PreProcessor(Worker):
             data = data.fillna(median)
             return data
 
-        if not self.is_frame:
+        if not self.isframe(self.data):
             data = self.data.to_frame().copy()
         else:
             data = self.data.copy()
         
-        if self.type_ == Worker.PN:
+        if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
             if grouper is not None:
                 grouper = [pd.Grouper(level=0)] + item2list(grouper)
             else:
                 grouper = pd.Grouper(level=0)
 
         if 'zero' in method:
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_zero)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_zero)
@@ -369,7 +370,7 @@ class PreProcessor(Worker):
                 return _zero(data)
 
         elif 'mean' in method:
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_mean)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_mean)
@@ -377,7 +378,7 @@ class PreProcessor(Worker):
                 return _mean(data)
         
         elif 'median' in method:
-            if self.type_ == Worker.PN:
+            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
                 return data.groupby(grouper).apply(_median)
             elif grouper is not None:
                 return data.groupby(grouper).apply(_median)
