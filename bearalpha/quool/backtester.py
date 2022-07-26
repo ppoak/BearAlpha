@@ -242,7 +242,7 @@ class BackTrader(Worker):
     """Backtester is a staff dedicated for run backtest on a dataset"""
 
     def _make_available(self, spt: int):
-        if self.is_frame and not 'close' in self.data.columns:
+        if self.is_frame and not 'close' in data.columns:
             raise BackTesterError('run', 'Your data should at least have a column named close')
         if self.type_ == Worker.CS:
             raise BackTesterError('run', 'Cross section data cannot be used to run backtest')
@@ -251,18 +251,18 @@ class BackTrader(Worker):
         if self.is_frame:
             # you should at least have a column named close
             for col in required_col:
-                if not col in self.data.columns and col != 'volume':
-                    self.data[col] = data['close']
-            if not 'volume' in self.data.columns:
-                self.data['volume'] = 0
+                if not col in data.columns and col != 'volume':
+                    data[col] = data['close']
+            if not 'volume' in data.columns:
+                data['volume'] = 0
         else:
             # just a series, all ohlc data will be the same, volume set to 0
-            self.data = data.to_frame(name='close')
+            data = data.to_frame(name='close')
             for col in required_col:
-                self.data[col] = col
-            self.data['volume'] = 0
+                data[col] = col
+            data['volume'] = 0
         
-        self.data = self.data.apply(lambda x: x * spt if x.name != 'volume' and x.name != 'openinterest' 
+        data = data.apply(lambda x: x * spt if x.name != 'volume' and x.name != 'openinterest' 
             else x / spt)
 
     def run(
@@ -292,8 +292,8 @@ class BackTrader(Worker):
         show: bool, whether to show the result
         """
         
-        self._make_available(spt)
         data = self.data.copy()
+        self._make_available(spt)
         indicators = item2list(indicators)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
@@ -380,8 +380,8 @@ class BackTrader(Worker):
         data_path: str, path to save backtest data
         show: bool, whether to show the result
         """
-        self._make_available(spt)
         data = self.data.copy()
+        self._make_available(spt)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
         observers = [bt.observers.DrawDown]\
