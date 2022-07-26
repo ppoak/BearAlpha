@@ -1,11 +1,3 @@
-[submodule "research"]
-	path = research
-	url = https://github.com/ppoak/research
-
-[submodule "backtest"]
-	path = backtest
-	url = https://github.com/ppoak/backtest
-
-[submodule "factor"]
-	path = factor
-	url = https://github.com/ppoak/factor
+[submodule "bearalpha-example"]
+	path = example
+	url = https://github.com/ppoak/bearalpha-example
