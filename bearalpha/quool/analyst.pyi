@@ -114,9 +114,9 @@ class Describer(Worker):
         """
 
 
-class Tester(Worker):
+class SigTester(Worker):
 
-    def sigtest(
+    def ttest(
         self, 
         h0: 'float | Series' = 0
     ) -> 'DataFrame | Series': 

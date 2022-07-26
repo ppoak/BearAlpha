@@ -30,13 +30,16 @@ from .processor import (
 from .backtester import (
     Relocator,
     BackTrader,
+)
+
+from .evaluator import (
+    Evaluator,
+)
+
+from .eventester import (
     Strategy,
     Indicator,
     Analyzer,
     Observer,
     OrderTable,
-)
-
-from .evaluator import (
-    Evaluator,
 )

@@ -310,11 +310,11 @@ class Describer(Worker):
             raise AnalystError('ic', 'Timeseries data cannot be used to calculate ic value!')
 
 
-@pd.api.extensions.register_dataframe_accessor("tester")
-@pd.api.extensions.register_series_accessor("tester")
-class Tester(Worker):
+@pd.api.extensions.register_dataframe_accessor("sigtester")
+@pd.api.extensions.register_series_accessor("sigtester")
+class SigTester(Worker):
 
-    def sigtest(
+    def ttest(
         self, 
         h0: 'float | pd.Series' = 0
     ):

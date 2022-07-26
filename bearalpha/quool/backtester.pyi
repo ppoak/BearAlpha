@@ -1,4 +1,3 @@
-import datetime
 import backtrader as bt
 from bearalpha import *
 
@@ -36,27 +35,6 @@ class Relocator(Worker):
 
         side: str, choice between "buy", "short" or "both"
         """
-
-
-class Strategy(bt.Strategy):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-
-class Analyzer(bt.Analyzer):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-class Observer(bt.Observer):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-class Indicator(bt.Indicator):
-
-    def log(self, text: str, datetime: datetime.datetime = None, hint: str = 'INFO') -> None: ...
-
-class OrderTable(Analyzer):
-    ...
 
 
 class BackTrader(Worker):
@@ -115,3 +93,22 @@ class BackTrader(Worker):
         data_path: str, path to save backtest data
         show: bool, whether to show the result
         """
+
+
+class Factester(Worker):
+
+    def analyze(
+        self,
+        price: 'Series | DataFrame',
+        marketcap: 'Series | DataFrame',
+        grouper: 'Series | DataFrame | dict' = None, 
+        benchmark: Series = None,
+        periods: 'list | int' = [5, 10, 15], 
+        q: int = 5, 
+        commission: float = 0.001, 
+        commission_type: str = 'both', 
+        plot_period: 'int | str' = -1, 
+        data_path: str = None, 
+        image_path: str = None, 
+        show: bool = True
+    ): ...
