@@ -358,6 +358,7 @@ class BackTrader(Worker):
         self,
         portfolio: 'pd.DataFrame | pd.Series' = None,
         spt: int = 100,
+        ratio: float = 0.05,
         cash: float = 1000000,
         analyzers: 'bt.Analyzer | list' = None,
         observers: 'bt.Observer | list' = None,
@@ -406,9 +407,9 @@ class BackTrader(Worker):
                 dec = target[target < self.holdings]
                 inc = target[target > self.holdings]
                 for d in dec.index:
-                    self.order_target_percent(data=d, target=target.loc[d], name=d)
+                    self.order_target_percent(data=d, target=target.loc[d] * (1 - ratio), name=d)
                 for i in inc.index:
-                    self.order_target_percent(data=i, target=target.loc[i], name=i)
+                    self.order_target_percent(data=i, target=target.loc[i] * (1 - ratio), name=i)
                 self.holdings = target
 
         class _RelocateData(bt.feeds.PandasData):
