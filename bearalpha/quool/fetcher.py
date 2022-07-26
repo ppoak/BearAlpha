@@ -99,8 +99,14 @@ class Filer(Worker):
         '''
         files = sorted(os.listdir(path))
         datas = []
+
+        if perspective is None:
+            for file in files:
+                data = pd.read_csv(os.path.join(path, file), **kwargs) 
+                datas.append(data)
+            datas = pd.concat(datas, axis=0).sort_index()
         
-        if perspective == "indicator":
+        elif perspective == "indicator":
             if name_pattern is None:
                 name_pattern = r'.*'
             for file in files:
@@ -156,7 +162,13 @@ class Filer(Worker):
         files = os.listdir(path)
         datas = []
         
-        if perspective == "indicator":
+        if perspective is None:
+            for file in files:
+                data = pd.read_csv(os.path.join(path, file), **kwargs) 
+                datas.append(data)
+            datas = pd.concat(datas, axis=0).sort_index()
+
+        elif perspective == "indicator":
             if name_pattern is None:
                 name_pattern = r'.*'
             for file in files:
