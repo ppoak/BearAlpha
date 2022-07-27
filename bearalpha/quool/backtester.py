@@ -574,11 +574,11 @@ class Factester(Worker):
         image_path: str = None, 
         show: bool = True
     ):
-        factor = self.data.dropna().copy()
-        factor = self._valid(factor, 'factor').dropna()
-        price = self._valid(price, 'price').dropna()
-        grouper = self._valid(grouper, 'grouper').dropna() if grouper is not None else None
-        marketcap = self._valid(marketcap, 'marketcap').dropna() if grouper is not None else None
+        factor = self.data.copy()
+        factor = self._valid(factor, 'factor')
+        price = self._valid(price, 'price')
+        grouper = self._valid(grouper, 'grouper') if grouper is not None else None
+        marketcap = self._valid(marketcap, 'marketcap') if grouper is not None else None
 
         periods = item2list(periods)
         data_writer = pd.ExcelWriter(data_path) if data_path is not None else None

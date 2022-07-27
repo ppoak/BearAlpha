@@ -100,7 +100,7 @@ class Factester(Worker):
     def analyze(
         self,
         price: 'Series | DataFrame',
-        marketcap: 'Series | DataFrame',
+        marketcap: 'Series | DataFrame' = None,
         grouper: 'Series | DataFrame | dict' = None, 
         benchmark: Series = None,
         periods: 'list | int' = [5, 10, 15], 
