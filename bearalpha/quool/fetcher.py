@@ -21,7 +21,7 @@ class Filer(Worker):
             writer = pd.ExcelWriter(path) if isinstance(path, str) else path
 
             if perspective == 'indicator':
-                if self.is_frame:
+                if self.isframe(self.data):
                     for column in self.data.columns:
                         self.data[column].unstack(level=1).to_excel(writer, sheet_name=str(column), **kwargs)
                 else:
@@ -32,7 +32,7 @@ class Filer(Worker):
                     self.data.loc[date].to_excel(writer, sheet_name=str(date), **kwargs)
                 
             elif perspective =='asset':
-                if not self.is_frame:
+                if not self.isframe(self.data):
                     for asset in self.data.index.get_level_values(1).unique():
                         self.data.loc[(slice(None), asset)].to_excel(writer, sheet_name=str(asset), **kwargs)
                 else:
@@ -372,7 +372,7 @@ class Sqliter(Databaser):
         
         # we should ensure data is in a frame form and no index can be assigned      
         data = self.data.copy()
-        if not self.is_frame:
+        if not self.isframe(data):
             data = data.to_frame()
         if index:
             if isinstance(self.data.index, pd.MultiIndex):
@@ -549,7 +549,7 @@ class Mysqler(Databaser):
         
         # we should ensure data is in a frame form and no index can be assigned      
         data = self.data.copy()
-        if not self.is_frame:
+        if not self.isframe(data):
             data = data.to_frame()
         if index:
             if isinstance(self.data.index, pd.MultiIndex):

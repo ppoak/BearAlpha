@@ -291,7 +291,7 @@ class BackTrader(Worker):
             params = (('portfolio', -1), )
 
         cerebro = bt.Cerebro()
-        cerebro.broker.setcash(cash * spt)
+        cerebro.broker.setcash(cash)
         if coc:
             cerebro.broker.set_coc(True)
 
