@@ -1,4 +1,5 @@
 import os
+from tabnanny import verbose
 import time
 import json
 import random
@@ -50,7 +51,7 @@ class Cache(diskcache.Cache):
 
 class Request:
 
-    def __init__(self, url, headers: dict = None, **kwargs):
+    def __init__(self, url, headers: dict = None, verbose: bool = True, **kwargs):
         self.url = url
         if headers:
             headers.update(self.header)
@@ -84,20 +85,24 @@ class Request:
             response = requests.get(self.url, headers=self.headers, **self.kwargs)
             response.raise_for_status()
             self.response = response
-            print(f'[+] {self.url} Get Success!')
+            if verbose:
+                print(f'[+] {self.url} Get Success!')
             return self
         except Exception as e:
-            print(f'[-] Error: {e}')
+            if verbose:
+                print(f'[-] Error: {e}')
 
     def post(self):
         try:
             response = requests.post(self.url, headers=self.headers, **self.kwargs)
             response.raise_for_status()        
             self.response = response
-            print(f'[+] {self.url} Post Success!')
+            if verbose:
+                print(f'[+] {self.url} Post Success!')
             return self
         except Exception as e:
-            print(f'[-] Error: {e}')
+            if verbose:
+                print(f'[-] Error: {e}')
 
     @property
     def etree(self):
@@ -145,10 +150,12 @@ class ProxyRequest(Request):
                     response = requests.get(self.url, headers=self.headers, proxies=proxy, timeout=self.timeout, **self.kwargs)
                     response.raise_for_status()
                     self.response = response
-                    print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
+                    if verbose:
+                        print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
                     return self
                 except Exception as e:
-                    print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
+                    if verbose:
+                        print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
                     time.sleep(self.retry_delay)
 
     def post(self):
@@ -163,10 +170,12 @@ class ProxyRequest(Request):
                     response = requests.post(self.url, headers=self.headers, proxies=proxy, **self.kwargs)
                     response.raise_for_status()
                     self.response = response
-                    print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
+                    if verbose:
+                        print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
                     return self
                 except Exception as e:
-                    print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
+                    if verbose:
+                        print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
                     time.sleep(self.retry_delay)
 
     def process(self):
@@ -224,5 +233,5 @@ try:
     CHD = chinese_holidays()
     CBD = pd.offsets.CustomBusinessDay(holidays=CHD)
 except:
-    print(f'[!] It seems that you have no internet connection, please check your network')
     CBD = pd.offsets.BusinessDay()
+    CHD = []
