@@ -74,6 +74,7 @@ from numpy import (
     array,
     intersect1d,  
     vstack, hstack, vsplit, hsplit,
+    apply_over_axes, apply_along_axis,
 )
 
 from matplotlib.pyplot import (
