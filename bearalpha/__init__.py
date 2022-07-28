@@ -74,7 +74,7 @@ from numpy import (
     array, arange,
     zeros, zeros_like, ones, ones_like, empty_like, empty, eye,
     intersect1d,  
-    vstack, hstack, vsplit, hsplit,
+    vstack, hstack, vsplit, hsplit, stack,
     apply_over_axes, apply_along_axis,
 )
 
