@@ -209,7 +209,7 @@ class Converter(Worker):
             data.index = pd.MultiIndex.from_arrays([data.index.get_level_values(0).date, 
                 data.index.get_level_values(0).time, data.index.get_level_values(1)], names=['date', 'time', data.index.names[1]])
         
-        elif self.type_ == Worker.OTMC or self.type_ == Worker.OTMI or self.type_ == Worker.MIMC:
+        elif self.type_ == Worker.MIFR or self.type_ == Worker.MISR or self.type_ == Worker.MCFR or self.type_ == Worker.MIMC:
             miarray = [data.index.get_level_values(i) for i in range(len(data.index.levels))] if not axis else [data.columns.get_level_values(i) for i in range(len(data.columns.levels))]
             miarray[level] = data.index.get_level_values(level).time if not axis else data.columns.get_level_values(level).time
             miarray.insert(level, data.index.get_level_values(level).date) if not axis else miarray.insert(level, data.columns.get_level_values(level).date)
