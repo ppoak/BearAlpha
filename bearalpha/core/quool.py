@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 import pandas as pd
 import backtrader as bt
 from ..tools import *
@@ -20,6 +21,10 @@ class Worker(object):
     TSSR = 4
     CSSR = 5
     PNSR = 6
+    OTHR = 7
+    OTMI = 8
+    OTMC = 9
+    MIMC = 10
     
     def __init__(self, data: 'pd.DataFrame | pd.Series'):
         self.data = data
@@ -57,6 +62,10 @@ class Worker(object):
     def isseries(data: 'pd.DataFrame | pd.Series'):
         return isinstance(data, pd.Series)
 
+    @staticmethod
+    def ismi(index: pd.Index):
+        return isinstance(index, pd.MultiIndex)
+
     def _validate(self):
 
         is_frame = self.isframe(self.data)
@@ -68,7 +77,7 @@ class Worker(object):
             self.data = self.frame2series(self.data)
             
         if self.data.empty:
-            raise ValueError('[!] Dataframe or Series is empty')
+            print('[!] Dataframe or Series is empty')
 
         is_ts = self.ists(self.data)
         is_cs = self.iscs(self.data)
@@ -86,8 +95,14 @@ class Worker(object):
             self.type_ = Worker.CSSR
         elif is_panel and is_series:
             self.type_ = Worker.PNSR
-        else:
-            raise ValueError("Your dataframe or series seems not supported in our framework")
+        elif self.ismi(self.data.index) and not self.ismi(self.data.columns):
+            self.type_ = Worker.OTMI
+        elif not self.ismi(self.data.index) and self.ismi(self.data.columns):
+            self.type_ = Worker.OTMC
+        elif self.ismi(self.data.index) and self.ismi(self.data.columns):
+            self.type_ = Worker.MIMC
+        elif not self.ismi(self.data.index) and not self.ismi(self.data.columns):
+            self.type_ = Worker.OTHR
  
     def _flat(self, datetime, asset, indicator):
         
@@ -135,6 +150,37 @@ class Worker(object):
             return data.loc[(asset, indicator)]
         elif self.type_ == Worker.TSFR:
             return data.loc[(datetime, indicator)]
+
+    def _to_array(self, *axes):
+
+        values = self.data.values.copy()
+        if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
+            if not self.ismi(self.data.columns):
+                revalues = values.reshape([self.data.index.levels[i].size 
+                    for i in range(len(self.data.index.levels))] + [self.data.columns.size])
+            else:
+                revalues = values.reshape([self.data.index.levels[i].size
+                    for i in range(len(self.data.index.levels))] + [self.data.columns.levels[i]
+                    for i in range(len(self.data.columns.levels))])
+        elif self.type_ == Worker.TSFR or self.type_ == Worker.TSSR \
+            or self.type_ == Worker.CSFR or self.type_ == Worker.CSSR \
+            or self.type_ == Worker.OTHR:
+            revalues = values
+        elif self.type_ == Worker.MIMC:
+            revalues = values.reshape([self.data.index.levels[i].size
+                for i in range(len(self.data.index.levels))] + [self.data.columns.levels[i]
+                for i in range(len(self.data.columns.levels))])
+        elif self.type_ == Worker.OTMI:
+            revalues = values.reshape([self.data.index.levels[i].size 
+                for i in range(len(self.data.index.levels))] + [self.data.columns.size])
+        elif self.type_ == Worker.OTMC:
+            revalues = values.reshape([self.data.index.size] + [self.data.columns.levels[i]
+                for i in range(len(self.data.columns.levels))])
+
+        if axes:
+            return revalues.transpose(*axes)
+        else:
+            return revalues
 
 
 class Strategy(bt.Strategy):

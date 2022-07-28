@@ -71,7 +71,9 @@ from numpy import (
     random,
     log, log10, exp,
     nan, inf,
-    intersect1d,
+    array,
+    intersect1d,  
+    vstack, hstack, vsplit, hsplit,
 )
 
 from matplotlib.pyplot import (
