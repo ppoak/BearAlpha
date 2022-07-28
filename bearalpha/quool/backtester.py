@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from ..core import *
 from ..tools import *
 
+
 class BackTesterError(FrameWorkError):
     pass
 

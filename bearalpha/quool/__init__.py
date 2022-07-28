@@ -30,6 +30,7 @@ from .processor import (
 from .backtester import (
     Relocator,
     BackTrader,
+    Factester,
 )
 
 from .evaluator import (

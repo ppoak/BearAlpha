@@ -21,7 +21,6 @@ class Worker(object):
     TSSR = 4
     CSSR = 5
     PNSR = 6
-    OTHR = 7
     OTMI = 8
     OTMC = 9
     MIMC = 10
@@ -47,7 +46,8 @@ class Worker(object):
     
     @staticmethod
     def iscs(data: 'pd.DataFrame | pd.Series'):
-        return not isinstance(data.index, pd.MultiIndex) and not isinstance(data.index, pd.DatetimeIndex)
+        return not isinstance(data.index, pd.MultiIndex) and not isinstance(data.index, pd.DatetimeIndex) \
+            and not isinstance(data.columns, pd.MultiIndex)
     
     @staticmethod
     def ispanel(data: 'pd.DataFrame | pd.Series'):
@@ -101,8 +101,8 @@ class Worker(object):
             self.type_ = Worker.OTMC
         elif self.ismi(self.data.index) and self.ismi(self.data.columns):
             self.type_ = Worker.MIMC
-        elif not self.ismi(self.data.index) and not self.ismi(self.data.columns):
-            self.type_ = Worker.OTHR
+        else:
+            raise FrameWorkError('_validate', 'Your data seems not supported in our framework')
  
     def _flat(self, datetime, asset, indicator):
         
@@ -150,6 +150,9 @@ class Worker(object):
             return data.loc[(asset, indicator)]
         elif self.type_ == Worker.TSFR:
             return data.loc[(datetime, indicator)]
+        
+        else:
+            return data.copy()
 
     def _to_array(self, *axes):
 

@@ -194,6 +194,36 @@ class Converter(Worker):
         elif self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
             return self.data.groupby([pd.Grouper(level=0, freq=rule, **kwargs), pd.Grouper(level=1)])
 
+    def spdatetime(self, level: int = 0, axis: int = 0):
+        """"""
+        data = self.data.copy()
+
+        if self.type_ == Worker.CSSR or self.type_ == Worker.CSFR:
+            raise ProcessorError('spdatetime', 'Cross section data cannot be splited by datetime')
+        
+        elif self.type_ == Worker.TSSR or self.type_ == Worker.TSFR:
+            data.index = pd.MultiIndex.from_arrays([data.index.get_level_values(0).date, 
+                data.index.get_level_values(0).time], names=['date', 'time'])
+        
+        elif self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
+            data.index = pd.MultiIndex.from_arrays([data.index.get_level_values(0).date, 
+                data.index.get_level_values(0).time, data.index.get_level_values(1)], names=['date', 'time', data.index.names[1]])
+        
+        elif self.type_ == Worker.OTMC or self.type_ == Worker.OTMI or self.type_ == Worker.MIMC:
+            miarray = [data.index.get_level_values(i) for i in range(len(data.index.levels))] if not axis else [data.columns.get_level_values(i) for i in range(len(data.columns.levels))]
+            miarray[level] = data.index.get_level_values(level).time if not axis else data.columns.get_level_values(level).time
+            miarray.insert(level, data.index.get_level_values(level).date) if not axis else miarray.insert(level, data.columns.get_level_values(level).date)
+            minames = list(data.index.names) if not axis else list(data.columns.names)
+            minames[level] = 'time'
+            minames = minames.insert(level, 'date')
+            if not axis: 
+                data.index = pd.MultiIndex.from_arrays(miarray, names=minames)
+            else: 
+                data.columns = pd.MultiIndex.from_arrays(miarray, names=minames)
+        
+        return data
+            
+
 @pd.api.extensions.register_dataframe_accessor("preprocessor")
 @pd.api.extensions.register_series_accessor("preprocessor")
 class PreProcessor(Worker):

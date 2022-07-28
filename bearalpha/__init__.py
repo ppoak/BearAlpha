@@ -92,8 +92,6 @@ from backtrader import (
     Order,
 )
 
-from bearalpha.quool.backtester import Factester
-
 
 from .tools import *
 from .core import *

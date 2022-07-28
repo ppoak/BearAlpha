@@ -43,6 +43,13 @@ class Converter(Worker):
 
     def resample(self, rule: str, **kwargs) -> 'DataFrame | Series': ...
 
+    def spdatetime(self, level: int = None, axis: int = 0) -> 'DataFrame | Series':
+        """Split data with datetime into date and time formatted index
+        ------------------------------------------------------------
+
+        level: int, the level the datetime index exists, only available when not matching standard data types
+        axis: int, the axis the datetime index exists, only available when not matching standard data types
+        """
 
 class PreProcessor(Worker):
 
