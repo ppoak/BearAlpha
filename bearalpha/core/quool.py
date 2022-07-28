@@ -166,8 +166,7 @@ class Worker(object):
                     for i in range(len(self.data.index.levels))] + [self.data.columns.levels[i]
                     for i in range(len(self.data.columns.levels))])
         elif self.type_ == Worker.TSFR or self.type_ == Worker.TSSR \
-            or self.type_ == Worker.CSFR or self.type_ == Worker.CSSR \
-            or self.type_ == Worker.OTHR:
+            or self.type_ == Worker.CSFR or self.type_ == Worker.CSSR:
             revalues = values
         elif self.type_ == Worker.MIMC:
             revalues = values.reshape([self.data.index.levels[i].size
@@ -329,6 +328,54 @@ def async_job(
     for k, v in result.items():
         result[k] = v.get()
     return result
+
+
+def from_array(
+    arr: np.ndarray,
+    index: pd.Index = None, 
+    columns: pd.Index = None, 
+    index_axis: 'int | list | tuple' = None,
+    columns_axis: 'int | list | tuple' = None,
+):
+    """Create a DataFrame from multi-dimensional array
+    ---------------------------------------------------
+
+    arr: np.ndarray, a multi-dimensional array
+    index: pd.Index, the index used as in row
+    columns: pd.Index, the index used as in column
+    index_axis: int, list or tuple, the sequence of axes used to transpose from original to result
+    columns_axis, int, list or tuple, the sequence of axes used to transpose from original to result 
+    """
+    if index_axis is None and columns_axis is None:
+        index_axis = [i for i in range(len(arr.shape) - 1)]
+        columns_axis = [len(arr.shape) - 1]
+    elif index_axis is None and columns_axis is not None:
+        columns_axis = list(columns_axis) if isinstance(columns_axis, tuple) else item2list(columns_axis)
+        index_axis = list(set(range(len(arr.shape))) - set(columns_axis))
+    elif index_axis is not None and columns_axis is None:
+        index_axis = list(index_axis) if isinstance(index_axis, tuple) else item2list(index_axis)
+        columns_axis = list(set(range(len(arr.shape))) - set(index_axis))
+
+    index_axis = item2list(index_axis) if not isinstance(index_axis, tuple) else list(index_axis)
+    columns_axis = item2list(columns_axis) if not isinstance(columns_axis, tuple) else list(columns_axis)
+    sequ = index_axis + columns_axis
+    
+    arrt = arr.transpose(sequ)
+
+    arrshape = np.array(arr.shape)
+    values = arrt.reshape(arrshape[index_axis].prod(), arrshape[columns_axis].prod())
+
+    if index is None:
+        index = pd.MultiIndex.from_product([range(i) for i in arrshape[index_axis]], 
+            names=[f'levels{i}' for i in range(len(index_axis))]) if len(index_axis) > 1 \
+            else pd.RangeIndex(0, arrshape[index_axis].prod())
+    
+    if columns is None:
+        columns = pd.MultiIndex.from_product([range(i) for i in arrshape[columns_axis]], 
+            names=[f'levels{i}' for i in range(len(columns_axis))]) if len(columns_axis) > 1 \
+            else pd.RangeIndex(0, arrshape[columns_axis].prod())
+
+    return pd.DataFrame(data=values, index=index, columns=columns)
 
 
 if __name__ == "__main__":

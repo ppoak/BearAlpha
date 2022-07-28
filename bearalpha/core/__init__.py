@@ -12,6 +12,7 @@ from .quool import (
     Observer,
     OrderTable,
     async_job,
+    from_array,
     )
 
 from .crawl import (
