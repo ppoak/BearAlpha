@@ -59,6 +59,7 @@ from pandas import (
     MultiIndex,
     Index,
     DatetimeIndex,
+    Grouper,
     date_range, to_datetime,
     concat, merge,
     cut, qcut,
@@ -86,6 +87,10 @@ from matplotlib.pyplot import (
 
 from pandas.tseries.offsets import (
     MonthEnd
+)
+
+from gc import (
+    collect as garbage_collect,
 )
 
 from backtrader import (

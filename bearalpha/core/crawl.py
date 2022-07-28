@@ -222,7 +222,7 @@ def chinese_holidays():
     while not complete:
         params = f'?field=date&holiday_recess=1&cn=1&page={page}&size=366'
         url = root + params
-        data = Request(url).get().json['data']
+        data = Request(url, verbose=False).get().json['data']
         if data['page'] * data['size'] >= data['total']:
             complete = True
         days = pd.DataFrame(data['list']).date.astype('str')\
