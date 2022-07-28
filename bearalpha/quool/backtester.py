@@ -110,7 +110,7 @@ class Relocator(Worker):
 class BackTrader(Worker):
     """Backtester is a staff dedicated for run backtest on a dataset"""
 
-    def _valid(self, spt: int, data: pd.DataFrame) -> pd.DataFrame:
+    def _valid(self, data: pd.DataFrame) -> pd.DataFrame:
         if self.isframe(data) and not 'close' in data.columns:
             raise BackTesterError('run', 'Your data should at least have a column named close')
         if self.type_ == Worker.CSSR or self.type_ == Worker.CSFR:
@@ -130,9 +130,6 @@ class BackTrader(Worker):
             for col in required_col:
                 data[col] = col
             data['volume'] = 0
-        
-        data = data.apply(lambda x: x * spt if x.name != 'volume' and x.name != 'openinterest' 
-            else x / spt)
 
         return data
 
@@ -140,7 +137,6 @@ class BackTrader(Worker):
         self, 
         strategy: bt.Strategy = None, 
         cash: float = 1000000,
-        spt: int = 1,
         indicators: 'bt.Indicator | list' = None,
         analyzers: 'bt.Analyzer | list' = None,
         observers: 'bt.Observer | list' = None,
@@ -165,7 +161,7 @@ class BackTrader(Worker):
         """
         
         data = self.data.copy()
-        data = self._valid(spt, data)
+        data = self._valid(data)
         indicators = item2list(indicators)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
@@ -179,7 +175,7 @@ class BackTrader(Worker):
             params = tuple(zip(more, [-1] * len(more)))
         
         cerebro = bt.Cerebro()
-        cerebro.broker.setcash(cash * spt)
+        cerebro.broker.setcash(cash)
         if coc:
             cerebro.broker.set_coc(True)
         
@@ -256,7 +252,9 @@ class BackTrader(Worker):
         show: bool, whether to show the result
         """
         data = self.data.copy()
-        data = self._valid(spt, data)
+        data = self._valid(data)
+        data = data.apply(lambda x: x * spt if x.name != 'volume' and x.name != 'openinterest' 
+            else x / spt)
         analyzers = [bt.analyzers.SharpeRatio, bt.analyzers.TimeDrawDown, bt.analyzers.TimeReturn, OrderTable]\
             if analyzers is None else item2list(analyzers)
         observers = [bt.observers.DrawDown]\
