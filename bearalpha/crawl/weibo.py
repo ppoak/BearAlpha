@@ -53,12 +53,15 @@ class WeiboSearch:
         blogs = []
         for card in cards:
             # find 'mblog' tag and append to result blogs
-            if mblog:= card.get("mblog"):
+            mblog = card.get("mblog")
+            card_group = card.get("card_group")
+            if card.get("mblog"):
                 blog = _parse(mblog)
                 blogs.append(blog)
-            elif card_group:= card.get("card_group"):
+            elif card_group:
                 for cg in card_group:
-                    if mblog:= cg.get("mblog"):
+                    mblog = cg.get("mblog")
+                    if mblog:
                         blog = _parse(mblog)
                         blogs.append(blog)
         return blogs

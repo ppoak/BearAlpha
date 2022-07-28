@@ -1,5 +1,4 @@
 import os
-from tabnanny import verbose
 import time
 import json
 import random
@@ -59,6 +58,7 @@ class Request:
         else:
             self.headers = self.header
         self.kwargs = kwargs
+        self.verbose = verbose
         
     @property
     def header(self):
@@ -85,11 +85,11 @@ class Request:
             response = requests.get(self.url, headers=self.headers, **self.kwargs)
             response.raise_for_status()
             self.response = response
-            if verbose:
+            if self.verbose:
                 print(f'[+] {self.url} Get Success!')
             return self
         except Exception as e:
-            if verbose:
+            if self.verbose:
                 print(f'[-] Error: {e}')
 
     def post(self):
@@ -97,11 +97,11 @@ class Request:
             response = requests.post(self.url, headers=self.headers, **self.kwargs)
             response.raise_for_status()        
             self.response = response
-            if verbose:
+            if self.verbose:
                 print(f'[+] {self.url} Post Success!')
             return self
         except Exception as e:
-            if verbose:
+            if self.verbose:
                 print(f'[-] Error: {e}')
 
     @property
@@ -131,6 +131,7 @@ class ProxyRequest(Request):
         timeout: int = None, 
         retry: int = None, 
         retry_delay: float = None,
+        verbose: bool = True,
         **kwargs
     ):
         super().__init__(url, headers, **kwargs)
@@ -139,6 +140,7 @@ class ProxyRequest(Request):
         self.retry = len(self.proxies) if retry is None else retry
         self.retry_delay = 0 if retry_delay is None else retry_delay
         self.kwargs = kwargs
+        self.verbose = verbose
     
     def get(self):
         if isinstance(self.proxies, dict):
@@ -150,11 +152,11 @@ class ProxyRequest(Request):
                     response = requests.get(self.url, headers=self.headers, proxies=proxy, timeout=self.timeout, **self.kwargs)
                     response.raise_for_status()
                     self.response = response
-                    if verbose:
+                    if self.verbose:
                         print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
                     return self
                 except Exception as e:
-                    if verbose:
+                    if self.verbose:
                         print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
                     time.sleep(self.retry_delay)
 
@@ -170,11 +172,11 @@ class ProxyRequest(Request):
                     response = requests.post(self.url, headers=self.headers, proxies=proxy, **self.kwargs)
                     response.raise_for_status()
                     self.response = response
-                    if verbose:
+                    if self.verbose:
                         print(f'[+] {self.url}, try {try_times + 1}/{self.retry}')
                     return self
                 except Exception as e:
-                    if verbose:
+                    if self.verbose:
                         print(f'[-] [{e}] {self.url}, try {try_times + 1}/{self.retry}')
                     time.sleep(self.retry_delay)
 
@@ -211,7 +213,7 @@ def get_proxy(page_size: int = 20):
         f'Current available rate is {len(available_proxies) / len(proxies) * 100:.2f}%')
     return proxies
 
-@Cache(directory=None, prefix='holidays', expire_time=2592000)
+@Cache(directory=None, prefix='holidays', expire_time=7776000)
 def chinese_holidays():
     root = 'https://api.apihubs.cn/holiday/get'
     complete = False
