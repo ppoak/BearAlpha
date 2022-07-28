@@ -21,9 +21,10 @@ class Worker(object):
     TSSR = 4
     CSSR = 5
     PNSR = 6
-    OTMI = 8
-    OTMC = 9
-    MIMC = 10
+    MISR = 8
+    MIFR = 9
+    MCFR = 10
+    MIMC = 11
     
     def __init__(self, data: 'pd.DataFrame | pd.Series'):
         self.data = data
@@ -82,6 +83,9 @@ class Worker(object):
         is_ts = self.ists(self.data)
         is_cs = self.iscs(self.data)
         is_panel = self.ispanel(self.data)
+
+        is_mc = False if is_series else self.ismi(self.data.columns)
+        is_mi = self.ismi(self.data.index)
         
         if is_ts and is_frame:
             self.type_ = Worker.TSFR
@@ -95,11 +99,13 @@ class Worker(object):
             self.type_ = Worker.CSSR
         elif is_panel and is_series:
             self.type_ = Worker.PNSR
-        elif self.ismi(self.data.index) and not self.ismi(self.data.columns):
-            self.type_ = Worker.OTMI
-        elif not self.ismi(self.data.index) and self.ismi(self.data.columns):
-            self.type_ = Worker.OTMC
-        elif self.ismi(self.data.index) and self.ismi(self.data.columns):
+        elif is_mi and is_series:
+            self.type_ = Worker.MISR
+        elif is_mi and is_frame and not is_mc:
+            self.type_ = Worker.MIFR
+        elif not is_mi and is_frame and is_mc:
+            self.type_ = Worker.MCFR
+        elif is_mi and is_frame and is_mc:
             self.type_ = Worker.MIMC
         else:
             raise FrameWorkError('_validate', 'Your data seems not supported in our framework')
