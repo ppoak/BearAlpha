@@ -80,6 +80,13 @@ from numpy import (
     apply_over_axes, apply_along_axis,
 )
 
+from dask import (
+    dataframe as dd,
+    array as da,
+    bag as db,
+    delayed,
+)
+
 from matplotlib.pyplot import (
     subplots, 
     show, imsave, imshow,

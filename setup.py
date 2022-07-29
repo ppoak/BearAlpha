@@ -19,6 +19,7 @@ setup(
         'pandas',
         'numpy',
         'matplotlib',
+        'dask',
         'mplfinance',
         'backtrader',
         'sqlalchemy',
