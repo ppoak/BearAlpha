@@ -72,9 +72,10 @@ from numpy import (
     random,
     log, log10, exp,
     nan, inf,
+    sum, append,
     array, arange,
     zeros, zeros_like, ones, ones_like, empty_like, empty, eye,
-    intersect1d,  
+    intersect1d, setdiff1d, 
     vstack, hstack, vsplit, hsplit, stack,
     apply_over_axes, apply_along_axis,
 )
