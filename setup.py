@@ -29,7 +29,7 @@ setup(
         'scipy',
         'bs4',
     ],
-    extra_require={
+    extras_require={
         "stats": ["statsmodules", "sklearn"],
         "crawl": ["akshare", "baostock",]
     },
