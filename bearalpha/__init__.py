@@ -89,16 +89,20 @@ from pandas.tseries.offsets import (
     MonthEnd
 )
 
-from gc import (
-    collect as garbage_collect,
-)
-
 from backtrader import (
     indicators, talib,
     And, Or, Sum,
     Order,
 )
 
+from pickle import (
+    dump as to_picklef, dumps as to_pickle,
+    load as from_picklef, loads as from_pickle,
+)
+
+from gc import (
+    collect as garbage_collect,
+)
 
 from .tools import *
 from .core import *
