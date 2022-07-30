@@ -71,13 +71,16 @@ from pandas import (
 from numpy import (
     random,
     log, log10, exp,
+    cos, cosh, sin, sinh, tan, tanh,
+    sqrt, power, square,
     nan, inf,
     sum, append,
     array, arange,
     zeros, zeros_like, ones, ones_like, empty_like, empty, eye,
     intersect1d, setdiff1d, 
-    vstack, hstack, vsplit, hsplit, stack,
+    vstack, hstack, vsplit, hsplit, stack, squeeze,
     apply_over_axes, apply_along_axis,
+    unique,
 )
 
 from dask import (
