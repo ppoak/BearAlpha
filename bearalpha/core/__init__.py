@@ -1,8 +1,3 @@
-from .database import (
-    DataBase, 
-    Loader, 
-    )
-
 from .quool import (
     FrameWorkError,
     Worker,
@@ -15,12 +10,13 @@ from .quool import (
     from_array,
     )
 
-from .crawl import (
+from .oxygene import (
     Request,
     ProxyRequest,
     Cache,
     get_proxy,
     chinese_holidays,
-    CHD,
-    CBD,
+    chinese_trading_days,
+    DataBase, 
+    Loader,
 )

@@ -18,15 +18,6 @@ import pandas as pd
 from functools import wraps
 
 
-MICROSECOND = datetime.timedelta(microseconds=1)
-SECOND = datetime.timedelta(seconds=1)
-MINUTE = datetime.timedelta(minutes=1)
-HOUR = datetime.timedelta(hours=1)
-DAY = datetime.timedelta(days=1)
-WEEK = datetime.timedelta(days=7)
-MONTH = datetime.timedelta(days=30)
-YEAR = datetime.timedelta(days=365)
-
 def time2str(date: 'str | datetime.datetime | int | datetime.date', formatstr: str = r'%Y-%m-%d') -> str:
     """convert a datetime class to time-like string"""
     if isinstance(date, int):
