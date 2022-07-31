@@ -12,8 +12,10 @@ Examples:
 """
 
 import re
+import time
 import datetime
 import pandas as pd
+from functools import wraps
 
 
 MICROSECOND = datetime.timedelta(microseconds=1)
@@ -106,6 +108,32 @@ def latest_report_period(date: 'str | datetime.datetime | datetime.date',
     fundmental_dates = pd.date_range(end=report_date, periods=n, freq='q')
     fundmental_dates = list(map(lambda x: x.strftime(r'%Y-%m-%d'), fundmental_dates))
     return fundmental_dates
+
+def timeit(func):
+    wraps(func)
+    def decorated(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        spent = end - start
+
+        if spent <= 60:
+            timestr = f'{spent: .4f}s'
+        
+        elif spent <= 3600:
+            minute = spent // 60
+            second = spent - minute * 60
+            timestr = f'{minute}m {second: .4f}s'
+            
+        else:
+            hour = spent // 3600
+            minute = (spent - hour * 3600) // 60
+            second = spent - hour * 3600 - minute * 60
+            timestr = f'{hour}h {minute}m {second:.4f}s'
+        
+        print(f'{func.__name__} Time Spent: {timestr}')
+        return result
+    return decorated
 
 
 if __name__ == '__main__':

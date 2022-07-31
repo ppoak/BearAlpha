@@ -22,6 +22,7 @@ from .common import (
     hump2snake,
     latest_report_period,
     strip_stock_code, wrap_stock_code,
+    timeit,
     MICROSECOND,
     SECOND,
     MINUTE,
