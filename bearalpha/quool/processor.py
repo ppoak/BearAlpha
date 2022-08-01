@@ -195,7 +195,12 @@ class Converter(Worker):
             return self.data.groupby([pd.Grouper(level=0, freq=rule, **kwargs), pd.Grouper(level=1)])
 
     def spdatetime(self, level: int = 0, axis: int = 0):
-        """"""
+        """Split data with datetime into date and time formatted index
+        ------------------------------------------------------------
+
+        level: int, the level the datetime index exists, only available when not matching standard data types
+        axis: int, the axis the datetime index exists, only available when not matching standard data types
+        """
         data = self.data.copy()
 
         if self.type_ == Worker.CSSR or self.type_ == Worker.CSFR:
@@ -221,6 +226,46 @@ class Converter(Worker):
             else: 
                 data.columns = pd.MultiIndex.from_arrays(miarray, names=minames)
         
+        return data
+            
+    def panelize(self):
+        """Panelize a dataframe
+        ------------------------
+        
+        Specifically used for imbalanced panel data, this
+        function will help you deal with that
+        """
+        data = self.data.copy()
+        if (
+            self.type_ == Worker.PNFR or self.type_ == Worker.PNSR or
+            self.type_ == Worker.MIFR or self.type_ == Worker.MISR
+        ):
+            if data.shape[0] != np.prod([data.index.levels[i].size for i in range(len(data.index.levels))]):
+                data = data.reindex(pd.MultiIndex.from_product(
+                        [data.index.levels[i] for i in range(len(data.index.levels))], 
+                        names = data.index.names
+                    )
+                )
+        elif self.type_ == Worker.MCFR:
+            if data.shape[1] != np.prod([data.columns.levels[i].size for i in range(len(data.columns.levels))]):
+                data = data.reindex(columns = pd.MultiIndex.from_product(
+                        [data.columns.levels[i] for i in range(len(data.columns.levels))],
+                        names = data.columns.names
+                    )
+                )
+        elif self.type_ == Worker.MIMC:
+            if data.shape[0] != np.prod([data.index.levels[i].size for i in range(len(data.index.levels))]):
+                data = data.reindex(pd.MultiIndex.from_product(
+                        [data.index.levels[i] for i in range(len(data.index.levels))], 
+                        names = data.index.names
+                    )
+                )
+            if data.shape[1] != np.prod([data.columns.levels[i].size for i in range(len(data.columns.levels))]):
+                data = data.reindex(columns = pd.MultiIndex.from_product(
+                        [data.columns.levels[i] for i in range(len(data.columns.levels))],
+                        names = data.columns.names
+                    )
+                )
         return data
             
 

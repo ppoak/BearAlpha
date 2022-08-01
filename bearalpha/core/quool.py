@@ -172,20 +172,20 @@ class Worker(object):
                     for i in range(len(self.data.index.levels))] + [self.data.columns.size])
             else:
                 revalues = values.reshape([self.data.index.levels[i].size
-                    for i in range(len(self.data.index.levels))] + [self.data.columns.levels[i]
+                    for i in range(len(self.data.index.levels))] + [self.data.columns.levels[i].size
                     for i in range(len(self.data.columns.levels))])
         elif self.type_ == Worker.TSFR or self.type_ == Worker.TSSR \
             or self.type_ == Worker.CSFR or self.type_ == Worker.CSSR:
             revalues = values
         elif self.type_ == Worker.MIMC:
             revalues = values.reshape([self.data.index.levels[i].size
-                for i in range(len(self.data.index.levels))] + [self.data.columns.levels[i]
+                for i in range(len(self.data.index.levels))] + [self.data.columns.levels[i].size
                 for i in range(len(self.data.columns.levels))])
         elif self.type_ == Worker.OTMI:
             revalues = values.reshape([self.data.index.levels[i].size 
                 for i in range(len(self.data.index.levels))] + [self.data.columns.size])
         elif self.type_ == Worker.OTMC:
-            revalues = values.reshape([self.data.index.size] + [self.data.columns.levels[i]
+            revalues = values.reshape([self.data.index.size] + [self.data.columns.levels[i].size
                 for i in range(len(self.data.columns.levels))])
 
         if axes:

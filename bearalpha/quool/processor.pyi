@@ -52,6 +52,15 @@ class Converter(Worker):
         axis: int, the axis the datetime index exists, only available when not matching standard data types
         """
 
+    def panelize(self) -> 'DataFrame | Series':
+        """Panelize a dataframe
+        ------------------------
+        
+        Specifically used for imbalanced panel data, this
+        function will help you deal with that
+        """
+
+
 class PreProcessor(Worker):
 
     def standarize(
