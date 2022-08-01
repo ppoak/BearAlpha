@@ -1,5 +1,6 @@
 from typing import Any
-from bearalpha import *
+from bearalpha.core import *
+from bearalpha.quool import *
 
 class Regressor(Worker):
     """Regressor

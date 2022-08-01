@@ -527,7 +527,7 @@ class Factester(Worker):
         win_rate = profit.apply(lambda x: x > benchmark_profit).sum() / len(profit)
         win_rate.name = 'win_rate'
 
-        date_size = pd.date_range(start=profit.index[0], end=profit.index[-1], freq=CBD).size
+        date_size = pd.date_range(start=profit.index[0], end=profit.index[-1], freq=chinese_trading_days()).size
         annual_ret = (netvaluecurve.iloc[-1] / netvaluecurve.iloc[0] - 1) * 252 / date_size
         annual_ret.name = 'annual_ret'
 
@@ -595,7 +595,7 @@ class Factester(Worker):
             factor.filer.to_excel(data_writer, sheet_name=f'factor_data')
         
         for i, period in enumerate(periods):
-            forward_return = price.converter.price2ret(period=(-period - 1) * CBD)
+            forward_return = price.converter.price2ret(period=(-period - 1) * chinese_trading_days())
             # slice the common part of data
             CONSOLE.print(f'[green][PERIOD = {period}][/green] Filtering common part ... ')
             common_index = factor.index.intersection(forward_return.index)

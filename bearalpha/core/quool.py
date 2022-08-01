@@ -47,8 +47,11 @@ class Worker(object):
     
     @staticmethod
     def iscs(data: 'pd.DataFrame | pd.Series'):
-        return not isinstance(data.index, pd.MultiIndex) and not isinstance(data.index, pd.DatetimeIndex) \
-            and not isinstance(data.columns, pd.MultiIndex)
+        if isinstance(data, pd.DataFrame):
+            return not isinstance(data.index, pd.MultiIndex) and not isinstance(data.index, pd.DatetimeIndex) \
+                and not isinstance(data.columns, pd.MultiIndex)
+        else:
+            return not isinstance(data.index, pd.MultiIndex) and not isinstance(data.index, pd.DatetimeIndex)
     
     @staticmethod
     def ispanel(data: 'pd.DataFrame | pd.Series'):

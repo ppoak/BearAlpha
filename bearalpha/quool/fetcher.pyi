@@ -1,5 +1,6 @@
 import sqlalchemy as sql
-from bearalpha import *
+from bearalpha.core import *
+from bearalpha.quool import *
 
 
 class Filer(Worker):
