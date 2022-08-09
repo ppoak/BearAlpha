@@ -6,6 +6,8 @@ from .base import (
     Observer,
     OrderTable,
     from_array,
+    concat,
+    read_excel, read_csv, read_parquet, read_sql
 )
 
 from .artist import (

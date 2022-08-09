@@ -2,6 +2,7 @@ import datetime
 import backtrader as bt
 import numpy as np
 from bearalpha import *
+from typing import overload
 
 
 class FrameWorkError(Exception):
@@ -59,15 +60,6 @@ class OrderTable(Analyzer):
     def notify_order(self, order) -> None: ...
     def get_analysis(self) -> DataFrame: ...
 
-def async_job(
-    jobs: list, 
-    func: ..., 
-    args: tuple = (), 
-    processors: int = 4, 
-    callback: ... = None, 
-    kwargs: dict = {}
-) -> None: ...
-
 def from_array(
     arr: np.ndarray,
     index: Index = None, 
@@ -84,3 +76,40 @@ def from_array(
     index_axis: int, list or tuple, the sequence of axes used to transpose from original to result
     columns_axis, int, list or tuple, the sequence of axes used to transpose from original to result 
     """
+
+def concat(objs, colnames: list = None, **kwargs) -> DataFrame: ...
+def read_csv(
+    path_or_buffer,
+    perspective: str = None,
+    name_pattern: str = None,      
+    **kwargs
+) -> DataFrame:
+    '''A enhanced function for reading files in a directory to a panel DataFrame
+    ----------------------------------------------------------------------------
+
+    path: path to the directory
+    perspective: 'datetime', 'asset', 'indicator'
+    name_pattern: pattern to match the file name, which will be extracted as index
+    kwargs: other arguments for pd.read_csv
+
+    **note: the name of the file in the directory will be interpreted as the 
+    sign(column or index) to the data, so set it to the brief one
+    '''
+def read_excel(
+    path_or_buffer,
+    perspective: str = None,
+    name_pattern: str = None,
+    **kwargs,
+) -> DataFrame:
+    '''A enhanced function for reading files in a directory to a panel DataFrame
+    ----------------------------------------------------------------------------
+
+    path: path to the directory
+    perspective: 'datetime', 'asset', 'indicator'
+    kwargs: other arguments for pd.read_excel
+
+    **note: the name of the file in the directory will be interpreted as the 
+    sign(column or index) to the data, so set it to the brief one
+    '''
+def read_parquet(path, **kwargs) -> DataFrame: ...
+def read_sql(query, con, **kwargs) -> DataFrame: ...
