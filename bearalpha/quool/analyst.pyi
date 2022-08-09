@@ -1,12 +1,11 @@
 from typing import Any
-from bearalpha.core import *
-from bearalpha.quool import *
+from bearalpha import *
 
-class Regressor(Worker):
+class Regressor(quool.base.Worker):
     """Regressor
     ============
 
-    Regressor is a staff worker in quool, used for a dataframe
+    Regressor is a staff quool.base.Worker in quool, used for a dataframe
     to perform regression analysis in multiple ways
     
     now it supports:
@@ -63,8 +62,8 @@ class Regressor(Worker):
 
 
 
-class Decompositer(Worker):
-    """Decompositer is a staff worker in bearalpha, used for a dataframe
+class Decompositer(quool.base.Worker):
+    """Decompositer is a staff quool.base.Worker in bearalpha, used for a dataframe
     or a series to perform a series of diminishing the dimensions, like pca
     """
 
@@ -82,8 +81,8 @@ class Decompositer(Worker):
 
 
     
-class Describer(Worker):
-    """Describer is a staff worker in bearalpha, used for a dataframe
+class Describer(quool.base.Worker):
+    """Describer is a staff quool.base.Worker in bearalpha, used for a dataframe
     or a series to perform a series of descriptive analysis, like
     correlation analysis, and so on.
     """
@@ -115,7 +114,7 @@ class Describer(Worker):
         """
 
 
-class SigTester(Worker):
+class SigTester(quool.base.Worker):
 
     def ttest(
         self, 

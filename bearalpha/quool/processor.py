@@ -1,7 +1,7 @@
 from inspect import isframe
 import numpy as np
 import pandas as pd
-from ..core import *
+from .base import *
 from ..tools import *
 
 

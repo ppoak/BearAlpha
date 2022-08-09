@@ -95,7 +95,8 @@ class Relocator(Worker):
             [weight.index.levels[0], weight.index.levels[1]],
             names = ['date', 'asset'],
         ))
-        delta = pd.concat([weight, weight.groupby(level=1).shift(1)], axis=1, join='outer').fillna(0)
+        delta = pd.concat([weight, weight.groupby(level=1).shift(1)], axis=0, 
+            keys=['cur', 'pre']).unstack(level=0).fillna(0)
         delta = delta.iloc[:, 0] - delta.iloc[:, -1]
         if side == 'both':
             return delta.groupby(level=0).apply(lambda x: x.abs().sum())
@@ -663,26 +664,4 @@ class Factester(Worker):
             plt.show()
         if data_writer is not None:
             data_writer.close()
-
-        
-if __name__ == "__main__":
-    data = pd.Series(np.random.rand(100), index=pd.MultiIndex.from_product(
-        [pd.date_range('20200101', periods=20, freq='3d'), list('abcde')]))
-    ret = pd.Series(np.random.rand(300), index=pd.MultiIndex.from_product(
-        [pd.date_range('20200101', periods=60), list('abcde')]))
-    port = data.groupby(level=0).apply(pd.qcut, labels=False, q=2) + 1
-    position = pd.Series(np.random.rand(10), index=pd.MultiIndex.from_tuples([
-        (pd.to_datetime('20200101'), 'a'),
-        (pd.to_datetime('20200101'), 'b'),
-        (pd.to_datetime('20200102'), 'c'),
-        (pd.to_datetime('20200102'), 'a'),
-        (pd.to_datetime('20200103'), 'd'),
-        (pd.to_datetime('20200103'), 'e'),
-        (pd.to_datetime('20200104'), 'a'),
-        (pd.to_datetime('20200104'), 'e'),
-        (pd.to_datetime('20200105'), 'b'),
-        (pd.to_datetime('20200105'), 'e'),
-    ]))
-    # print(data.relocator.profit(ret))
-    print(position.relocator.turnover(side='sell'))
     

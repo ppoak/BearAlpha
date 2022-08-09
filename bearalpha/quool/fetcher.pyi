@@ -1,9 +1,8 @@
 import sqlalchemy as sql
-from bearalpha.core import *
-from bearalpha.quool import *
+from bearalpha import *
 
 
-class Filer(Worker):
+class Filer(quool.base.Worker):
 
     def to_excel(
         self, 
@@ -67,7 +66,7 @@ class Filer(Worker):
         '''
 
 
-class Databaser(Worker):
+class Databaser(quool.base.Worker):
     ...
 
 

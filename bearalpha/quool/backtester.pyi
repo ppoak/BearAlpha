@@ -1,9 +1,8 @@
 import backtrader as bt
-from bearalpha.core import *
-from bearalpha.quool import *
+from bearalpha import *
 
 
-class Relocator(Worker):
+class Relocator(quool.base.Worker):
 
     def profit(
         self, 
@@ -38,7 +37,7 @@ class Relocator(Worker):
         """
 
 
-class BackTrader(Worker):
+class BackTrader(quool.base.Worker):
 
     def run(
         self, 
@@ -96,7 +95,7 @@ class BackTrader(Worker):
         """
 
 
-class Factester(Worker):
+class Factester(quool.base.Worker):
 
     def analyze(
         self,

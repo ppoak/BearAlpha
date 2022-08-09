@@ -1,9 +1,8 @@
 import re
 import importlib
 import argparse
-from .core import *
+from .oxygene import *
 from .tools import *
-from .database import *
 
 
 def set(args):

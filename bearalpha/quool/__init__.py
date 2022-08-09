@@ -1,4 +1,12 @@
-import pandas as pd
+from .base import (
+    FrameWorkError,
+    Strategy,
+    Indicator,
+    Analyzer,
+    Observer,
+    OrderTable,
+    from_array,
+)
 
 from .artist import (
     Drawer,
@@ -36,42 +44,3 @@ from .backtester import (
 from .evaluator import (
     Evaluator,
 )
-
-class DataFrame(pd.DataFrame):
-    drawer: Drawer
-    printer: Printer
-    regressor: Regressor
-    describer: Describer
-    decompositer: Decompositer
-    tester: SigTester
-    filer: Filer
-    sqliter: Sqliter
-    mysqler: Mysqler
-    calculator: Calculator
-    converter: Converter
-    preprocessor: PreProcessor
-    backtrader: BackTrader
-    relocator: Relocator
-    factester: Factester
-    evaluator: Evaluator
-
-
-class Series(pd.Series):
-    drawer: Drawer
-    printer: Printer
-    regressor: Regressor
-    describer: Describer
-    decompositer: Decompositer
-    tester: SigTester
-    filer: Filer
-    sqliter: Sqliter
-    mysqler: Mysqler
-    calculator: Calculator
-    converter: Converter
-    preprocessor: PreProcessor
-    backtrader: BackTrader
-    relocator: Relocator
-    factester: Factester
-    evaluator: Evaluator
-
-del pd

@@ -1,8 +1,7 @@
-from bearalpha.core import *
-from bearalpha.quool import *
+from bearalpha import *
 
 
-class Evaluator(Worker):
+class Evaluator(quool.base.Worker):
 
     def sharpe(
         self, 

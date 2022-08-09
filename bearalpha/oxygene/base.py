@@ -264,6 +264,7 @@ class DataBase:
             data = data.droplevel(1)
         return data
 
+
 class Loader:
 
     def __init__(self, config) -> None:
@@ -322,8 +323,8 @@ def get_proxy(page_size: int = 20):
         f'Current available rate is {len(available_proxies) / len(proxies) * 100:.2f}%')
     return proxies
 
-@Cache(directory=None, prefix='holidays', expire_time=7776000)
-def chinese_holidays():
+@Cache(directory=None, prefix='chd', expire_time=7776000)
+def chd():
     root = 'https://api.apihubs.cn/holiday/get'
     complete = False
     page = 1
@@ -340,6 +341,23 @@ def chinese_holidays():
         page += 1
     return holidays
 
-@Cache(directory=None, prefix='holidays', expire_time=7776000)
-def chinese_trading_days():
-    return pd.offsets.CustomBusinessDay(holidays=chinese_holidays())
+@Cache(directory=None, prefix='ctd', expire_time=7776000)
+def ctd():
+    return pd.offsets.CustomBusinessDay(holidays=chd())
+
+def async_job(
+    jobs: 'dict | list',
+    *args,
+    keys: 'str | list' = None,
+    func = None,
+    processors: int = 4, 
+):
+    from dask.multiprocessing import get
+    
+    if isinstance(jobs, list):
+        graph = dict(zip([f'idx_{i}' for i in range(len(jobs))], ((func, job, *args) for job in jobs)))
+    elif isinstance(jobs, dict):
+        graph = jobs
+    
+    result = get(graph, keys or list(graph.keys()), num_workers=processors)
+    return result

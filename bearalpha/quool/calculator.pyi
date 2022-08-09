@@ -1,7 +1,6 @@
-from bearalpha.core import *
-from bearalpha.quool import *
+from bearalpha import *
 
-class Calculator(Worker):
+class Calculator(quool.base.Worker):
 
     def rolling(
         self, 

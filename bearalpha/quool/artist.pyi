@@ -1,8 +1,7 @@
-from bearalpha.core import *
-from bearalpha.quool import *
+from bearalpha import *
 
 
-class Drawer(Worker):
+class Drawer(quool.base.Worker):
 
     def draw(
         self, 
@@ -23,7 +22,7 @@ class Drawer(Worker):
         """
 
 
-class Printer(Worker):
+class Printer(quool.base.Worker):
 
     def display(
         self, 

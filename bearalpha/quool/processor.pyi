@@ -1,8 +1,7 @@
-from bearalpha.core import *
-from bearalpha.quool import *
+from bearalpha import *
 
 
-class Converter(Worker):
+class Converter(quool.base.Worker):
 
     def price2ret(
         self, 
@@ -61,7 +60,7 @@ class Converter(Worker):
         """
 
 
-class PreProcessor(Worker):
+class PreProcessor(quool.base.Worker):
 
     def standarize(
         self, 

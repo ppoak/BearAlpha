@@ -3,7 +3,7 @@ import re
 import sys
 import pandas as pd
 import sqlalchemy as sql
-from ..core import *
+from .base import *
 from ..tools import *
 
 

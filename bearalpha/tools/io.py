@@ -72,13 +72,13 @@ def beautify_traceback(
     word_wrap: bool = False,
     show_locals: bool = False,
     indent_guides: bool = True,
-    suppress: 'str | list' = (),
+    suppress: 'str | list' = None,
     max_frames: int = 100
 ):
     """Enable traceback beautifier backend by rich"""
     install(
         console = console,
-        suppress = [rich, pandas, numpy, matplotlib, backtrader], 
+        suppress = [rich, pandas, numpy, matplotlib, backtrader] or suppress, 
         width = width,
         extra_lines = extra_lines,
         theme = theme,
