@@ -3,8 +3,8 @@ import time
 import random
 import pandas as pd
 from urllib.parse import quote
-from ..tools import *
-from ..core import *
+from ...tools import *
+from ..base import *
 
 class WeiboSearch:
     '''A search crawler engine for weibo

@@ -1,8 +1,8 @@
 import re
 import pandas as pd
 from math import floor
-from ..tools import *
-from ..core import *
+from ...tools import *
+from ..base import *
 
 class Cnki:
 

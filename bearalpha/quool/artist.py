@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 from matplotlib.widgets import Cursor
-from ..core import *
+from .base import *
 from ..tools import *
 
 
@@ -42,13 +42,10 @@ class Drawer(Worker):
             _, ax = plt.subplots(1, 1, figsize=(12, 8))
 
         # bar plot
-        if Worker.ists(plotwised) and Worker.isseries(plotwised) and kind == "bar":
-            ax.bar(plotwised.index, plotwised, **kwargs)
-        elif Worker.isframe(plotwised) and Worker.ists(plotwised) and kind == "bar":
-            bot = 0
-            for col in plotwised.columns:
-                ax.bar(plotwised.index, plotwised[col], label=col, bottom=bot, **kwargs)
-                bot += plotwised[col]
+        if kind == 'bar' and Worker.ists(plotwised):
+            plotwised.plot.bar(ax=ax, **kwargs)
+            ax.set_xticks(plotwised.index[::20])
+            ax.set_xticklabels(plotwised.index.strftim('%b\n%Y')[::20])
         
         # candle plot
         elif Worker.isframe(plotwised) and Worker.ists(plotwised) and kind == "candle" and \
@@ -58,7 +55,8 @@ class Drawer(Worker):
         else:
             plotwised.plot(kind=kind, ax=ax, **kwargs)
 
-        Cursor(ax, useblit=False, color='grey', lw=0.5, horizOn=True, vertOn=True)
+        Cursor(ax, useblit=False, color='grey', lw=0.5, horizOn=True, vertOn=True, ls=':')
+        return ax
 
 
 @pd.api.extensions.register_dataframe_accessor("printer")
@@ -67,12 +65,12 @@ class Printer(Worker):
     
     def display(
         self, 
+        title: str = "Table",
         datetime: str = slice(None), 
         asset: str = slice(None),
         indicator: str = slice(None), 
         maxdisplay_length: int = 20, 
         maxdisplay_width: int = 12, 
-        title: str = "Table"
     ):
         """Print the dataframe or series in a terminal
         ------------------------------------------

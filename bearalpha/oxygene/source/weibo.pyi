@@ -1,4 +1,3 @@
-from h11 import Data
 from bearalpha import *
 
 

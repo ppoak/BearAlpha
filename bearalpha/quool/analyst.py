@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from ..core import *
+from .base import *
 from ..tools import *
 
 
@@ -219,7 +219,8 @@ class Describer(Worker):
         self, 
         other: pd.Series = None, 
         method: str = 'spearman', 
-        tvalue = False
+        axis: int = 0,
+        tvalue = False,
     ):
         """Calculation for correlation matrix
         -------------------------------------
@@ -228,37 +229,30 @@ class Describer(Worker):
         tvalue: bool, whether to return t-value of a time-seriesed correlation coefficient
         """
         if other is not None:
-            other = other.copy()
             if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
-                other.index.names = self.data.index.names
+                corr = self.data.groupby(level=0).corrwith(other, method=method)
+                if tvalue:
+                    t = corr.groupby(level=1).mean() / corr.groupby(level=1).st() \
+                        * np.sqrt(corr.index.levels[0].size)
+                    return t
+                return corr
             else:
-                other.index.name = self.data.name
-            
-            if self.data.name is None:
-                self.data.name = 'corr_x'
-            if other.name is None:
-                other.name = 'corr_y'
-            
-            data = pd.merge(self.data, other, left_index=True, right_index=True)
+                return self.data.corrwith(other, method=method, axis=axis)
+        
         else:
-            data = self.data.copy()
-
-        if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
-            corr = data.groupby(level=0).corr(method=method)
-            if tvalue:
-                n = corr.index.levels[0].size
-                mean = corr.groupby(level=1).mean()
-                std = corr.groupby(level=1).std()
-                t = mean / std * np.sqrt(n)
-                t = t.loc[t.columns, t.columns].replace(np.inf, np.nan).replace(-np.inf, np.nan)
-                return t
-            return corr
-        else:
-            return data.corr(method=method)
+            if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
+                corr = self.data.groupby(level=0).corr(method=method)
+                if tvalue:
+                    t = corr.groupby(level=1).mean() / corr.groupby(level=1).st() \
+                        * np.sqrt(corr.index.levels[0].size)
+                    return t
+                return corr
+            else:
+                return self.data.corr(method=method)
 
     def ic(
         self, 
-        forward: pd.Series = None, 
+        ret: pd.Series, 
         grouper = None, 
         method: str = 'spearman'
     ):
@@ -268,37 +262,23 @@ class Describer(Worker):
         other: series, the forward column
         method: str, 'spearman' means rank ic
         """
-        if forward is not None:
-            forward = forward.copy()
-            if self.type_ == Worker.PNFR or self.type_ == Worker.PNSR:
-                forward.index.names = self.data.index.names
-            else:
-                forward.index.name = self.data.index.name
-            
-            if not self.isframe(self.data) and self.data.name is None:
-                self.data.name = 'factor'
-            if isinstance(forward, pd.Series) and forward.name is None:
-                forward.name = 'forward'
-            data = pd.merge(self.data, forward, left_index=True, right_index=True)
-        else:
-            data = self.data.copy()
-        
+       
         groupers = [pd.Grouper(level=0)]
         if grouper is not None:
             groupers += item2list(grouper)
         groupers_num = len(groupers)
             
         if self.type_ == Worker.PNSR or self.type_ == Worker.PNFR:
-            ic = data.groupby(groupers).corr(method=method)
+            ic = self.data.groupby(groupers).corrwith(ret, method=method, axis=0)
             idx = (slice(None),) * groupers_num + (ic.columns[-1],)
             ic = ic.loc[idx, ic.columns[:-1]].droplevel(groupers_num)
             return ic
 
         elif self.type_ == Worker.CSFR or self.type_ == Worker.CSSR:
             if groupers_num < 2:
-                ic = data.corr(method=method)
+                ic = self.data.corrwith(ret, method=method)
             else:
-                ic = data.groupby(groupers[1:]).corr(method=method)
+                ic = self.data.groupby(groupers[1:]).corrwith(ret, method=method)
             idx = (slice(None),) * (groupers_num - 1) + (ic.columns[-1],)
             if groupers_num < 2:
                 ic = ic.loc[idx, ic.columns[:-1]]
@@ -353,21 +333,3 @@ class SigTester(Worker):
         
         else:
             return _t(data)
-
-
-if __name__ == "__main__":
-    panelframe = pd.DataFrame(np.random.rand(500, 5), index=pd.MultiIndex.from_product(
-        [pd.date_range('20100101', periods=100), list('abcde')]
-    ), columns=['id1', 'id2', 'id3', 'id4', 'id5'])
-    panelseries = pd.Series(np.random.rand(500), index=pd.MultiIndex.from_product(
-        [pd.date_range('20100101', periods=100), list('abcde')]
-    ), name='id1')
-    tsframe = pd.DataFrame(np.random.rand(500, 5), index=pd.date_range('20100101', periods=500),
-        columns=['id1', 'id2', 'id3', 'id4', 'id5'])
-    tsseries = pd.Series(np.random.rand(500), index=pd.date_range('20100101', periods=500), name='id1')
-    csframe = pd.DataFrame(np.random.rand(5, 5), index=list('abcde'), 
-        columns=['id1', 'id2', 'id3', 'id4', 'id5'])
-    csseries = pd.Series(np.random.rand(5), index=list('abcde'), name='id1')
-
-    # print(panelframe.regressor.logistic(panelseries, backend='statsmodels').apply(lambda x: x.params))
-    print(panelframe.tester.sigtest(panelseries))
