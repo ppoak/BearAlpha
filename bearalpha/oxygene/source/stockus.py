@@ -23,7 +23,7 @@ class StockUS:
     todaystr = datetime.datetime.today().strftime(r'%Y%m%d')
             
     @classmethod
-    @Cache(prefix='StockUS_index_price', expire_time=2592000)
+    @cache(prefix='StockUS_index_price', expire=2592000)
     def index_price(
         cls, 
         index: str, 
@@ -40,7 +40,7 @@ class StockUS:
         return price
     
     @classmethod
-    @Cache(prefix='StockUS_cn_price', expire_time=2592000)
+    @cache(prefix='StockUS_cn_price', expire=2592000)
     def cn_price(
         cls, 
         code: str, 
@@ -57,7 +57,7 @@ class StockUS:
         return price
     
     @classmethod
-    @Cache(prefix='stockus_report_list', expire_time=2592000)
+    @cache(prefix='stockus_report_list', expire=2592000)
     def report_list(
         cls, 
         category: str = 8,
@@ -101,7 +101,7 @@ class StockUS:
         return data
     
     @classmethod
-    @Cache(prefix='stockus_report_search', expire_time=2592000)
+    @cache(prefix='stockus_report_search', expire=2592000)
     def report_search(
         cls, 
         keyword: str = '', 

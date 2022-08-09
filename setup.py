@@ -19,18 +19,26 @@ setup(
         'pandas',
         'numpy',
         'matplotlib',
-        'mplfinance',
         'backtrader',
-        'sqlalchemy',
-        'diskcache',
         'requests',
+        'mplfinance',
         'rich',
-        'scipy',
-        'bs4',
     ],
     extras_require={
-        "stats": ["statsmodules", "sklearn", "dask"],
-        "crawl": ["akshare", "baostock", "dask"]
+        "stats": [
+            "statsmodules", 
+            "sklearn", 
+            "dask", 
+            'scipy',
+        ],
+        "crawl": [
+            "akshare", 
+            "baostock", 
+            "dask", 
+            'sqlalchemy', 
+            'bs4', 
+            'diskcache',
+        ]
     },
     entry_points={
         "console_scripts": [

@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-from math import floor
+from math import ceil
 from ...tools import *
 from ..base import *
 
@@ -9,7 +9,7 @@ class Cnki:
     __search_url = "https://kns.cnki.net/KNS8/Brief/GetGridTableHtml"
 
     @classmethod
-    @Cache(prefix='cnki_generic_search', expire_time=2592000)
+    @cache(prefix='cnki_generic_search', expire=2592000)
     def generic_search(cls, keyword: str, page: int = 3):
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -38,11 +38,11 @@ class Cnki:
         text = req.text
         total = int(re.findall(r'共找到.{0,}?([\d,]+).{0,}?条结果', text)[0].replace(',', ''))
         if page == -1:
-            page = floor(total / 50)
+            page = ceil(total / 50)
         if page == 1:
             return pd.concat(results, axis=1)
-        page = min(page, floor(total / 50))
-        CONSOLE.print(f'[green][+][/green] Current page 1 / {page}')
+        page = min(page, ceil(total / 50))
+        Console().print(f'[green][+][/green] Current page 1 / {page}')
         result = pd.read_html(text)[0]
         results.append(result)
 
@@ -51,7 +51,7 @@ class Cnki:
             data.update(CurPage=f'{p}', IsSearch='false')
             req = Request(cls.__search_url, headers=headers, data=data).post()
             text = req.text
-            CONSOLE.print(f'[green][+][/green] Current page {p} / {page}')
+            Console().print(f'[green][+][/green] Current page {p} / {page}')
             result = pd.read_html(text)[0]
             results.append(result)
         results = pd.concat(results, axis=0)

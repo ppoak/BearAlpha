@@ -5,50 +5,40 @@ import random
 import pickle
 import hashlib
 import datetime
-import diskcache
 import requests
 import pandas as pd
-import sqlalchemy as sql
-from lxml import etree
 from functools import wraps
-from bs4 import BeautifulSoup
 from ..tools import *
 
 
-class Cache(diskcache.Cache):
+def cache(
+    directory: str = None, 
+    prefix: str = 'generic', 
+    expire: float = 3600,
+):
+    from diskcache import Cache
+    if directory is None:
+        directory = os.path.join(os.path.split(
+            os.path.abspath(__file__))[0] , '..', 'cache')
+    _cache = Cache(directory=directory)
+    _cache.reset('size_limit', int(50e6))
+    _cache.reset('cull_limit', 0)
 
-    def __init__(self, 
-        directory: str = None, 
-        prefix: str = 'generic', 
-        expire_time: float = 3600,
-    ):
-        if directory is None:
-            directory = os.path.join(os.path.split(
-                os.path.abspath(__file__))[0] , '..', 'cache')
-        self.prefix = prefix
-        self.expire_time = expire_time
-        super().__init__(directory)
-        self.reset('size_limit', int(50e6))
-        self.reset('cull_limit', 0)
-    
-    @staticmethod
-    def md5key(func, *args, **kwargs):
-        return hashlib.md5(pickle.dumps(f'{func.__name__};{args};{kwargs}')).hexdigest()
-    
-    def __call__(self, func):
+    def wrapper(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            hash_key = self.md5key(func, *args, **kwargs)
-            data = self.get(key=self.prefix + ':' + hash_key)
+        def wrapped(*args, **kwargs):
+            hash_key = hashlib.md5(pickle.dumps(f'{func.__name__};{args};{kwargs}')).hexdigest()
+            data = _cache.get(key=prefix + ':' + hash_key)
             if data is not None:
                 # get cache successful
                 return data
             else:
                 # not fund cache,return data will be cache
-                result = func(*args, **kwargs)
-                self.set(key=self.prefix + ':' + hash_key, value=result, expire=self.expire_time)
-                return result
-        return wrapper
+                data = func(*args, **kwargs)
+                _cache.set(key=_cache.prefix + ':' + hash_key, value=data, expire=expire)
+                return data
+        return wrapped
+    return wrapper
 
 
 class Request:
@@ -109,6 +99,7 @@ class Request:
 
     @property
     def etree(self):
+        from lxml import etree
         return etree.HTML(self.response.text)
 
     @property
@@ -117,6 +108,7 @@ class Request:
     
     @property
     def soup(self):
+        from bs4 import BeautifulSoup
         return BeautifulSoup(self.response.text, 'html.parser')
     
     @property
@@ -188,7 +180,7 @@ class ProxyRequest(Request):
 
 
 class DataBase:
-    def __init__(self, database: sql.engine.Engine) -> None:
+    def __init__(self, database) -> None:
         self.today = datetime.datetime.today()
         self.engine = database
         
@@ -294,7 +286,7 @@ class Loader:
         self.postprocess()
 
 
-@Cache(directory=None, prefix='proxy', expire_time=2592000)
+@cache(directory=None, prefix='proxy', expire=2592000)
 def get_proxy(page_size: int = 20):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36"
@@ -323,7 +315,7 @@ def get_proxy(page_size: int = 20):
         f'Current available rate is {len(available_proxies) / len(proxies) * 100:.2f}%')
     return proxies
 
-@Cache(directory=None, prefix='chd', expire_time=7776000)
+@cache(directory=None, prefix='chd', expire=7776000)
 def chd():
     root = 'https://api.apihubs.cn/holiday/get'
     complete = False
@@ -341,7 +333,7 @@ def chd():
         page += 1
     return holidays
 
-@Cache(directory=None, prefix='ctd', expire_time=7776000)
+@cache(directory=None, prefix='ctd', expire=7776000)
 def ctd():
     return pd.offsets.CustomBusinessDay(holidays=chd())
 

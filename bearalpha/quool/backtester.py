@@ -204,8 +204,8 @@ class BackTrader(Worker):
         result = cerebro.run()
 
         timereturn = pd.Series(result[0].analyzers.timereturn.rets)
-        CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
-        CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
+        Console().print(dict(result[0].analyzers.sharperatio.rets))
+        Console().print(dict(result[0].analyzers.timedrawdown.rets))
         figs = cerebro.plot(style='candel')
         if image_path is not None:
             fig = figs[0][0]
@@ -315,8 +315,8 @@ class BackTrader(Worker):
         result = cerebro.run()
 
         timereturn = pd.Series(result[0].analyzers.timereturn.rets)
-        CONSOLE.print(dict(result[0].analyzers.sharperatio.rets))
-        CONSOLE.print(dict(result[0].analyzers.timedrawdown.rets))
+        Console().print(dict(result[0].analyzers.sharperatio.rets))
+        Console().print(dict(result[0].analyzers.timedrawdown.rets))
         figs = cerebro.plot(style='candel')
         if image_path is not None:
             fig = figs[0][0]
@@ -344,7 +344,7 @@ class Factester(Worker):
         if data is None:
             return None
         elif self.ists(data) and self.isframe(data):
-            CONSOLE.print(f'[yellow][!][/yellow] {name} in wide form, transposing ... ')
+            Console().print(f'[yellow][!][/yellow] {name} in wide form, transposing ... ')
             data = data.stack()
         elif self.ispanel(data) and self.isseries(data):
             data = data.copy()
@@ -528,7 +528,7 @@ class Factester(Worker):
         win_rate = profit.apply(lambda x: x > benchmark_profit).sum() / len(profit)
         win_rate.name = 'win_rate'
 
-        date_size = pd.date_range(start=profit.index[0], end=profit.index[-1], freq=chinese_trading_days()).size
+        date_size = len(profit)
         annual_ret = (netvaluecurve.iloc[-1] / netvaluecurve.iloc[0] - 1) * 252 / date_size
         annual_ret.name = 'annual_ret'
 
@@ -596,9 +596,9 @@ class Factester(Worker):
             factor.filer.to_excel(data_writer, sheet_name=f'factor_data')
         
         for i, period in enumerate(periods):
-            forward_return = price.converter.price2ret(period=(-period - 1) * chinese_trading_days())
+            forward_return = price.converter.price2ret(period=(-period - 1))
             # slice the common part of data
-            CONSOLE.print(f'[green][PERIOD = {period}][/green] Filtering common part ... ')
+            Console().print(f'[green][PERIOD = {period}][/green] Filtering common part ... ')
             common_index = factor.index.intersection(forward_return.index)
             common_index = common_index.intersection(grouper.index) if grouper is not None else common_index
             common_index = common_index.intersection(marketcap.index) if marketcap is not None else common_index
@@ -618,7 +618,7 @@ class Factester(Worker):
                 hist_ax=axes[2, i]
             )
                                 
-            CONSOLE.rule(f'[PERIOD = {period}] Barra Test')
+            Console().rule(f'[PERIOD = {period}] Barra Test')
             if grouper_period is not None and marketcap_period is not None:
                 self._branalyze(
                     factor=factor_data_period, 
@@ -630,10 +630,10 @@ class Factester(Worker):
                     show=show
                 )
             else:
-                CONSOLE.print('[yellow][!][/yellow] You didn\'t provide group information,'
+                Console().print('[yellow][!][/yellow] You didn\'t provide group information,'
                     'so it is impossible to make barra test')
                         
-            CONSOLE.rule(f'[PERIOD = {period}] IC Test')
+            Console().rule(f'[PERIOD = {period}] IC Test')
             factor_direction = self._icanalyze(
                 factor=factor_data_period, 
                 forward=forward_return_period, 
@@ -643,7 +643,7 @@ class Factester(Worker):
                 show=show
             )
                     
-            CONSOLE.rule(f'[PERIOD = {period}] Layering Test')
+            Console().rule(f'[PERIOD = {period}] Layering Test')
             self._lranalyze(
                 factor=factor_data_period,
                 forward=forward_return_period, 

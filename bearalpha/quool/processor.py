@@ -276,7 +276,7 @@ class Converter(Worker):
         to reduce memory usage.
         """
         start_mem = self.data.memory_usage().sum()
-        CONSOLE.print(f'[yellow][=][/yellow] Memory usage of dataframe is {start_mem:.2f} MB')
+        Console().print(f'[yellow][=][/yellow] Memory usage of dataframe is {start_mem:.2f} MB')
         for col in self.data.columns:
             col_type = self.data[col].dtype
             if col_type != object:
@@ -310,8 +310,8 @@ class Converter(Worker):
             else:
                 self.data[col] = self.data[col].astype('category')
         end_mem = self.data.memory_usage().sum()
-        CONSOLE.print(f'[green][=][/green] Memory usage after optimization is {end_mem:.2f} MB')
-        CONSOLE.print(f'[green][=][/green] Decreased by {100 * (start_mem - end_mem) / start_mem:.1f}%')
+        Console().print(f'[green][=][/green] Memory usage after optimization is {end_mem:.2f} MB')
+        Console().print(f'[green][=][/green] Decreased by {100 * (start_mem - end_mem) / start_mem:.1f}%')
         if retframe:
             return self.data
 

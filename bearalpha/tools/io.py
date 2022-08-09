@@ -16,7 +16,7 @@ import rich
 import numpy
 import pandas
 import matplotlib
-import backtrader
+from six import with_metaclass
 from rich.console import Console as RichConsole
 from rich.progress import track
 from rich.progress import Progress as RichProgress
@@ -29,12 +29,22 @@ from rich.progress import (
     SpinnerColumn,
 )
 
+class Singleton(type):
+    _instance = None
 
-CONSOLE = RichConsole()
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instance:
+            cls._instance = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instance
+
+
+class Console(with_metaclass(Singleton, RichConsole)):
+    ...
+
 
 def progressor(
     *columns: str,
-    console = CONSOLE,
+    console = None,
     auto_refresh: bool = True,
     refresh_per_second: float = 10,
     speed_estimate_period: float = 30.0,
@@ -65,7 +75,7 @@ def progressor(
     
 def beautify_traceback(
     *,
-    console = CONSOLE,
+    console = None,
     width: int = 100,
     extra_lines: int = 3,
     theme: str = None,
@@ -76,6 +86,7 @@ def beautify_traceback(
     max_frames: int = 100
 ):
     """Enable traceback beautifier backend by rich"""
+    import backtrader
     install(
         console = console,
         suppress = [rich, pandas, numpy, matplotlib, backtrader] or suppress, 

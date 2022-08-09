@@ -103,7 +103,7 @@ class Printer(Worker):
         for row in printwised.index:
             table.add_row(*printwised.loc[row].tolist())
 
-        CONSOLE.print(table)
+        Console().print(table)
 
 if __name__ == "__main__":
     pass

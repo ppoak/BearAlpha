@@ -8,7 +8,7 @@ class Em:
     __data_center = "https://datacenter-web.eastmoney.com/api/data/v1/get"
 
     @classmethod
-    @Cache(prefix='Em_active_opdep', expire_time=2592000)
+    @cache(prefix='Em_active_opdep', expire=2592000)
     def active_opdep(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         '''Update data for active oprate department
         --------------------------------------------
@@ -39,7 +39,7 @@ class Em:
         return data
     
     @classmethod
-    @Cache(prefix='Em_active_opdep_details', expire_time=2592000)
+    @cache(prefix='Em_active_opdep_details', expire=2592000)
     def active_opdep_details(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         date = time2str(date)
         params = {
@@ -91,7 +91,7 @@ class Em:
         return datas
         
     @classmethod
-    @Cache(prefix='Em_institution_trade', expire_time=2592000)
+    @cache(prefix='Em_institution_trade', expire=2592000)
     def institution_trade(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         date = time2str(date)
         params = {
@@ -117,7 +117,7 @@ class Em:
         return data
         
     @classmethod
-    @Cache(prefix='Em_oversea_institution_holding', expire_time=2592000)
+    @cache(prefix='Em_oversea_institution_holding', expire=2592000)
     def oversea_institution_holding(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         import requests
         import numpy as np
@@ -164,7 +164,7 @@ class Em:
         return datas
     
     @classmethod
-    @Cache(prefix='Em_stock_buyback', expire_time=2592000)
+    @cache(prefix='Em_stock_buyback', expire=2592000)
     def stock_buyback(cls, date: 'str | datetime.datetime') -> pd.DataFrame:
         date = time2str(date)
         datas = []
@@ -206,7 +206,7 @@ class Guba:
         return text.strip().replace('\r\n', '').replace(' ', '')
 
     @classmethod
-    @Cache(prefix='Guba_overview_info', expire_time=18000)
+    @cache(prefix='Guba_overview_info', expire=18000)
     def overview_info(cls, code: str, page: int):
         page = str(page)
         url = f"{cls.__root}/list,{code},f_{page}.html"
@@ -221,7 +221,7 @@ class Guba:
         return data
 
     @classmethod
-    @Cache(prefix='Guba_detail_info_orig', expire_time=18000)
+    @cache(prefix='Guba_detail_info_orig', expire=18000)
     def _detail_info_orig(cls, url: str):
         html = ProxyRequest(url).get().etree
         content = ''.join(html.xpath('//*[@id="zwconbody"]//text()'))
@@ -230,7 +230,7 @@ class Guba:
         return data
     
     @classmethod
-    @Cache(prefix='Guba_detail_info_cfh', expire_time=18000)
+    @cache(prefix='Guba_detail_info_cfh', expire=18000)
     def _detail_info_cfh(cls, url: str):
         html = ProxyRequest(url).get().etree
         content = ''.join(html.xpath('//*[@class="article-body"]//text()'))
@@ -239,7 +239,7 @@ class Guba:
         return data
     
     @classmethod
-    @Cache(prefix='Guba_detail_info', expire_time=18000)
+    @cache(prefix='Guba_detail_info', expire=18000)
     def detail_info(cls, code: str, page: int):
         brief_data = cls.overview_info(code, page).set_index('href')
         detail_data = []
@@ -258,7 +258,7 @@ class Guba:
             return cls._detail_info_orig(cls.__root + url)
     
     @classmethod
-    @Cache(prefix='Guba_detail_info_', expire_time=18000)
+    @cache(prefix='Guba_detail_info_', expire=18000)
     def detail_info_(cls, code: str, page: int):
         # On MacOS, if you want to successfully run this function,
         # you may need to set a environment variable

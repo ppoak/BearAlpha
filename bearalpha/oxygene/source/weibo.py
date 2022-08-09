@@ -74,9 +74,9 @@ class WeiboSearch:
             "Referer": f"https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D{quote(keyword, 'utf-8')}",
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
             }
-        CONSOLE.log(f"[red]Start in keyword: {keyword}[/red]")
+        Console().log(f"[red]Start in keyword: {keyword}[/red]")
         while True:
-            CONSOLE.print(f"Getting [blue]{keyword}[/blue], currently at page: [blue]{page}[/blue] ... ")
+            Console().print(f"Getting [blue]{keyword}[/blue], currently at page: [blue]{page}[/blue] ... ")
             url = cls.__base.format(keyword, page)
             blogs = cls._get_content(url, headers)
             if not blogs:
@@ -84,28 +84,28 @@ class WeiboSearch:
             result.extend(blogs)
             page += 1
             time.sleep(random.randint(5, 8))
-        CONSOLE.log(f"[green]Finished in keyword: {keyword}!")
+        Console().log(f"[green]Finished in keyword: {keyword}!")
         return result
     
     @classmethod
     def _get_assigned(cls, keyword: str, pages: int):
         result = []
-        CONSOLE.log(f"[red]Start in keyword: {keyword}")
+        Console().log(f"[red]Start in keyword: {keyword}")
         headers = {
             "Referer": f"https://m.weibo.cn/search?containerid=100103type%3D1%26q%3D{quote(keyword, 'utf-8')}",
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
             }
         for page in track(range(1, pages+1)):
-            CONSOLE.print(f"Getting [blue]{keyword}[/blue], currently at page: [blue]{page}[/blue] ... ")
+            Console().print(f"Getting [blue]{keyword}[/blue], currently at page: [blue]{page}[/blue] ... ")
             url = cls.__base.format(keyword, page)
             blogs = cls._get_content(url, headers)
             result.extend(blogs)
             time.sleep(random.randint(5, 8))
-        CONSOLE.log(f"[green]Finished in keyword: {keyword}!")
+        Console().log(f"[green]Finished in keyword: {keyword}!")
         return result          
     
     @classmethod
-    @Cache(prefix='weibosearch_search', expire_time=604800)
+    @cache(prefix='weibosearch_search', expire=604800)
     def search(cls, keyword: str, pages: int = -1):
         """Search for the keyword
         --------------------------
@@ -137,7 +137,7 @@ class HotTopic:
     __trend = "https://google-api.zhaoyizhe.com/google-api/index/superInfo?keyword={}"
     
     @classmethod
-    @Cache(prefix='weibo_search', expire_time=604800)
+    @cache(prefix='weibo_search', expire=604800)
     def search(cls, keyword: str = None, date: str = None):
         if keyword is None and date is None:
             url = cls.__list
@@ -152,7 +152,7 @@ class HotTopic:
         return data
 
     @classmethod
-    @Cache(prefix='weibo_trend', expire_time=604800)
+    @cache(prefix='weibo_trend', expire=604800)
     def trend(cls, keyword: str):
         url = cls.__trend.format(keyword)
         result = Request(url).get().json
@@ -161,7 +161,7 @@ class HotTopic:
         return data
 
     @classmethod
-    @Cache(prefix='weibo_trend_history', expire_time=604800)
+    @cache(prefix='weibo_trend_history', expire=604800)
     def trend_history(cls, keyword: str, freq: str = '3m'):
         if freq not in ['1h', '24h', '1m', '3m']:
             raise ValueError('Freq parameter must be in ["1h", "24h', "1m", "3m]")

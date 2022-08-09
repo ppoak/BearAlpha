@@ -227,7 +227,7 @@ class Sqliter(Databaser):
             else:
                 index_col = f'(`{self.data.index.name}`)'
             if data.index.has_duplicates:
-                CONSOLE.print('[yellow][!][/yellow] Warning: index has duplicates, will be ignored except the first one')
+                Console().print('[yellow][!][/yellow] Warning: index has duplicates, will be ignored except the first one')
                 data = data[~data.index.duplicated(keep='first')]
             data = data.reset_index()
 
@@ -404,7 +404,7 @@ class Mysqler(Databaser):
             else:
                 index_col = f'(`{self.data.index.name}`)'
             if data.index.has_duplicates:
-                CONSOLE.print('[yellow][!][/yellow] Warning: index has duplicates, will be ignored except the first one')
+                Console().print('[yellow][!][/yellow] Warning: index has duplicates, will be ignored except the first one')
                 data = data[~data.index.duplicated(keep='first')]
             data = data.reset_index()
 

@@ -210,7 +210,7 @@ class Strategy(bt.Strategy):
             color = "red"
         else:
             color = "blue"
-        CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
+        Console().print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
 
     def notify_order(self, order: bt.Order):
         """order notification"""
@@ -257,7 +257,7 @@ class Indicator(bt.Indicator):
             color = "red"
         else:
             color = "blue"
-        CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
+        Console().print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
     
 
 class Analyzer(bt.Analyzer):
@@ -274,7 +274,7 @@ class Analyzer(bt.Analyzer):
             color = "red"
         else:
             color = "blue"
-        CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
+        Console().print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
 
 
 class Observer(bt.Observer):
@@ -291,7 +291,7 @@ class Observer(bt.Observer):
             color = "red"
         else:
             color = "blue"
-        CONSOLE.print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
+        Console().print(f'[{color}][{hint}][/{color}] {datetime}: {text}')
 
 
 class OrderTable(Analyzer):

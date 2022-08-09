@@ -27,7 +27,7 @@ from .common import (
 )
 
 from .io import (
-    CONSOLE,
+    Console,
     Table,
     track,
     progressor,

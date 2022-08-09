@@ -1,7 +1,7 @@
 from .source import *
 from .stream import *
 from .base import (
-    Cache,
+    cache,
     Request,
     ProxyRequest,
     DataBase,

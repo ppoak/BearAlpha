@@ -3,11 +3,6 @@ import pandas as pd
 from ..base import *
 from ...tools import *
 
-try:
-    import akshare as ak
-except:
-    pass
-
 
 class AkShare:
     
@@ -15,7 +10,7 @@ class AkShare:
     dbstart = '20050101'
     
     @classmethod
-    @Cache(prefix='akshare_market_daily', expire_time=2592000)
+    @cache(prefix='akshare_market_daily', expire=2592000)
     def market_daily(cls, code: str, start: str = None, end: str = None):
         """Get market daily prices for one specific stock
         
@@ -23,6 +18,7 @@ class AkShare:
         start: str, start date in string format
         end: str, end date in string format
         """
+        import akshare as ak
         code = strip_stock_code(code)
         start = time2str(start, formatstr=r'%Y%m%d') or cls.dbstart
         end = time2str(end, formatstr=r'%Y%m%d') or time2str(cls.today, formatstr=r'%Y%m%d')
@@ -49,6 +45,7 @@ class AkShare:
 
         code_only: bool, decide only return codes on the market
         """
+        import akshare as ak
         price = ak.stock_zh_a_spot_em()
         price = price.set_index('代码').drop('序号', axis=1)
         if code_only:
@@ -57,6 +54,7 @@ class AkShare:
 
     @classmethod
     def plate_quote(cls, name_only: bool = False):
+        import akshare as ak
         data = ak.stock_board_industry_name_em()
         data = data.set_index('板块名称')
         if name_only:
@@ -64,8 +62,9 @@ class AkShare:
         return data
 
     @classmethod
-    @Cache(prefix='akshare_etf_market_daily', expire_time=2592000)
+    @cache(prefix='akshare_etf_market_daily', expire=2592000)
     def etf_market_daily(cls, code: str, start: str = None, end: str = None):
+        import akshare as ak
         code = strip_stock_code(code)
         start = start or cls.dbstart
         end = end or time2str(cls.today, formatstr=r'%Y%m%d')
@@ -74,8 +73,9 @@ class AkShare:
         return price
     
     @classmethod
-    @Cache(prefix='akshare_stock_fund_flow', expire_time=18000)
+    @cache(prefix='akshare_stock_fund_flow', expire=18000)
     def stock_fund_flow(cls, code: str):
+        import akshare as ak
         code, market = code.split('.')
         if market.isdigit():
             code, market = market, code
@@ -87,8 +87,9 @@ class AkShare:
         return funds
     
     @classmethod
-    @Cache(prefix='akshare_stock_fund_rank', expire_time=18000)
+    @cache(prefix='akshare_stock_fund_rank', expire=18000)
     def stock_fund_rank(cls):
+        import akshare as ak
         datas = []
         for indi in ['今日', '3日', '5日', '10日']:
             datas.append(ak.stock_individual_fund_flow_rank(indicator=indi
@@ -101,16 +102,18 @@ class AkShare:
         return datas
     
     @classmethod
-    @Cache(prefix='akshare_plate_info', expire_time=18000)
+    @cache(prefix='akshare_plate_info', expire=18000)
     def plate_info(cls, plate: str):
+        import akshare as ak
         data = ak.stock_board_industry_cons_em(symbol=plate).set_index('代码')
         return data
 
     @classmethod
-    @Cache(prefix='akshare_balance_sheet', expire_time=2592000)
+    @cache(prefix='akshare_balance_sheet', expire=2592000)
     def balance_sheet(cls, code: str):
         # more infomation, please refer to this website:
         # https://emweb.securities.eastmoney.com/PC_HSF10/NewFinanceAnalysis/Index?type=web&code=sz000001#lrb-0
+        import akshare as ak
         code = wrap_stock_code(code, formatstr='{market}{code}')
         data = ak.stock_balance_sheet_by_report_em(symbol=code)
         if data.empty:
