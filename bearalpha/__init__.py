@@ -50,10 +50,12 @@ Examples:
 >>> data.sqliter.to_sql(table='test', database='database_connection_string')
 """
 
-from pandas import *
-from numpy import *
-from matplotlib import *
 from backtrader import *
+from matplotlib import *
+from numpy import *
+from pandas import *
+# to cover the pd.unique
+from numpy import unique
 
 from .oxygene import *
 from .quool import *
