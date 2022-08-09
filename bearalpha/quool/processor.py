@@ -267,7 +267,53 @@ class Converter(Worker):
                     )
                 )
         return data
-            
+    
+    def shrink(self, retframe: bool = False, allow_halffloat: bool = True):
+        """Reduce the memory usage for a dataframe
+        -----------------------------------------
+
+        iterate through all the columns of a dataframe and modify the data type
+        to reduce memory usage.
+        """
+        start_mem = self.data.memory_usage().sum()
+        CONSOLE.print(f'[yellow][=][/yellow] Memory usage of dataframe is {start_mem:.2f} MB')
+        for col in self.data.columns:
+            col_type = self.data[col].dtype
+            if col_type != object:
+                c_min = self.data[col].min()
+                c_max = self.data[col].max()
+                if str(col_type).startswith('int'):
+                    if c_min > np.iinfo(np.int8).min and c_max < np.iinfo(np.int8).max:
+                        self.data[col] = self.data[col].astype(np.int8)
+                    elif c_min > np.iinfo(np.int16).min and c_max < np.iinfo(np.int16).max:
+                        self.data[col] = self.data[col].astype(np.int16)
+                    elif c_min > np.iinfo(np.int32).min and c_max < np.iinfo(np.int32).max:
+                        self.data[col] = self.data[col].astype(np.int32)
+                    elif c_min > np.iinfo(np.int64).min and c_max < np.iinfo(np.int64).max:
+                        self.data[col] = self.data[col].astype(np.int64)
+                elif str(col_type).startswith('uint'):
+                    if c_min > np.iinfo(np.uint8).min and c_max < np.iinfo(np.uint8).max:
+                        self.data[col] = self.data[col].astype(np.uint8)
+                    elif c_min > np.iinfo(np.uint16).min and c_max < np.iinfo(np.uint16).max:
+                        self.data[col] = self.data[col].astype(np.uint16)
+                    elif c_min > np.iinfo(np.uint32).min and c_max < np.iinfo(np.uint32).max:
+                        self.data[col] = self.data[col].astype(np.uint32)
+                    elif c_min > np.iinfo(np.uint64).min and c_max < np.iinfo(np.uint64).max:
+                        self.data[col] = self.data[col].astype(np.uint64)
+                else:
+                    if allow_halffloat and c_min > np.finfo(np.float16).min and c_max < np.finfo(np.float16).max:
+                        self.data[col] = self.data[col].astype(np.float16)
+                    elif c_min > np.finfo(np.float32).min and c_max < np.finfo(np.float32).max:
+                        self.data[col] = self.data[col].astype(np.float32)
+                    else:
+                        self.data[col] = self.data[col].astype(np.float64)
+            else:
+                self.data[col] = self.data[col].astype('category')
+        end_mem = self.data.memory_usage().sum()
+        CONSOLE.print(f'[green][=][/green] Memory usage after optimization is {end_mem:.2f} MB')
+        CONSOLE.print(f'[green][=][/green] Decreased by {100 * (start_mem - end_mem) / start_mem:.1f}%')
+        if retframe:
+            return self.data
 
 @pd.api.extensions.register_dataframe_accessor("preprocessor")
 @pd.api.extensions.register_series_accessor("preprocessor")

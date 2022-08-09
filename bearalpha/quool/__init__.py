@@ -1,5 +1,4 @@
 from .base import (
-    FrameWorkError,
     Strategy,
     Indicator,
     Analyzer,

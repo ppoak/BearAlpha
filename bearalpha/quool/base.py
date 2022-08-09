@@ -531,9 +531,3 @@ def read_excel(
             datas = pd.concat(datas).sort_index()
         
         return datas
-
-def read_parquet(path, **kwargs):
-    return pd.read_parquet(path, **kwargs)
-
-def read_sql(query, con, **kwargs):
-    return pd.read_sql(query, con, **kwargs)

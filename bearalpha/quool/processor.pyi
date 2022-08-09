@@ -24,7 +24,6 @@ class Converter(quool.base.Worker):
         lag: int, define how many day as lagged after the day of calculation forward return
         """
 
-
     def cum2diff(
         self,
         grouper = None, 
@@ -57,6 +56,14 @@ class Converter(quool.base.Worker):
         
         Specifically used for imbalanced panel data, this
         function will help you deal with that
+        """
+
+    def reduce_memory(self) -> DataFrame:
+        """Reduce the memory usage for a dataframe
+        -----------------------------------------
+
+        iterate through all the columns of a dataframe and modify the data type
+        to reduce memory usage.
         """
 
 

@@ -50,18 +50,16 @@ Examples:
 >>> data.sqliter.to_sql(table='test', database='database_connection_string')
 """
 
-from backtrader import *
-from matplotlib import *
-from numpy import *
-from pandas import *
-# to cover the pd.unique
-from numpy import unique
+from pandas import (
+    DataFrame as PDDataFrame,
+    Series as PDSeires,
+)
 
 from .oxygene import *
 from .quool import *
 from .tools import *
 
-class DataFrame(DataFrame):
+class DataFrame(PDDataFrame):
     drawer: Drawer
     printer: Printer
     regressor: Regressor
@@ -80,7 +78,7 @@ class DataFrame(DataFrame):
     evaluator: Evaluator
 
 
-class Series(Series):
+class Series(PDSeires):
     drawer: Drawer
     printer: Printer
     regressor: Regressor
@@ -100,3 +98,5 @@ class Series(Series):
 
 
 __version__ = '0.1.5'
+
+del PDDataFrame, PDSeires
