@@ -1,4 +1,5 @@
 import re
+import os
 import importlib
 import argparse
 from .oxygene import *
@@ -6,34 +7,38 @@ from .tools import *
 
 
 def set(args):
-    cache = Cache()
+    from diskcache import Cache
+    cache = Cache(directory=os.path.join(os.path.split(os.path.abspath(__file__))[0], 'cache'))
     cache.set(key=args.key, value=args.value, expire=args.expire)
 
 def delete(args):
-    cache = Cache()
+    from diskcache import Cache
+    cache = Cache(directory=os.path.join(os.path.split(os.path.abspath(__file__))[0], 'cache'))
     for k in cache.iterkeys():
         if re.match(args.key, k):
             cache.delete(key=k)
 
 def show(args):
-    cache = Cache()
+    from diskcache import Cache
+    cache = Cache(directory=os.path.join(os.path.split(os.path.abspath(__file__))[0], 'cache'))
     if args.key is not None:
         for akey in cache.iterkeys():
             if re.match(args.key, akey):
-                CONSOLE.rule(f'{akey}')
+                Console().rule(f'{akey}')
                 if args.value:
-                    CONSOLE.print(f'{cache.get(akey)}')
+                    Console().print(f'{cache.get(akey)}')
 
     elif args.value:
         for akey in cache.iterkeys():
-            CONSOLE.rule(f'{akey}')
-            CONSOLE.print(f'{cache.get(akey)}')
+            Console().rule(f'{akey}')
+            Console().print(f'{cache.get(akey)}')
     
     else:
-        CONSOLE.print(f'{list(cache.iterkeys())}')
+        Console().print(f'{list(cache.iterkeys())}')
 
 def clear(args):
-    cache = Cache()
+    from diskcache import Cache
+    cache = Cache(directory=os.path.join(os.path.split(os.path.abspath(__file__))[0], 'cache'))
     cache.expire()
     
 def store(args):
@@ -42,10 +47,14 @@ def store(args):
     for name, config in mod.__dict__.items():
         if ('baconfig' in name) or ('Loader' in name)\
             or ('loader' in name and name != '__loader__'):
-            Cache().set(name, config)
+                from diskcache import Cache
+                cache = Cache(directory=os.path.join(os.path.split(os.path.abspath(__file__))[0], 'cache'))
+                cache.set(name, config)
 
 def load(args):
-    config = Cache().get(args.config)
+    from diskcache import Cache
+    cache = Cache(directory=os.path.join(os.path.split(os.path.abspath(__file__))[0], 'cache'))
+    config = cache.get(args.config)
     config['loader'](config)()
 
 def main():

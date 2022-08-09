@@ -35,7 +35,7 @@ def cache(
             else:
                 # not fund cache,return data will be cache
                 data = func(*args, **kwargs)
-                _cache.set(key=_cache.prefix + ':' + hash_key, value=data, expire=expire)
+                _cache.set(key=prefix + ':' + hash_key, value=data, expire=expire)
                 return data
         return wrapped
     return wrapper
@@ -324,7 +324,7 @@ def chd():
     while not complete:
         params = f'?field=date&holiday_recess=1&cn=1&page={page}&size=366'
         url = root + params
-        data = Request(url, verbose=False).get().json['data']
+        data = Request(url).get().json['data']
         if data['page'] * data['size'] >= data['total']:
             complete = True
         days = pd.DataFrame(data['list']).date.astype('str')\
