@@ -35,9 +35,7 @@ In this way, you can also help develop bearalpha, any changes will be sync to yo
 
 ## Submodules
 
-- [Factor](https://github.com/ppoak/factor/tree/main)
-- [Backtest](https://github.com/ppoak/backtest/tree/main)
-- [Research](https://github.com/ppoak/research/tree/main)
+- [BearAlpha-Example](https://github.com/ppoak/bearalpha-example)
 
 ## Plans
 
