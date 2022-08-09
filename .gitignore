@@ -186,3 +186,6 @@ test/
 test.py
 tests/
 tests.py
+
+# Data File
+data/

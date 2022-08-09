@@ -23,6 +23,7 @@ from .common import (
     latest_report_period,
     strip_stock_code, wrap_stock_code,
     timeit,
+    varexist,
 )
 
 from .io import (

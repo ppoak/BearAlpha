@@ -126,6 +126,13 @@ def timeit(func):
         return result
     return decorated
 
+def varexist(varname):
+    try:
+        eval(varname)
+        return True
+    except:
+        return False
+
 
 if __name__ == '__main__':
     pass
